@@ -55,7 +55,7 @@ button{background:var(--acc);color:#fff;border:0;border-radius:8px;padding:10px 
   <div><label>Top cut</label><select id="tc"><option value="2">Top 2</option><option value="4" selected>Top 4</option><option value="8">Top 8</option></select></div>
  </div>
  <div class="scroll"><table><thead><tr><th>#</th><th>Player</th><th>Record</th><th>Card 1 name</th><th>Card 2 name</th></tr></thead><tbody id="rows"></tbody></table></div>
- <p class="note">Enter players in placement order (1st at the top). Type a Pokémon’s name (e.g. “Charizard ex”) and its icon is picked automatically. The two card names form each player’s deck for the pie charts. Records are optional (e.g. 5-1-1). The graphic is generated as a PNG.</p>
+ <p class="note">Enter players in placement order (1st at the top). Type a Pokémon’s name (e.g. “Charizard”) and its icon is picked automatically. The two card names form each player’s deck for the pie charts. Records are optional (e.g. 5-1-1). The graphic is generated as a PNG.</p>
  <button id="go">Generate graphic</button>
 </div>
 <div id="out"></div>
@@ -68,8 +68,8 @@ function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;
 function build(){
  var n=Math.max(2,Math.min(64,+$("np").value||2)),h="";
  for(var i=0;i<n;i++){h+='<tr><td class="n">'+(i+1)+'</td><td><input id="p'+i+'"></td><td><input id="r'+i+'" placeholder="W-L-T" style="min-width:70px"></td>'+
- '<td><input id="a'+i+'" placeholder="e.g. Charizard ex" list="pk"></td>'+
- '<td><input id="b'+i+'" placeholder="e.g. Pidgeot ex" list="pk"></td></tr>'}
+ '<td><input id="a'+i+'" placeholder="e.g. Charizard" list="pk"></td>'+
+ '<td><input id="b'+i+'" placeholder="e.g. Pidgeot" list="pk"></td></tr>'}
  $("rows").innerHTML=h;
 }
 $("np").addEventListener("change",function(){
