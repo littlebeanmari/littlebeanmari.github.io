@@ -26,7 +26,7 @@ section.card{background:var(--panel);border:1px solid var(--line);border-radius:
 h2{font-size:16px;margin:0 0 12px}
 label{display:block;font-size:13px;color:var(--mute);margin-bottom:4px}
 input,select,textarea,button{font:inherit;color:var(--ink)}
-input[type=text],input[type=url],input[type=date],input[type=time],select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px}
+input[type=text],input[type=number],input[type=url],input[type=date],input[type=time],select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px}
 .g{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 .btn{background:var(--ink);color:var(--bg);border:0;border-radius:6px;padding:8px 14px;font-weight:700;cursor:pointer}
 .ed input.bad{border-color:#e0323f}
@@ -174,10 +174,13 @@ textarea.out{height:260px;font-family:ui-monospace,Consolas,monospace;font-size:
     <div style="grid-column:1/-1"><label for="stitle">Title</label><input type="text" id="stitle" value="Tournament Standings"></div>
     <div><label for="ssub">Subtitle (optional)</label><input type="text" id="ssub" placeholder="e.g. Friday Night Cup, 6 Nov 2026"></div>
     <div><label for="ptotal">Total players</label><input type="number" id="ptotal" min="0" step="1" inputmode="numeric" placeholder="e.g. 32"></div>
+    <div><label for="pp2">Players advancing to Phase 2</label><input type="number" id="pp2" min="0" step="1" inputmode="numeric" placeholder="e.g. 64"></div>
+    <div><label for="pcut">Players in Top Cut</label><input type="number" id="pcut" min="0" step="1" inputmode="numeric" placeholder="e.g. 8"></div>
    </div>
    <label style="margin-top:12px">Game</label>
    <div class="row" id="pgame"><button class="btn seg" data-g="TCG" aria-pressed="true">TCG</button><button class="btn seg" data-g="VGC" aria-pressed="false">VGC</button><button class="btn seg" data-g="GO" aria-pressed="false">GO</button></div>
    <p class="note" id="pnote"></p>
+   <p class="note">Phase 2 and Top Cut: placements up to the Top Cut number are marked gold and the following placements up to the Phase 2 number are marked blue. In the JPG and HTML this is a colored bar with a legend; in the plain text and Discord outputs the players are grouped under headings. Dropped players are not marked.</p>
   </section>
   <section class="card"><h2>Players</h2>
    <div class="tw"><table class="ed" id="ptable"><colgroup id="pcg"></colgroup><thead><tr id="phr"></tr></thead><tbody id="prows"></tbody></table></div>
@@ -317,6 +320,13 @@ const COLS_S=[["place","Place"],["name","Player"],["record","Record"],["points",
 const showP={place:1,name:0,record:0,points:0};let pgame="TCG";let stRows=[{place:"1",name:"",record:"",points:"",drop:"",mon1:"",mon2:""}];
 const dropN=r=>{const n=parseInt(String(r&&r.drop||"").replace(/\D/g,""),10);return n>0?n:0};
 const isDrop=r=>mode=="p"&&dropN(r)>0;
+const cutN=()=>Math.max(0,+$("pcut").value||0),p2N=()=>Math.max(0,+$("pp2").value||0);
+const PH={cut:"#f5b301",p2:"#3aa0ff"};
+const phaseOf=r=>{if(mode!="p"||isDrop(r))return"";const n=+r.place;if(!(n>0))return"";const c=cutN(),q=p2N();return c&&n<=c?"cut":q&&n<=q?"p2":""};
+const phLabel=ph=>ph=="cut"?"Top Cut (1–"+cutN()+")":"Phase 2 ("+(cutN()+1)+"–"+p2N()+")";
+const legend=d=>mode=="p"?["cut","p2"].filter(k=>d.some(r=>phaseOf(r)==k)):[];
+function groupLines(d,lineFn,head){if(mode!="p"||!(cutN()||p2N()))return d.map(lineFn).join("\n");
+ const o=[];let prev="#";d.forEach(r=>{const ph=phaseOf(r);if(ph!=prev){if(o.length)o.push("");if(ph)o.push(head(phLabel(ph)));prev=ph}o.push(lineFn(r))});return o.join("\n")}
 const kv=()=>active().map(([k,l])=>[l,cell(T,k)]).filter(x=>x[1]);
 function drawKV(c,S,X,TW,top,RH){const lw=TW*.32;
  kv().forEach(([l,v],j)=>{const y=top+j*RH;
@@ -325,7 +335,7 @@ function drawKV(c,S,X,TW,top,RH){const lw=TW*.32;
   c.fillStyle=l=="Type"?(S.ty[T.type]||S.tx):S.tx;c.font='700 26px "Trebuchet MS",sans-serif';
   let t=v;const mw=TW-lw-32;while(c.measureText(t).width>mw&&t.length>1)t=t.slice(0,-2);if(t!=v)t+="…";
   c.fillText(t,X+lw+16,y+(RH-4)/2)})}
-function mkDiscordP(){const a=active();return "## "+TT()+(period()?"\n-# "+period():"")+"\n\n"+data().map(r=>{const dr=isDrop(r),L=a.map(([k])=>k=="place"?(dr?"":"**"+r.place+".**"):k=="points"&&r.points?r.points+" pts":k=="name"&&normUrl(r.url)&&cell(r,k)?"["+cell(r,k)+"](<"+normUrl(r.url)+">)":cell(r,k)).filter(Boolean).join(" | ");return dr?"-# *"+L+"*":L}).join("\n")}
+function mkDiscordP(){const a=active();return "## "+TT()+(period()?"\n-# "+period():"")+"\n\n"+groupLines(data(),r=>{const dr=isDrop(r),L=a.map(([k])=>k=="place"?(dr?"":"**"+r.place+".**"):k=="points"&&r.points?r.points+" pts":k=="name"&&normUrl(r.url)&&cell(r,k)?"["+cell(r,k)+"](<"+normUrl(r.url)+">)":cell(r,k)).filter(Boolean).join(" | ");return dr?"-# *"+L+"*":L},l=>"**"+l+"**")}
 function mkDiscordT(){const u=normUrl(T.url),t=TT();let s="## "+(u&&t?"["+t+"](<"+u+">)":t)+"\n\n";const L=[];
  if(show.date||show.time){const v=dcTime(T);if(v)L.push("**Date & time:** "+v)}
  [["type","Type"],["game","Game"],["fee","Entry fee"],["store","Store"],["pw","Password"]].forEach(([k,l])=>{if(show[k]&&T[k])L.push("**"+l+":** "+T[k])});
@@ -339,7 +349,7 @@ function period(){if(mode=="t")return"";if(mode=="p")return [$("ssub").value.tri
 
 /* outputs */
 function mkText(){if(mode=="t")return TT()+"\n\n"+kv().map(x=>x[0]+": "+x[1]).join("\n");const a=active(),d=data();let s=TT()+"\n"+(period()?period()+"\n":"")+"\n";
- s+=d.map(r=>a.filter(([k])=>!(k=="place"&&isDrop(r))).map(([k])=>cell(r,k)).join(" | ")).join("\n");
+ s+=groupLines(d,r=>a.filter(([k])=>!(k=="place"&&isDrop(r))).map(([k])=>cell(r,k)).join(" | "),l=>l+":");
  return s}
 const SOC=[["discord","Discord","https://discord.gg/"],["twitch","Twitch","https://twitch.tv/"],["bluesky","Bluesky","https://bsky.app/profile/"],["instagram","Instagram","https://instagram.com/"],["twitter","Twitter","https://x.com/"]];
 const SOC_ICON={"discord": "M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z", "twitch": "M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z", "bluesky": "M12 10.8c-1.087-2.114-4.046-6.053-6.798-7.995C2.566.944 1.561 1.266.902 1.565.139 1.908 0 3.08 0 3.768c0 .69.378 5.65.624 6.479.815 2.736 3.713 3.66 6.383 3.364.136-.02.275-.039.415-.056-.138.022-.276.04-.415.056-3.912.58-7.387 2.005-2.83 7.078 5.013 5.19 6.87-1.113 7.823-4.308.953 3.195 2.05 9.271 7.733 4.308 4.267-4.308 1.172-6.498-2.74-7.078a8.741 8.741 0 0 1-.415-.056c.14.017.279.036.415.056 2.67.297 5.568-.628 6.383-3.364.246-.828.624-5.79.624-6.478 0-.69-.139-1.861-.902-2.206-.659-.298-1.664-.62-4.3 1.24C16.046 4.748 13.087 8.687 12 10.8Z", "instagram": "M7.0301.084c-1.2768.0602-2.1487.264-2.911.5634-.7888.3075-1.4575.72-2.1228 1.3877-.6652.6677-1.075 1.3368-1.3802 2.127-.2954.7638-.4956 1.6365-.552 2.914-.0564 1.2775-.0689 1.6882-.0626 4.947.0062 3.2586.0206 3.6671.0825 4.9473.061 1.2765.264 2.1482.5635 2.9107.308.7889.72 1.4573 1.388 2.1228.6679.6655 1.3365 1.0743 2.1285 1.38.7632.295 1.6361.4961 2.9134.552 1.2773.056 1.6884.069 4.9462.0627 3.2578-.0062 3.668-.0207 4.9478-.0814 1.28-.0607 2.147-.2652 2.9098-.5633.7889-.3086 1.4578-.72 2.1228-1.3881.665-.6682 1.0745-1.3378 1.3795-2.1284.2957-.7632.4966-1.636.552-2.9124.056-1.2809.0692-1.6898.063-4.948-.0063-3.2583-.021-3.6668-.0817-4.9465-.0607-1.2797-.264-2.1487-.5633-2.9117-.3084-.7889-.72-1.4568-1.3876-2.1228C21.2982 1.33 20.628.9208 19.8378.6165 19.074.321 18.2017.1197 16.9244.0645 15.6471.0093 15.236-.005 11.977.0014 8.718.0076 8.31.0215 7.0301.0839m.1402 21.6932c-1.17-.0509-1.8053-.2453-2.2287-.408-.5606-.216-.96-.4771-1.3819-.895-.422-.4178-.6811-.8186-.9-1.378-.1644-.4234-.3624-1.058-.4171-2.228-.0595-1.2645-.072-1.6442-.079-4.848-.007-3.2037.0053-3.583.0607-4.848.05-1.169.2456-1.805.408-2.2282.216-.5613.4762-.96.895-1.3816.4188-.4217.8184-.6814 1.3783-.9003.423-.1651 1.0575-.3614 2.227-.4171 1.2655-.06 1.6447-.072 4.848-.079 3.2033-.007 3.5835.005 4.8495.0608 1.169.0508 1.8053.2445 2.228.408.5608.216.96.4754 1.3816.895.4217.4194.6816.8176.9005 1.3787.1653.4217.3617 1.056.4169 2.2263.0602 1.2655.0739 1.645.0796 4.848.0058 3.203-.0055 3.5834-.061 4.848-.051 1.17-.245 1.8055-.408 2.2294-.216.5604-.4763.96-.8954 1.3814-.419.4215-.8181.6811-1.3783.9-.4224.1649-1.0577.3617-2.2262.4174-1.2656.0595-1.6448.072-4.8493.079-3.2045.007-3.5825-.006-4.848-.0608M16.953 5.5864A1.44 1.44 0 1 0 18.39 4.144a1.44 1.44 0 0 0-1.437 1.4424M5.8385 12.012c.0067 3.4032 2.7706 6.1557 6.173 6.1493 3.4026-.0065 6.157-2.7701 6.1506-6.1733-.0065-3.4032-2.771-6.1565-6.174-6.1498-3.403.0067-6.156 2.771-6.1496 6.1738M8 12.0077a4 4 0 1 1 4.008 3.9921A3.9996 3.9996 0 0 1 8 12.0077", "twitter": "M21.543 7.104c.015.211.015.423.015.636 0 6.507-4.954 14.01-14.01 14.01v-.003A13.94 13.94 0 0 1 0 19.539a9.88 9.88 0 0 0 7.287-2.041 4.93 4.93 0 0 1-4.6-3.42 4.916 4.916 0 0 0 2.223-.084A4.926 4.926 0 0 1 .96 9.167v-.062a4.887 4.887 0 0 0 2.235.616A4.928 4.928 0 0 1 1.67 3.148 13.98 13.98 0 0 0 11.82 8.292a4.929 4.929 0 0 1 8.39-4.49 9.868 9.868 0 0 0 3.128-1.196 4.941 4.941 0 0 1-2.165 2.724A9.828 9.828 0 0 0 24 4.555a10.019 10.019 0 0 1-2.457 2.549z"};
@@ -365,13 +375,14 @@ function mkHTML(){const S=sch(),a=active(),d=data(),so=socials();
   const bg=bgUrl?`background:linear-gradient(rgba(10,14,32,.55),rgba(10,14,32,.55)),url('${esc(bgUrl.replace(/'/g,"%27").replace(/\(/g,"%28").replace(/\)/g,"%29"))}') center/cover`:"background:#0d1330 linear-gradient(135deg,#1b2750,#0d1330)";
   const TC=S.ty;const ttlH=mode=="t"&&normUrl(T.url)?`<a href="${esc(normUrl(T.url))}" style="color:#fff;text-decoration:underline">${esc(TT())}</a>`:esc(TT());const tblF=()=>mode=="t"?`<tbody>\n`+kv().map(([l,v],j)=>`<tr><th style="background:${S.head};color:${S.hx};font-weight:800;text-align:left;padding:14px;width:32%">${esc(l)}</th><td style="background:${j%2?S.r2:S.r1};color:${l=="Type"?(TC[T.type]||S.tx):S.tx};padding:14px;font-weight:700">${esc(v)}</td></tr>`).join("\n")+`\n</tbody>`:`<thead><tr>${a.map(([,l])=>`<th style="background:${S.head};color:${S.hx};font-weight:800;text-align:left;padding:14px">${l}</th>`).join("")}${hasMons(d)?`<th style="background:${S.head};padding:14px"></th>`:""}</tr></thead>\n<tbody>\n${rowsH}\n</tbody>`;
   const cellH=(k,r)=>k=="name"&&normUrl(r.url)&&cell(r,k)?`<a href="${esc(normUrl(r.url))}" style="color:${S.tx};text-decoration:underline">${esc(cell(r,k))}</a>`:esc(cell(r,k));
+  const legH=legend(d).length?`\n<p style="text-align:center;margin:14px 0 0;font-size:14px">`+legend(d).map(k=>`<span style="display:inline-block;margin:0 12px;white-space:nowrap"><span style="display:inline-block;width:12px;height:12px;background:${PH[k]};vertical-align:middle;margin-right:6px"></span>${esc(phLabel(k))}</span>`).join("")+`</p>`:"";
   const monTd=(r,j)=>hasMons(d)?`<td style="background:${j%2?S.r2:S.r1};padding:6px 14px;text-align:right;white-space:nowrap">${monUrls(r).map((u,n)=>u?`<img src="${esc(u)}" alt="${esc(r[monKeys()[n]])}" width="${monKeys().length>2?40:52}" height="${monKeys().length>2?40:52}" style="vertical-align:middle${isDrop(r)?";opacity:.5":""}">`:"").join("")}</td>`:"";
-  const rowsH=d.map((r,j)=>`<tr>${a.map(([k])=>`<td style="background:${j%2?S.r2:S.r1};color:${S.tx};padding:14px;${k=="date"||k=="type"||k=="place"?"font-weight:700;":""}${k=="type"?"color:"+(TC[r.type]||S.tx)+";":""}">${isDrop(r)?`<span style="font-style:italic;opacity:.5">${cellH(k,r)}</span>`:cellH(k,r)}</td>`).join("")}${monTd(r,j)}</tr>`).join("\n");
+  const rowsH=d.map((r,j)=>`<tr>${a.map(([k],ci)=>`<td style="background:${j%2?S.r2:S.r1};color:${S.tx};padding:14px;${ci==0&&phaseOf(r)?"border-left:6px solid "+PH[phaseOf(r)]+";":""}${k=="date"||k=="type"||k=="place"?"font-weight:700;":""}${k=="type"?"color:"+(TC[r.type]||S.tx)+";":""}">${isDrop(r)?`<span style="font-style:italic;opacity:.5">${cellH(k,r)}</span>`:cellH(k,r)}</td>`).join("")}${monTd(r,j)}</tr>`).join("\n");
   const soH=so.length?`\n<p style="text-align:center;margin:22px 0 0">`+so.map(x=>`<a href="${esc(x.url)}" title="${esc(x.name)}" aria-label="${esc(x.name)}" style="display:inline-block;margin:4px 8px;padding:8px 14px;border-radius:8px;background:${S.box};color:${S.boxAcc};font-weight:700;font-size:16px;text-decoration:none"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="#fff" role="img" style="vertical-align:middle;margin-right:8px"><title>${esc(x.name)}</title><path d="${x.path}"/></svg><span style="vertical-align:middle">${esc(x.label)}</span></a>`).join("")+`</p>`:"";
   return `<div style="${F};color:#fff;max-width:1200px;padding-bottom:28px">\n`+
    (1?"":`<div style="height:14px;background:#e0323f"></div><div style="height:5px;background:#ffcb05"></div>\n`)+
    `<div style="background:${S.box};border-bottom:5px solid ${S.boxAcc};border-radius:10px;padding:22px 28px;margin:30px 30px 0;display:flex;align-items:center;justify-content:space-between;gap:20px"><div><div style="font-size:38px;font-weight:800;line-height:1.2">${ttlH}</div>`+(period()?`<div style="font-size:20px;font-weight:600;color:${S.boxAcc};margin-top:8px">${esc(period())}</div>`:"")+`</div>`+((logoUrl||logoData)?`<img src="${esc(logoUrl||logoData)}" alt="" style="max-height:80px;max-width:220px;flex:none">`:"")+`</div>\n`+
-   `<div style="padding:20px 30px 0;overflow-x:auto">\n<table style="width:100%;border-collapse:separate;border-spacing:0 4px;font-size:15px;color:${S.tx}">\n${tblF()}\n</table>\n</div>`+soH+`\n</div>`}
+   `<div style="padding:20px 30px 0;overflow-x:auto">\n<table style="width:100%;border-collapse:separate;border-spacing:0 4px;font-size:15px;color:${S.tx}">\n${tblF()}\n</table>\n</div>`+legH+soH+`\n</div>`}
  function mkCanvas(){
  const S=sch(),cv=$("cv"),W=1200,a=active(),d=data(),RH=64,RH2=92,top=230,foot=110;
  const wts={date:1.1,time:1.3,name:1.8,game:1.3,type:1,fee:.9,store:1.7,pw:1.2,place:.8,record:1.2,points:1},tot=a.reduce((s,[k])=>s+wts[k],0),X=50,TW=W-100;
@@ -389,7 +400,8 @@ function mkHTML(){const S=sch(),a=active(),d=data(),so=socials();
   if(L.length>2){const l2=L.slice(1).join(" ");L.length=2;L[1]=m.measureText(l2).width>w?ell(l2,w):l2}return L};
  const nameW=a.some(([k])=>k=="name")?CW*wts.name/tot-32:0;
  const nl=d.map(r=>nameW?wrap(r.name,nameW):[""]),rh=nl.map(l=>l.length>1?RH2:RH);
- const H=mode=="t"?Math.max(600,top+kv().length*RH+foot):Math.max(700,top+RH+rh.reduce((x,y)=>x+y,0)+foot);
+ const LG=legend(d),lgH=LG.length?44:0;
+ const H=mode=="t"?Math.max(600,top+kv().length*RH+foot):Math.max(700,top+RH+rh.reduce((x,y)=>x+y,0)+foot+lgH);
  cv.width=W;cv.height=H;const c=cv.getContext("2d");
  if(bgImg){const s=Math.max(W/bgImg.width,H/bgImg.height),w=bgImg.width*s,h=bgImg.height*s;c.drawImage(bgImg,(W-w)/2,(H-h)/2,w,h);c.fillStyle=S.ov;c.fillRect(0,0,W,H)}
  else{const g=c.createLinearGradient(0,0,W,H);g.addColorStop(0,S.bg[0]);g.addColorStop(1,S.bg[1]);c.fillStyle=g;c.fillRect(0,0,W,H);
@@ -409,6 +421,7 @@ function mkHTML(){const S=sch(),a=active(),d=data(),so=socials();
   a.forEach(([,l],i)=>c.fillText(l,xs[i]+16,top+(RH-8)/2));
   let yy=top+RH;d.forEach((r,j)=>{const y=yy,H2=rh[j];yy+=H2;
 c.fillStyle=j%2?S.r2:S.r1;c.fillRect(X,y,TW,H2-4);
+const ph=phaseOf(r);if(ph){c.fillStyle=PH[ph];c.fillRect(X,y,8,H2-4)}
    const dr=isDrop(r),IT=dr?"italic ":"";
    a.forEach(([k],i)=>{c.globalAlpha=dr?.5:1;const cw=CW*wts[k]/tot-24;let t=cell(r,k);
 if(k=="name"){c.fillStyle=S.tx;c.font=IT+"500 "+FONT;const cy=y+(H2-4)/2;
@@ -420,6 +433,10 @@ if(k=="name"){c.fillStyle=S.tx;c.font=IT+"500 "+FONT;const cy=y+(H2-4)/2;
    if(sp){c.globalAlpha=dr?.5:1;monUrls(r).forEach((u,n)=>{const im=u&&sprImg(u);if(im)c.drawImage(im,X+TW-12-(NM-n)*SPR-(NM-1-n)*4,y+(H2-4)/2-SPR/2,SPR,SPR)})}
    c.globalAlpha=1});
  }
+ if(LG.length){c.textAlign="left";c.font='600 22px "Trebuchet MS",sans-serif';
+  const it=LG.map(k=>({k,t:phLabel(k),w:c.measureText(phLabel(k)).width})),tw=it.reduce((x,i)=>x+26+i.w,0)+36*(it.length-1);
+  let lx=(W-tw)/2;const ly=top+RH+rh.reduce((x,y)=>x+y,0)+28;
+  it.forEach(i=>{c.fillStyle=PH[i.k];c.fillRect(lx,ly-9,18,18);c.fillStyle=S.tx;c.fillText(i.t,lx+26,ly);lx+=26+i.w+36})}
  const so=socials();
  if(so.length){let fz=28;const gap=44,maxW=W-100;let items;
   const meas=()=>{c.font=`700 ${fz}px "Trebuchet MS",sans-serif`;const ic=fz*1.15;items=so.map(x=>({x,ic,tw:c.measureText(x.label).width}));return items.reduce((s,i)=>s+i.ic+10+i.tw,0)+gap*(items.length-1)};
@@ -557,7 +574,7 @@ $("prows").addEventListener("input",e=>{const t=e.target;if(t.dataset.i!=null){s
 $("prows").addEventListener("click",e=>{const d=e.target.dataset.del;if(d!=null){stRows.splice(d,1);drawPRows();render()}});
 $("padd").onclick=()=>{stRows.push({place:String(stRows.length+1),name:"",record:"",points:"",drop:"",mon1:"",mon2:""});drawPRows();render()};
 $("pclear").onclick=()=>{stRows=[];drawPRows();render()};
-["stitle","ssub","ptotal"].forEach(i=>$(i).addEventListener("input",render));
+["stitle","ssub","ptotal","pp2","pcut"].forEach(i=>$(i).addEventListener("input",render));
 const PGAMES={TCG:"Pokémon TCG",VGC:"Pokémon VGC",GO:"Pokémon GO"};
 function pNote(){$("pnote").textContent=pgame=="GO"?"Pokémon GO: enter up to six Pokémon per player (their team). Their sprites appear at the end of that player's line in the JPG and HTML outputs.":pgame=="VGC"?"Pokémon VGC: enter up to six Pokémon per player (their team). Their sprites appear at the end of that player's line in the JPG and HTML outputs.":pgame=="TCG"?"Pokémon TCG: enter up to two Pokémon per player (the deck archetype). Their sprites appear at the end of that player's line in the JPG and HTML outputs.":PGAMES[pgame]+" options are a placeholder and will be added later."}
 const gameOf=v=>{v=String(v||"").trim().toUpperCase();return v=="PTCG"||v=="TCG"?"TCG":v=="VGC"?"VGC":v=="GO"?"GO":""};
