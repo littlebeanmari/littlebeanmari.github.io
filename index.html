@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tournament Graphics Studio</title>
+<meta name="color-scheme" content="light dark">
+<style>
+:root{--bg:#eef1f7;--panel:#fff;--ink:#1b2340;--mute:#5d6786;--line:#d5dbea;--acc:#e0323f;--acc2:#ffcb05;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10152a;--panel:#192040;--ink:#eef1fb;--mute:#9aa5c8;--line:#2b3560}}
+:root[data-theme="dark"]{--bg:#10152a;--panel:#192040;--ink:#eef1fb;--mute:#9aa5c8;--line:#2b3560}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 "Trebuchet MS","Segoe UI",system-ui,sans-serif}
+header{padding:18px 24px 0;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.ball{width:34px;height:34px;border-radius:50%;background:linear-gradient(var(--acc) 0 46%,var(--ink) 46% 54%,#fff 54%);border:3px solid var(--ink);position:relative}
+.ball:after{content:"";position:absolute;inset:9px;border-radius:50%;background:#fff;border:3px solid var(--ink)}
+h1{font-size:22px;margin:0;letter-spacing:.2px}
+nav{display:flex;gap:4px;padding:14px 24px 0;border-bottom:2px solid var(--line)}
+nav button{background:none;border:0;padding:10px 18px;font:inherit;font-weight:700;color:var(--mute);cursor:pointer;border-bottom:4px solid transparent;margin-bottom:-2px}
+nav button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--acc)}
+main{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:20px;padding:20px 24px 40px;max-width:1500px;margin:auto}
+@media(max-width:980px){main{grid-template-columns:1fr}}
+section.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+h2{font-size:16px;margin:0 0 12px}
+label{display:block;font-size:13px;color:var(--mute);margin-bottom:4px}
+input,select,textarea,button{font:inherit;color:var(--ink)}
+input[type=text],input[type=url],input[type=date],input[type=time],select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:7px 9px}
+.g{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.btn{background:var(--ink);color:var(--bg);border:0;border-radius:6px;padding:8px 14px;font-weight:700;cursor:pointer}
+.btn.seg{background:none;border:1px solid var(--line);color:var(--ink)}.btn.seg[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.btn.acc{background:var(--acc);color:#fff}.btn.ghost{background:none;border:1px solid var(--line);color:var(--ink)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.checks label,.radios label{display:inline-flex;align-items:center;gap:6px;color:var(--ink);margin:0 14px 6px 0;font-size:14px}
+.tw{overflow-x:auto}
+table.ed{border-collapse:collapse;table-layout:fixed;min-width:1180px;width:100%}
+table.ed td,table.ed th{white-space:nowrap}
+table.ed input,table.ed select{padding:6px 6px;font-size:14px;min-width:0;text-overflow:ellipsis}
+table.ed td{padding:3px}table.ed th{font-size:12px;color:var(--mute);text-align:left;padding:3px}
+.x{background:none;border:1px solid var(--line);border-radius:6px;width:32px;height:32px;cursor:pointer;color:var(--acc);font-weight:700}
+canvas{max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;display:block}
+textarea.out{height:260px;font-family:ui-monospace,Consolas,monospace;font-size:13px}
+.prev{background:repeating-conic-gradient(#3a4060 0 25%,#2c3150 0 50%) 0 0/20px 20px;color:#fff;padding:10px;border-radius:6px;overflow-x:auto;margin-top:10px}
+.note{font-size:13px;color:var(--mute);margin:6px 0 0}
+.empty{padding:50px 20px;text-align:center;color:var(--mute)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header><div class="ball"></div><h1>Tournament Graphics Studio</h1></header>
+<nav role="tablist"><button role="tab" id="t-sch" aria-selected="true">Schedule</button><button role="tab" id="t-trn" aria-selected="false">Tournament</button><button role="tab" id="t-std" aria-selected="false">Standings</button><button role="tab" id="t-use" aria-selected="false">Usage</button><button role="tab" id="t-mat" aria-selected="false">Matchups</button></nav>
+
+<main id="schedule">
+<div style="grid-column:1/-1">
+<section class="card"><h2>Schedule details</h2>
+  <div class="g">
+   <div style="grid-column:1/-1"><label for="title">Title</label><input type="text" id="title" value="Weekly Tournament Schedule"></div>
+   <div><label for="from">From</label><input type="date" id="from"></div>
+   <div><label for="to">To</label><input type="date" id="to"></div>
+  </div>
+  <p class="note">Only tournaments inside this time frame appear in the output. Leave empty to include everything.</p>
+ </section>
+
+<section class="card"><h2>Tournaments</h2>
+  <div class="tw"><table class="ed"><colgroup><col style="width:9%"><col style="width:7%"><col style="width:11%"><col style="width:15%"><col style="width:8%"><col style="width:10%"><col style="width:7%"><col style="width:11%"><col style="width:8%"><col style="width:11%"><col style="width:40px"></colgroup><thead><tr><th>Date</th><th>Time</th><th>Time zone</th><th>Name</th><th>Type</th><th>Game</th><th>Entry fee</th><th>Store</th><th>Password</th><th>Link</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+  <div class="row" style="margin-top:10px">
+   <button class="btn" id="add">Add line</button>
+   <button class="btn ghost" id="clear">Remove all</button>
+   <label class="btn ghost" style="margin:0;color:var(--ink)">Import CSV<input type="file" id="csv" accept=".csv,text/csv" hidden></label>
+   <button class="btn ghost" id="tpl">Download CSV template</button>
+  </div>
+  <p class="note">CSV columns: date, time, game, type, fee, store, and optionally time zone (e.g. Europe/Berlin), tournament name, link URL and password. Date as YYYY-MM-DD. A header row is optional.</p>
+ </section>
+</div>
+<div>
+ 
+
+ 
+
+ <section class="card"><h2>Import from Limitless</h2>
+  <label for="orglink">1. Paste your Limitless organizer link (or ID)</label>
+  <input type="text" id="orglink" placeholder="https://play.limitlesstcg.com/organizer/123">
+  <div class="row" style="margin:8px 0"><a class="btn acc" id="limopen" target="_blank" rel="noopener" href="#" aria-disabled="true" style="text-decoration:none;opacity:.5;pointer-events:none">2. Open data in new tab</a><span class="note" id="orgmsg" style="margin:0"></span></div>
+  <label for="lim">3. Copy everything on that page and paste it here</label>
+  <textarea id="lim" rows="4" placeholder='[{"name":"Friday Cup","game":"PTCG","date":"2026-11-06T18:00:00.000Z"}]'></textarea>
+  <div class="row" style="margin-top:8px"><button class="btn" id="limgo">Import tournaments</button><span class="note" id="limmsg"></span></div>
+ </section>
+</div>
+
+<div>
+ <section class="card"><h2>Social Media</h2>
+  <div class="g">
+   <div><label for="soc-discord">Discord</label><input type="text" id="soc-discord" placeholder="invite code or discord.gg/yourserver"></div>
+   <div><label for="soc-twitch">Twitch</label><input type="text" id="soc-twitch" placeholder="username"></div>
+   <div><label for="soc-bluesky">Bluesky</label><input type="text" id="soc-bluesky" placeholder="name.bsky.social"></div>
+   <div><label for="soc-instagram">Instagram</label><input type="text" id="soc-instagram" placeholder="username"></div>
+   <div><label for="soc-twitter">Twitter</label><input type="text" id="soc-twitter" placeholder="username"></div>
+  </div>
+  <p class="note">Enter a username or a full link. Platforms you fill in appear as logos at the bottom of the JPG graphic and as clickable icons below the HTML table.</p>
+ </section>
+ <section class="card"><h2>Look</h2>
+  <div class="g">
+   <div style="grid-column:1/-1"><label>Custom background</label>
+    <div class="row" id="bgmode" style="margin-bottom:8px"><button class="btn seg" data-mode="file" aria-pressed="true">File upload</button><button class="btn seg" data-mode="url" aria-pressed="false">URL import</button></div>
+    <div id="bgfile"><input type="file" id="bg" accept="image/*" aria-label="Upload background image"></div>
+    <div id="bgurlbox" hidden><div class="row"><input type="url" id="bgurl" placeholder="https://example.com/background.jpg" aria-label="Background image URL" style="flex:1"><button class="btn" id="bgurlgo">Load</button></div></div>
+    <span class="note" id="bgmsg"></span></div>
+  </div>
+  <button class="btn ghost" id="bgx" style="margin-top:8px" hidden>Remove background</button>
+  <h2 style="margin-top:16px">Show columns</h2>
+  <div class="checks" id="cols"></div>
+  <h2 style="margin-top:8px">Output</h2>
+  <div class="radios" id="fmt">
+   <label><input type="radio" name="f" value="jpg" checked>JPG graphic</label>
+   <label><input type="radio" name="f" value="txt">Plain text</label>
+   <label><input type="radio" name="f" value="html">HTML table</label>
+   <label><input type="radio" name="f" value="dc">Discord message</label>
+  </div>
+ </section>
+ <section class="card"><h2>Result</h2>
+  <div id="o-jpg"><canvas id="cv"></canvas><div class="row" style="margin-top:10px"><button class="btn acc" id="dl">Download JPG</button></div></div>
+  <div id="o-txt" hidden><textarea class="out" id="txt" readonly></textarea><div class="row" style="margin-top:10px"><button class="btn acc" data-copy="txt" data-label="Copy text">Copy text</button></div></div>
+  <div id="o-dc" hidden><textarea class="out" id="dc" readonly></textarea><div class="row" style="margin-top:10px"><button class="btn acc" data-copy="dc" data-label="Copy message">Copy message</button><span class="note" id="dccount"></span></div></div>
+  <div id="o-html" hidden><textarea class="out" id="htm" readonly></textarea><div class="row" style="margin-top:10px"><button class="btn acc" data-copy="htm" data-label="Copy HTML">Copy HTML</button></div><div class="prev" id="hprev"></div></div>
+ </section>
+</div>
+</main>
+
+<main id="tournament" hidden>
+ <section class="card" style="grid-column:1/-1"><div class="empty"><h2>Tournament</h2>Tournament graphics are coming soon.</div></section>
+</main>
+
+<main id="standings" hidden>
+ <section class="card" style="grid-column:1/-1"><div class="empty"><h2>Standings</h2>Standings graphics are coming soon.</div></section>
+</main>
+
+<main id="usage" hidden>
+ <section class="card" style="grid-column:1/-1"><div class="empty"><h2>Usage</h2>Usage graphics are coming soon.</div></section>
+</main>
+
+<main id="matchups" hidden>
+ <section class="card" style="grid-column:1/-1"><div class="empty"><h2>Matchups</h2>Matchups graphics are coming soon.</div></section>
+</main>
+
+<script>
+const COLS=[["date","Date"],["time","Time"],["name","Tournament name"],["type","Type"],["game","Game"],["fee","Entry fee"],["store","Store"]];
+const TYPES=["Friendly","Challenge","Cup","Online"];
+const BTZ=Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC";
+const TZS=["UTC","Europe/London","Europe/Berlin","Europe/Athens","America/New_York","America/Chicago","America/Denver","America/Los_Angeles","America/Sao_Paulo","Asia/Tokyo","Australia/Sydney"];
+if(!TZS.includes(BTZ))TZS.unshift(BTZ);
+const tzOpts=v=>`<option value=""${v?"":" selected"}>None</option>`+TZS.map(z=>`<option value="${z}"${z==v?" selected":""}>${z.replace("_"," ")}</option>`).join("");
+function tzLabel(r){if(!r.tz)return"";const d=new Date((r.date||new Date().toISOString().slice(0,10))+"T12:00:00Z");if(isNaN(d))return"";if(r.tz=="UTC")return"UTC";
+ const get=l=>{try{const p=new Intl.DateTimeFormat(l,{timeZone:r.tz,timeZoneName:"short"}).formatToParts(d).find(x=>x.type=="timeZoneName");return p?p.value:""}catch(e){return""}};
+ const a=get("en-US");if(a&&!/^GMT[+-]/.test(a))return a;return get("en-GB")||r.tz}
+const $=id=>document.getElementById(id);
+let rows=[{date:"",time:"18:00",game:"Pokémon TCG",name:"",url:"",pw:"",type:"Friendly",fee:"€5",store:"",tz:BTZ}];
+let show={name:1,date:1,time:1,game:1,type:1,fee:1,store:1};
+let bgImg=null,bgUrl="";
+
+/* tabs */
+const TABS=[["t-sch","schedule"],["t-trn","tournament"],["t-std","standings"],["t-use","usage"],["t-mat","matchups"]];
+function tab(id){TABS.forEach(([b,m])=>{$(m).hidden=b!=id;$(b).setAttribute("aria-selected",b==id)})}
+TABS.forEach(([b])=>$(b).onclick=()=>tab(b));
+
+/* column toggles */
+$("cols").innerHTML=COLS.map(([k,l])=>`<label><input type="checkbox" data-k="${k}" checked>${l}</label>`).join("");
+$("cols").onchange=e=>{show[e.target.dataset.k]=e.target.checked?1:0;render()};
+
+/* editor */
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function drawRows(){
+ $("rows").innerHTML=rows.map((r,i)=>`<tr>
+ <td><input type="date" data-i="${i}" data-k="date" value="${esc(r.date)}"></td>
+ <td><input type="time" data-i="${i}" data-k="time" value="${esc(r.time)}"></td>
+ <td><select data-i="${i}" data-k="tz">${tzOpts(r.tz)}</select></td>
+ <td><input type="text" data-i="${i}" data-k="name" value="${esc(r.name)}"></td>
+ <td><select data-i="${i}" data-k="type">${TYPES.map(t=>`<option${t==r.type?" selected":""}>${t}</option>`).join("")}</select></td>
+ <td><input type="text" data-i="${i}" data-k="game" value="${esc(r.game)}"></td>
+ <td><input type="text" data-i="${i}" data-k="fee" value="${esc(r.fee)}"></td>
+ <td><input type="text" data-i="${i}" data-k="store" value="${esc(r.store)}"></td>
+ <td><input type="text" data-i="${i}" data-k="pw" value="${esc(r.pw)}"></td>
+ <td><input type="url" data-i="${i}" data-k="url" placeholder="https://…" value="${esc(r.url)}"></td>
+ <td><button class="x" data-del="${i}" aria-label="Remove line">×</button></td></tr>`).join("");
+}
+$("rows").addEventListener("input",e=>{const t=e.target;if(t.dataset.i!=null){rows[t.dataset.i][t.dataset.k]=t.value;render()}});
+$("rows").addEventListener("click",e=>{const d=e.target.dataset.del;if(d!=null){rows.splice(d,1);drawRows();render()}});
+$("add").onclick=()=>{const l=rows[rows.length-1]||{};rows.push({date:l.date||"",time:l.time||"18:00",tz:l.tz===undefined?BTZ:l.tz,name:"",url:"",pw:"",game:l.game||"",type:l.type||"Friendly",fee:l.fee||"",store:l.store||""});drawRows();render()};
+$("clear").onclick=()=>{rows=[];drawRows();render()};
+
+/* CSV */
+function parseCSV(t){const out=[];let r=[],c="",q=false;
+ for(let i=0;i<t.length;i++){const ch=t[i];
+  if(q){if(ch=='"'){if(t[i+1]=='"'){c+='"';i++}else q=false}else c+=ch}
+  else if(ch=='"')q=true;
+  else if(ch==","||ch==";"){r.push(c);c=""}
+  else if(ch=="\n"||ch=="\r"){if(ch=="\r"&&t[i+1]=="\n")i++;r.push(c);c="";out.push(r);r=[]}
+  else c+=ch}
+ if(c||r.length){r.push(c);out.push(r)}return out.filter(x=>x.some(v=>v.trim()))}
+$("csv").onchange=async e=>{const f=e.target.files[0];if(!f)return;
+ let d=parseCSV(await f.text());
+ if(d.length&&/date|time|game/i.test(d[0].join(" ")))d.shift();
+ const added=d.map(c=>({date:(c[0]||"").trim(),time:(c[1]||"").trim(),game:(c[2]||"").trim(),type:TYPES.find(t=>t.toLowerCase()==(c[3]||"").trim().toLowerCase())||"Friendly",fee:(c[4]||"").trim(),name:(c[7]||"").trim(),url:(c[8]||"").trim(),pw:(c[9]||"").trim(),store:(c[5]||"").trim(),tz:TZS.find(z=>z.toLowerCase()==(c[6]||"").trim().toLowerCase())||BTZ}));
+ if(rows.length==1&&!rows[0].date&&!rows[0].store)rows=[];
+ rows=rows.concat(added);e.target.value="";drawRows();render()};
+
+/* Limitless */
+function orgId(v){v=v.trim();if(/^\d+$/.test(v))return v;const m=v.match(/organizer(?:Id)?[\/=](\d+)/i)||v.match(/\/org(?:anizer)?s?\/(\d+)/i);return m?m[1]:null}
+$("orglink").addEventListener("input",()=>{const a=$("limopen"),v=$("orglink").value,id=orgId(v),ok=!!id;
+ a.href=ok?"https://play.limitlesstcg.com/api/tournaments?organizerId="+id+"&limit=100":"#";
+ a.style.opacity=ok?1:.5;a.style.pointerEvents=ok?"auto":"none";a.setAttribute("aria-disabled",!ok);
+ $("orgmsg").textContent=!v.trim()?"":ok?"Organizer "+id+" found.":"Could not find a numeric organizer ID in that link."});
+$("limgo").onclick=()=>{const m=$("limmsg");
+ try{const j=JSON.parse($("lim").value);const arr=Array.isArray(j)?j:(j.data||[]);
+  const f=$("from").value,t=$("to").value;let n=0;
+  const add=[];
+  arr.forEach(x=>{if(!x.date)return;const d=new Date(x.date);if(isNaN(d))return;
+   const ds=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+   if((f&&ds<f)||(t&&ds>t))return;
+   const nm=x.name||"";const type="Online";
+   add.push({date:ds,time:String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0"),game:x.game||"",type,fee:"",store:"",name:nm,pw:"",url:x.id?"https://play.limitlesstcg.com/tournament/"+encodeURIComponent(x.id):"",tz:BTZ});n++});
+  if(rows.length==1&&!rows[0].date&&!rows[0].store)rows=[];
+  rows=rows.concat(add);drawRows();render();
+  m.textContent=n?n+" tournament(s) added. Times use your local time zone.":"No tournaments found in this time frame. Only the 100 most recent tournaments are in the data, so check your dates."}
+ catch(e){m.textContent="That is not valid JSON. Copy the full response from the Limitless API."}};
+
+/* data */
+function data(){const f=$("from").value,t=$("to").value;
+ return rows.filter(r=>!(r.date&&((f&&r.date<f)||(t&&r.date>t)))).slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time))}
+function fmtDate(s){if(!s)return"";const d=new Date(s+"T12:00:00");return isNaN(d)?s:d.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}
+const cell=(r,k)=>k=="date"?fmtDate(r.date):k=="time"?((r.time||"")+(r.time&&tzLabel(r)?" "+tzLabel(r):"")):(r[k]||"");
+const active=()=>COLS.filter(([k])=>show[k]);
+function period(){const f=$("from").value,t=$("to").value;return f&&t?fmtDate(f)+" – "+fmtDate(t):f?"From "+fmtDate(f):t?"Until "+fmtDate(t):""}
+
+/* outputs */
+function mkText(){const a=active(),d=data();let s=$("title").value+"\n"+(period()?period()+"\n":"")+"\n";
+ s+=d.map(r=>a.map(([k])=>cell(r,k)).join(" | ")).join("\n");
+ return s}
+const SOC=[["discord","Discord","https://discord.gg/"],["twitch","Twitch","https://twitch.tv/"],["bluesky","Bluesky","https://bsky.app/profile/"],["instagram","Instagram","https://instagram.com/"],["twitter","Twitter","https://x.com/"]];
+const SOC_ICON={"discord": "M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z", "twitch": "M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714Z", "bluesky": "M12 10.8c-1.087-2.114-4.046-6.053-6.798-7.995C2.566.944 1.561 1.266.902 1.565.139 1.908 0 3.08 0 3.768c0 .69.378 5.65.624 6.479.815 2.736 3.713 3.66 6.383 3.364.136-.02.275-.039.415-.056-.138.022-.276.04-.415.056-3.912.58-7.387 2.005-2.83 7.078 5.013 5.19 6.87-1.113 7.823-4.308.953 3.195 2.05 9.271 7.733 4.308 4.267-4.308 1.172-6.498-2.74-7.078a8.741 8.741 0 0 1-.415-.056c.14.017.279.036.415.056 2.67.297 5.568-.628 6.383-3.364.246-.828.624-5.79.624-6.478 0-.69-.139-1.861-.902-2.206-.659-.298-1.664-.62-4.3 1.24C16.046 4.748 13.087 8.687 12 10.8Z", "instagram": "M7.0301.084c-1.2768.0602-2.1487.264-2.911.5634-.7888.3075-1.4575.72-2.1228 1.3877-.6652.6677-1.075 1.3368-1.3802 2.127-.2954.7638-.4956 1.6365-.552 2.914-.0564 1.2775-.0689 1.6882-.0626 4.947.0062 3.2586.0206 3.6671.0825 4.9473.061 1.2765.264 2.1482.5635 2.9107.308.7889.72 1.4573 1.388 2.1228.6679.6655 1.3365 1.0743 2.1285 1.38.7632.295 1.6361.4961 2.9134.552 1.2773.056 1.6884.069 4.9462.0627 3.2578-.0062 3.668-.0207 4.9478-.0814 1.28-.0607 2.147-.2652 2.9098-.5633.7889-.3086 1.4578-.72 2.1228-1.3881.665-.6682 1.0745-1.3378 1.3795-2.1284.2957-.7632.4966-1.636.552-2.9124.056-1.2809.0692-1.6898.063-4.948-.0063-3.2583-.021-3.6668-.0817-4.9465-.0607-1.2797-.264-2.1487-.5633-2.9117-.3084-.7889-.72-1.4568-1.3876-2.1228C21.2982 1.33 20.628.9208 19.8378.6165 19.074.321 18.2017.1197 16.9244.0645 15.6471.0093 15.236-.005 11.977.0014 8.718.0076 8.31.0215 7.0301.0839m.1402 21.6932c-1.17-.0509-1.8053-.2453-2.2287-.408-.5606-.216-.96-.4771-1.3819-.895-.422-.4178-.6811-.8186-.9-1.378-.1644-.4234-.3624-1.058-.4171-2.228-.0595-1.2645-.072-1.6442-.079-4.848-.007-3.2037.0053-3.583.0607-4.848.05-1.169.2456-1.805.408-2.2282.216-.5613.4762-.96.895-1.3816.4188-.4217.8184-.6814 1.3783-.9003.423-.1651 1.0575-.3614 2.227-.4171 1.2655-.06 1.6447-.072 4.848-.079 3.2033-.007 3.5835.005 4.8495.0608 1.169.0508 1.8053.2445 2.228.408.5608.216.96.4754 1.3816.895.4217.4194.6816.8176.9005 1.3787.1653.4217.3617 1.056.4169 2.2263.0602 1.2655.0739 1.645.0796 4.848.0058 3.203-.0055 3.5834-.061 4.848-.051 1.17-.245 1.8055-.408 2.2294-.216.5604-.4763.96-.8954 1.3814-.419.4215-.8181.6811-1.3783.9-.4224.1649-1.0577.3617-2.2262.4174-1.2656.0595-1.6448.072-4.8493.079-3.2045.007-3.5825-.006-4.848-.0608M16.953 5.5864A1.44 1.44 0 1 0 18.39 4.144a1.44 1.44 0 0 0-1.437 1.4424M5.8385 12.012c.0067 3.4032 2.7706 6.1557 6.173 6.1493 3.4026-.0065 6.157-2.7701 6.1506-6.1733-.0065-3.4032-2.771-6.1565-6.174-6.1498-3.403.0067-6.156 2.771-6.1496 6.1738M8 12.0077a4 4 0 1 1 4.008 3.9921A3.9996 3.9996 0 0 1 8 12.0077", "twitter": "M21.543 7.104c.015.211.015.423.015.636 0 6.507-4.954 14.01-14.01 14.01v-.003A13.94 13.94 0 0 1 0 19.539a9.88 9.88 0 0 0 7.287-2.041 4.93 4.93 0 0 1-4.6-3.42 4.916 4.916 0 0 0 2.223-.084A4.926 4.926 0 0 1 .96 9.167v-.062a4.887 4.887 0 0 0 2.235.616A4.928 4.928 0 0 1 1.67 3.148 13.98 13.98 0 0 0 11.82 8.292a4.929 4.929 0 0 1 8.39-4.49 9.868 9.868 0 0 0 3.128-1.196 4.941 4.941 0 0 1-2.165 2.724A9.828 9.828 0 0 0 24 4.555a10.019 10.019 0 0 1-2.457 2.549z"};
+function socials(){const out=[];
+ SOC.forEach(([k,name,base])=>{const v=($("soc-"+k).value||"").trim();if(!v)return;
+  let url,label;
+  if(v.includes("/")){url=normUrl(v);if(!url)return;label=url.replace(/^https?:\/\/(www\.)?/i,"").replace(/\/+$/,"")}
+  else{const h=v.replace(/^@/,"");if(!h)return;url=base+encodeURIComponent(h);label=k=="discord"?"discord.gg/"+h:"@"+h}
+  out.push({k,name,url,label,path:SOC_ICON[k]})});
+ return out}
+const normUrl=u=>{u=(u||"").trim();return !u?"":/^[a-z][a-z0-9+.-]*:/i.test(u)?(/^https?:/i.test(u)?u:""):"https://"+u};
+function tzOff(ts,tz){const p={};new Intl.DateTimeFormat("en-US",{timeZone:tz,hourCycle:"h23",year:"numeric",month:"numeric",day:"numeric",hour:"numeric",minute:"numeric",second:"numeric"}).formatToParts(new Date(ts)).forEach(x=>p[x.type]=x.value);return Date.UTC(p.year,p.month-1,p.day,p.hour,p.minute,p.second)-Math.floor(ts/1000)*1000}
+ function toEpoch(date,time,tz){const [y,mo,d]=String(date).split("-").map(Number),[h,mi]=(time||"12:00").split(":").map(Number);if(!y||!mo||!d||isNaN(h)||isNaN(mi))return null;const g=Date.UTC(y,mo-1,d,h,mi);try{let e=g-tzOff(g,tz);e=g-tzOff(e,tz);return Math.floor(e/1000)}catch(x){return null}}
+ function dcTime(r){const ts=r.date?toEpoch(r.date,r.time,r.tz||BTZ):null;if(!ts)return [cell(r,"date"),cell(r,"time")].filter(Boolean).join(" ");return r.time?`<t:${ts}:f>`:`<t:${ts}:D>`}
+ function mkDiscord(){const d=data();
+ let s="## "+$("title").value+(period()?"\n-# "+period():"")+"\n\n";
+ s+=d.map(r=>{const nm=cell(r,"name"),u=normUrl(r.url);
+  const f=[dcTime(r),u&&nm?"["+nm+"](<"+u+">)":nm,r.type||"",r.game||"",r.store||"",r.pw||""];
+  while(f.length>3&&!f[f.length-1])f.pop();return f.join(" | ")}).join("\n");
+ return s}
+function mkHTML(){const a=active(),d=data(),so=socials();
+  const F="font-family:'Trebuchet MS','Segoe UI',Arial,sans-serif";
+  const bg=bgUrl?`background:linear-gradient(rgba(10,14,32,.55),rgba(10,14,32,.55)),url('${esc(bgUrl.replace(/'/g,"%27").replace(/\(/g,"%28").replace(/\)/g,"%29"))}') center/cover`:"background:#0d1330 linear-gradient(135deg,#1b2750,#0d1330)";
+  const TC={Cup:"#ffcb05",Challenge:"#7fd1ff",Friendly:"#9be58b",Online:"#d9a7ff"};
+  const cellH=(k,r)=>k=="name"&&normUrl(r.url)&&cell(r,k)?`<a href="${esc(normUrl(r.url))}" style="color:#fff;text-decoration:underline">${esc(cell(r,k))}</a>`:esc(cell(r,k));
+  const rowsH=d.map((r,j)=>`<tr>${a.map(([k])=>`<td style="background:${j%2?"rgba(8,12,30,.62)":"rgba(8,12,30,.78)"};padding:14px;${k=="date"||k=="type"?"font-weight:700;":""}${k=="type"?"color:"+(TC[r.type]||"#fff")+";":""}">${cellH(k,r)}</td>`).join("")}</tr>`).join("\n");
+  const soH=so.length?`\n<p style="text-align:center;margin:22px 0 0">`+so.map(x=>`<a href="${esc(x.url)}" title="${esc(x.name)}" aria-label="${esc(x.name)}" style="display:inline-block;margin:0 14px;color:#ffcb05;font-weight:700;font-size:16px;text-decoration:none"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="#fff" role="img" style="vertical-align:middle;margin-right:8px"><title>${esc(x.name)}</title><path d="${x.path}"/></svg><span style="vertical-align:middle">${esc(x.label)}</span></a>`).join("")+`</p>`:"";
+  return `<div style="${F};color:#fff;max-width:1200px;padding-bottom:28px">\n`+
+   (1?"":`<div style="height:14px;background:#e0323f"></div><div style="height:5px;background:#ffcb05"></div>\n`)+
+   `<div style="background:#1b2750;border-bottom:5px solid #ffcb05;border-radius:10px;padding:22px 28px;margin:30px 30px 0"><div style="font-size:38px;font-weight:800;line-height:1.2">${esc($("title").value)}</div>`+(period()?`<div style="font-size:20px;font-weight:600;color:#ffcb05;margin-top:8px">${esc(period())}</div>`:"")+`</div>\n`+
+   `<div style="padding:20px 30px 0;overflow-x:auto">\n<table style="width:100%;border-collapse:separate;border-spacing:0 4px;font-size:15px;color:#fff">\n<thead><tr>${a.map(([,l])=>`<th style="background:#e0323f;color:#fff;font-weight:800;text-align:left;padding:14px">${l}</th>`).join("")}</tr></thead>\n<tbody>\n${rowsH}\n</tbody>\n</table>\n</div>`+soH+`\n</div>`}
+ function mkCanvas(){
+ const cv=$("cv"),W=1200,a=active(),d=data(),RH=64,RH2=92,top=230,foot=110;
+ const wts={date:1.1,time:1.3,name:1.8,game:1.3,type:1,fee:.9,store:1.7},tot=a.reduce((s,[k])=>s+wts[k],0),X=50,TW=W-100;
+ const FONT='24px "Trebuchet MS",sans-serif',m=document.createElement("canvas").getContext("2d");m.font="500 "+FONT;
+ const ell=(t,w)=>{while(t.length>1&&m.measureText(t+"…").width>w)t=t.slice(0,-1);return t+"…"};
+ const wrap=(t,w)=>{t=String(t||"").trim();if(m.measureText(t).width<=w)return[t];
+  const L=[];let cur="";
+  for(const wd of t.split(/\s+/)){const nx=cur?cur+" "+wd:wd;
+   if(m.measureText(nx).width<=w){cur=nx;continue}
+   if(cur){L.push(cur);cur=""}
+   let rest=wd;while(m.measureText(rest).width>w&&rest.length>1){let i=rest.length-1;while(i>1&&m.measureText(rest.slice(0,i)).width>w)i--;L.push(rest.slice(0,i));rest=rest.slice(i)}
+   cur=rest}
+  if(cur)L.push(cur);
+  if(L.length>2){const l2=L.slice(1).join(" ");L.length=2;L[1]=m.measureText(l2).width>w?ell(l2,w):l2}return L};
+ const nameW=a.some(([k])=>k=="name")?TW*wts.name/tot-32:0;
+ const nl=d.map(r=>nameW?wrap(r.name,nameW):[""]),rh=nl.map(l=>l.length>1?RH2:RH);
+ const H=Math.max(700,top+RH+rh.reduce((x,y)=>x+y,0)+foot);
+ cv.width=W;cv.height=H;const c=cv.getContext("2d");
+ if(bgImg){const s=Math.max(W/bgImg.width,H/bgImg.height),w=bgImg.width*s,h=bgImg.height*s;c.drawImage(bgImg,(W-w)/2,(H-h)/2,w,h);c.fillStyle="rgba(10,14,32,.55)";c.fillRect(0,0,W,H)}
+ else{const g=c.createLinearGradient(0,0,W,H);g.addColorStop(0,"#1b2750");g.addColorStop(1,"#0d1330");c.fillStyle=g;c.fillRect(0,0,W,H);
+  c.fillStyle="rgba(224,50,63,.9)";c.fillRect(0,0,W,14);c.fillStyle="#ffcb05";c.fillRect(0,14,W,5)}
+ c.textBaseline="middle";c.fillStyle="#fff";
+ let fs=64;c.font=`800 ${fs}px "Trebuchet MS",sans-serif`;
+ while(c.measureText($("title").value).width>W-120&&fs>26){fs-=2;c.font=`800 ${fs}px "Trebuchet MS",sans-serif`}
+ c.shadowColor="rgba(0,0,0,.6)";c.shadowBlur=12;c.fillText($("title").value,60,95);c.shadowBlur=0;
+ c.font='600 28px "Trebuchet MS",sans-serif';c.fillStyle="#ffcb05";c.fillText(period(),60,150);
+ if(!a.length||!d.length){c.fillStyle="#fff";c.font='600 30px "Trebuchet MS",sans-serif';c.fillText(a.length?"No tournaments in this time frame.":"Select at least one column.",60,top+60)}
+ else{
+  let x=X;const xs=a.map(([k])=>{const o=x;x+=TW*wts[k]/tot;return o});
+  c.fillStyle="rgba(224,50,63,.95)";c.fillRect(X,top,TW,RH-8);
+  c.fillStyle="#fff";c.font='800 24px "Trebuchet MS",sans-serif';
+  a.forEach(([,l],i)=>c.fillText(l,xs[i]+16,top+(RH-8)/2));
+  let yy=top+RH;d.forEach((r,j)=>{const y=yy,H2=rh[j];yy+=H2;
+c.fillStyle=j%2?"rgba(8,12,30,.62)":"rgba(8,12,30,.78)";c.fillRect(X,y,TW,H2-4);
+   a.forEach(([k],i)=>{const cw=TW*wts[k]/tot-24;let t=cell(r,k);
+if(k=="name"){c.fillStyle="#fff";c.font="500 "+FONT;const cy=y+(H2-4)/2;
+ if(nl[j].length>1){c.fillText(nl[j][0],xs[i]+16,cy-15);c.fillText(nl[j][1],xs[i]+16,cy+15)}else c.fillText(nl[j][0],xs[i]+16,cy);return}
+    c.fillStyle=k=="type"?({Cup:"#ffcb05",Challenge:"#7fd1ff",Friendly:"#9be58b",Online:"#d9a7ff"}[t]||"#fff"):"#fff";
+    c.font=(k=="date"||k=="type"?"700":"500")+' 24px "Trebuchet MS",sans-serif';
+    while(c.measureText(t).width>cw&&t.length>1)t=t.slice(0,-2);
+    if(t!=cell(r,k))t+="…";c.fillText(t,xs[i]+16,y+(H2-4)/2)})});
+ }
+ const so=socials();
+ if(so.length){let fz=28;const gap=44,maxW=W-100;let items;
+  const meas=()=>{c.font=`700 ${fz}px "Trebuchet MS",sans-serif`;const ic=fz*1.15;items=so.map(x=>({x,ic,tw:c.measureText(x.label).width}));return items.reduce((s,i)=>s+i.ic+10+i.tw,0)+gap*(items.length-1)};
+  let tot=meas();while(tot>maxW&&fz>14){fz-=2;tot=meas()}
+  let x=(W-tot)/2;const y=H-55;c.textAlign="left";
+  items.forEach(i=>{c.save();c.translate(x,y-i.ic/2);c.scale(i.ic/24,i.ic/24);c.fillStyle="#fff";c.fill(new Path2D(i.x.path));c.restore();
+   c.fillStyle="#ffcb05";c.font=`700 ${fz}px "Trebuchet MS",sans-serif`;c.fillText(i.x.label,x+i.ic+10,y);x+=i.ic+10+i.tw+gap})}
+}
+
+function render(){
+ const f=document.querySelector("input[name=f]:checked").value;
+ $("o-jpg").hidden=f!="jpg";$("o-txt").hidden=f!="txt";$("o-html").hidden=f!="html";$("o-dc").hidden=f!="dc";
+ if(f=="jpg")mkCanvas();
+ if(f=="txt")$("txt").value=mkText();
+ if(f=="dc"){const m=mkDiscord();$("dc").value=m;$("dccount").textContent=m.length+" / 2000 characters"+(m.length>2000?" – too long for one Discord message":"")}
+ if(f=="html"){const h=mkHTML();$("htm").value=h;$("hprev").innerHTML=h}
+}
+["title","from","to",...SOC.map(x=>"soc-"+x[0])].forEach(i=>$(i).addEventListener("input",render));
+$("fmt").onchange=render;
+
+$("bg").onchange=e=>{const f=e.target.files[0];if(!f)return;const im=new Image();
+ im.onload=()=>{bgImg=im;bgUrl="";$("bgx").hidden=false;render()};im.src=URL.createObjectURL(f)};
+document.querySelectorAll("#bgmode [data-mode]").forEach(b=>b.onclick=()=>{const u=b.dataset.mode=="url";
+ $("bgfile").hidden=u;$("bgurlbox").hidden=!u;$("bgmsg").textContent="";
+ document.querySelectorAll("#bgmode [data-mode]").forEach(x=>x.setAttribute("aria-pressed",x==b))});
+$("bgurlgo").onclick=()=>{const m=$("bgmsg"),u=$("bgurl").value.trim();
+ if(!u){m.textContent="";return}
+ if(!/^https?:\/\//i.test(u)){m.textContent="Please enter a link starting with http:// or https://";return}
+ m.textContent="Loading…";const im=new Image();im.crossOrigin="anonymous";
+ im.onload=()=>{bgImg=im;bgUrl=u;$("bgx").hidden=false;m.textContent="Background loaded.";render()};
+ im.onerror=()=>{m.textContent="Could not load that image. The link may be wrong, or the website does not allow other sites to use its images. In that case, download the image and use Custom background instead."};
+ im.src=u};
+$("bgurl").addEventListener("keydown",e=>{if(e.key=="Enter")$("bgurlgo").click()});
+$("bgx").onclick=()=>{bgImg=null;bgUrl="";$("bg").value="";$("bgurl").value="";$("bgmsg").textContent="";$("bgx").hidden=true;render()};
+
+async function saveFile(name,data,mime){
+ try{if(window.claude&&claude.use){const dl=await claude.use("downloads");if(dl){await dl.save({filename:name,data});return}}}catch(e){if(e&&e.code=="declined")return}
+ const b=data instanceof Blob?data:new Blob([data],{type:mime});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
+$("dl").onclick=()=>{mkCanvas();const fn=($("title").value||"schedule").replace(/[^\w-]+/g,"_")+".jpg";$("cv").toBlob(b=>saveFile(fn,b,"image/jpeg"),"image/jpeg",.92)};
+$("tpl").onclick=()=>saveFile("tournament-template.csv","\ufeff"+[
+ "date;time;game;type;fee;store;timezone;name;link;password",
+ "2026-11-06;18:00;Pokémon TCG;Cup;€5;Example Store;Europe/Berlin;Friday Night Cup;https://example.com/event;secret",
+ "2026-11-07;14:00;Pokémon VGC;Online;Free;;UTC;Saturday Online Challenge;;"].join("\r\n"),"text/csv");
+document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=async()=>{const t=$(b.dataset.copy);try{await navigator.clipboard.writeText(t.value);b.textContent="Copied"}catch(e){t.select();document.execCommand("copy");b.textContent="Copied"}setTimeout(()=>b.textContent=b.dataset.label,1500)});
+
+/* default date range: current month on the 1st-15th, next month from the 16th */
+(()=>{const n=new Date(),y=n.getFullYear(),m=n.getMonth()+(n.getDate()>=16?1:0);
+ const f=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+ $("from").value=f(new Date(y,m,1));$("to").value=f(new Date(y,m+1,0))})();
+
+drawRows();render();
+</script>
+</body>
+</html>
