@@ -47,6 +47,41 @@ textarea.out{height:260px;font-family:ui-monospace,Consolas,monospace;font-size:
 .note{font-size:13px;color:var(--mute);margin:6px 0 0}
 .empty{padding:50px 20px;text-align:center;color:var(--mute)}
 [hidden]{display:none!important}
+
+/* ---- mobile ---- */
+@media (max-width:720px),(pointer:coarse){
+ input,select,textarea{font-size:16px!important}
+ input[type=text],input[type=number],input[type=url],input[type=date],input[type=time],select{min-height:44px}
+ .btn{min-height:44px;padding:10px 16px}
+ .row .btn{flex:1 1 auto;text-align:center}
+ .checks label,.radios label{padding:6px 0;margin-right:18px;font-size:15px}
+ .checks input,.radios input{width:20px;height:20px}
+}
+@media (max-width:720px){
+ header{padding:12px 14px 0;gap:10px}
+ .logo{width:38px;height:38px}
+ h1{font-size:18px;line-height:1.25}
+ nav{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:10px 10px 0}
+ nav::-webkit-scrollbar{display:none}
+ nav button{flex:none;white-space:nowrap;padding:10px 14px}
+ main{padding:12px 12px 32px;gap:12px}
+ section.card{padding:12px;margin-bottom:12px}
+ .g{grid-template-columns:1fr 1fr}
+ .g>div[style*="grid-column"]{grid-column:1/-1}
+ .tw{overflow:visible}
+ table.ed,table.ed tbody{display:block;min-width:0!important;width:100%}
+ table.ed colgroup,table.ed thead{display:none}
+ table.ed tr{display:grid;grid-template-columns:1fr 1fr;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:10px}
+ table.ed td{display:block;padding:0;white-space:normal;min-width:0}
+ table.ed td[data-l]::before{content:attr(data-l);display:block;font-size:12px;color:var(--mute);margin-bottom:2px}
+ table.ed td:has([data-k="name"]),table.ed td:has([data-k="store"]),table.ed td:has([data-k="url"]),table.ed td:has([data-k="ov"]),table.ed td:has([data-k="game"]),table.ed td:last-child{grid-column:1/-1}
+ table.ed input,table.ed select{font-size:16px;padding:8px 9px}
+ table.ed input.item{font-size:14px}
+ .x{width:100%;height:44px}
+ canvas{width:100%}
+ textarea.out{height:200px}
+ .note{font-size:12.5px}
+}
 </style>
 </head>
 <body>
@@ -176,6 +211,7 @@ textarea.out{height:260px;font-family:ui-monospace,Consolas,monospace;font-size:
     <div style="grid-column:1/-1" id="btitlebox" hidden><label for="btitle">Title</label><input type="text" id="btitle" value="Tournament Name"></div>
     <div id="ssubbox"><label for="ssub">Subtitle (optional)</label><input type="text" id="ssub" value="Standings" placeholder="e.g. Standings"></div>
     <div id="bsubbox" hidden><label for="bsub">Subtitle (optional)</label><input type="text" id="bsub" value="Top Cut" placeholder="e.g. Top Cut"></div>
+    <div id="usubbox" hidden><label for="usub">Subtitle (optional)</label><input type="text" id="usub" value="Usage" placeholder="e.g. Usage"></div>
     <div><label for="ptotal">Total players</label><input type="number" id="ptotal" min="0" step="1" inputmode="numeric" placeholder="e.g. 32"></div>
     <div id="pp2box"><label for="pp2">Players advancing to Phase 2</label><input type="number" id="pp2" min="0" step="1" inputmode="numeric" placeholder="e.g. 64"></div>
     <div id="pcutbox"><label for="pcut">Players in Top Cut</label><input type="number" id="pcut" min="0" step="1" inputmode="numeric" placeholder="e.g. 8"></div>
@@ -194,16 +230,38 @@ textarea.out{height:260px;font-family:ui-monospace,Consolas,monospace;font-size:
    <p class="note" style="margin:0 0 4px">Pick the winner of a match to move that player into the next round. The score is optional.</p>
    <div id="bkres"></div>
   </section>
-  <section class="card"><h2>Players</h2>
+  <section class="card" id="mcard" hidden><h2>Player</h2>
+   <div class="g"><div style="grid-column:1/-1"><label for="mplayer">Player name</label><input type="text" id="mplayer" placeholder="Your name, as it appears on Limitless"></div></div>
+   <p class="note" id="mrec"></p>
+   <p class="note">Add one line per round in the Matchups table below: the round, your opponent, the result (for example Win, Loss or Tie, or just W, L or T) and the table. The opponent's Pokémon are optional. The result column is colored green, red or amber, and your record is calculated for the subtitle.</p>
+   <h2 style="margin-top:16px">Import from Limitless</h2>
+   <label for="mlink">1. Paste the Limitless tournament link (or ID)</label>
+   <input type="text" id="mlink" placeholder="https://play.limitlesstcg.com/tournament/abc123">
+   <div class="row" style="margin:8px 0"><a class="btn acc" id="mopen" target="_blank" rel="noopener" href="#" aria-disabled="true" style="text-decoration:none;opacity:.5;pointer-events:none">2. Open pairings in new tab</a><span class="note" id="mmsg" style="margin:0"></span></div>
+   <label for="mlim">3. Copy everything on that page and paste it here</label>
+   <textarea id="mlim" rows="4"></textarea>
+   <div class="row" style="margin-top:8px"><button class="btn" id="mlimgo">Import my matchups</button><span class="note" id="mlimmsg"></span></div>
+   <p class="note">The import uses the player name above, which has to match the name on Limitless. Opponents are shown by their Limitless name and their Pokémon are left empty.</p>
+  </section>
+  <section class="card" id="ucard" hidden><h2>Usage</h2>
+   <div class="g"><div><label for="utop">Entries to show</label><input type="number" id="utop" min="1" max="40" step="1" inputmode="numeric" value="10"></div></div>
+   <p class="note" id="ucount"></p>
+   <p class="note">Percentages are calculated from the Players table below: the share of players in each group who played the card or Pokémon. Groups are formed from the placements, using the Phase 2 and Top Cut numbers above. Dropped players are not counted in Phase 2 or Top Cut. TCG card usage needs the decklists, which are imported together with Limitless standings.</p>
+   <h2 style="margin-top:16px">Manual entries and overrides</h2>
+   <p class="note" style="margin:0 0 6px">Add an entry or a percentage to replace what was calculated. Percentages that you type win over the calculated ones. In the last column you can replace the picture that was found: type another card or Pokémon name, or paste a direct link to an image.</p>
+   <div class="tw"><table class="ed" style="min-width:640px"><colgroup><col style="width:25%"><col style="width:11%"><col style="width:11%"><col style="width:11%"><col style="width:34%"><col style="width:40px"></colgroup><thead><tr><th>Name</th><th>All %</th><th>Phase 2 %</th><th>Top Cut %</th><th>Image override (name or URL)</th><th></th></tr></thead><tbody id="urows"></tbody></table></div>
+   <div class="row" style="margin-top:10px"><button class="btn" id="uadd">Add line</button><button class="btn ghost" id="ufill">Add detected entries</button><button class="btn ghost" id="uclear">Remove all</button></div>
+  </section>
+  <section class="card"><h2 id="phd">Players</h2>
    <div class="tw"><table class="ed" id="ptable"><colgroup id="pcg"></colgroup><thead><tr id="phr"></tr></thead><tbody id="prows"></tbody></table></div>
    <datalist id="pkmn"></datalist>
    <div class="row" style="margin-top:10px"><button class="btn" id="padd">Add line</button><button class="btn ghost" id="pclear">Remove all</button><label class="btn ghost" style="margin:0;color:var(--ink)">Import CSV<input type="file" id="pcsv" accept=".csv,text/csv" hidden></label><button class="btn ghost" id="ptpl">Download CSV template</button></div>
-   <p class="note">CSV columns: place, player, record (for example 5-1-0), points and, optionally, the round the player dropped and up to six Pokémon names (TCG uses the first two, VGC and GO up to six). A header row is optional.</p>
-   <p class="note">Players with a round in the "Dropped" column are listed at the bottom, ordered by that round, grayed out and in italics. The round itself is only used for sorting and is never shown in the outputs.</p>
+   <p class="note" id="pcsvnote">CSV columns: place, player, record (for example 5-1-0), points and, optionally, the round the player dropped and up to six Pokémon names (TCG uses the first two, VGC and GO up to six). A header row is optional.</p>
+   <p class="note" id="pdropnote">Players with a round in the "Dropped" column are listed at the bottom, ordered by that round, grayed out and in italics. The round itself is only used for sorting and is never shown in the outputs.</p>
   </section>
  </div>
  <div id="pcolL">
-  <section class="card"><h2>Import from Limitless</h2>
+  <section class="card" id="plimcard"><h2>Import from Limitless</h2>
    <label for="plink">1. Paste the Limitless tournament link (or ID)</label>
    <input type="text" id="plink" placeholder="https://play.limitlesstcg.com/tournament/abc123">
    <div class="row" style="margin:8px 0"><a class="btn acc" id="popen" target="_blank" rel="noopener" href="#" aria-disabled="true" style="text-decoration:none;opacity:.5;pointer-events:none">2. Open standings in new tab</a><span class="note" id="pmsg" style="margin:0"></span></div>
@@ -256,12 +314,13 @@ let bgImg=null,bgUrl="";let logoImg=null,logoUrl="",logoData="";
 
 /* tabs */
 const TABS=[["t-sch","schedule"],["t-trn","tournament"],["t-std","standings"],["t-bra","bracket"],["t-use","usage"],["t-mat","matchups"]];
-function tab(id){TABS.forEach(([b,m])=>{$(m).hidden=b!=id;$(b).setAttribute("aria-selected",b==id)});if(id=="t-sch")setMode("s");if(id=="t-trn")setMode("t");$("standings").hidden=!(id=="t-std"||id=="t-bra");$("bracket").hidden=true;if(id=="t-std")setMode("p");if(id=="t-bra"){autoBracket();setMode("b")}}
+function tab(id){TABS.forEach(([b,m])=>{$(m).hidden=b!=id;$(b).setAttribute("aria-selected",b==id)});if(id=="t-sch")setMode("s");if(id=="t-trn")setMode("t");$("standings").hidden=!(id=="t-std"||id=="t-bra"||id=="t-use"||id=="t-mat");$("bracket").hidden=true;$("usage").hidden=true;$("matchups").hidden=true;if(id=="t-std")setMode("p");if(id=="t-use")setMode("u");if(id=="t-mat")setMode("m");if(id=="t-bra"){autoBracket();setMode("b")}}
 TABS.forEach(([b])=>$(b).onclick=()=>tab(b));
 
 /* column toggles */
 $("cols").innerHTML=COLS.map(([k,l])=>`<label><input type="checkbox" data-k="${k}">${l}</label>`).join("");
-$("cols").onchange=e=>{show[e.target.dataset.k]=e.target.checked?1:0;render()};
+let uOff=new Set();
+$("cols").onchange=e=>{const k=e.target.dataset.k;show[k]=e.target.checked?1:0;if(mode=="u")e.target.checked?uOff.delete(k):uOff.add(k);render()};
 function syncChecks(){document.querySelectorAll("#cols input").forEach(i=>i.checked=!!show[i.dataset.k])}
 function autoShow(k,v){if(k in show&&String(v||"").trim()&&!show[k]){show[k]=1;syncChecks()}}
 function autoAll(list){list.forEach(r=>Object.keys(show).forEach(k=>autoShow(k,r[k])))}
@@ -324,10 +383,10 @@ $("limgo").onclick=()=>{const m=$("limmsg");
  catch(e){m.textContent="That is not valid JSON. Copy the full response from the Limitless API."}};
 
 /* data */
-let mode="s";const isP=()=>mode=="p"||mode=="b";
+let mode="s";const isP=()=>mode=="p"||mode=="b"||mode=="u"||mode=="m";
 const T={date:"",time:"18:00",tz:BTZ,type:"Friendly",game:"",fee:"",store:"",pw:"",url:"",name:""};
 const showT={name:0,date:0,time:0,game:0,type:0,fee:0,store:0,pw:0};const showS=show;
-const TT=()=>mode=="t"?$("ttitle").value:mode=="b"?$("btitle").value:mode=="p"?$("stitle").value:$("title").value;
+const TT=()=>mode=="t"?$("ttitle").value:mode=="b"?$("btitle").value:(mode=="p"||mode=="u"||mode=="m")?$("stitle").value:$("title").value;
 const COLS_S=[["place","Place"],["name","Player"],["record","Record"],["points","Points"]];
 const showP={place:1,name:0,record:0,points:0};let pgame="TCG";let stRows=[{place:"1",name:"",record:"",points:"",drop:"",mon1:"",mon2:""}];
 const dropN=r=>{const n=parseInt(String(r&&r.drop||"").replace(/\D/g,""),10);return n>0?n:0};
@@ -356,11 +415,11 @@ function data(){if(mode=="t")return [T];if(isP())return stRows.filter(r=>r.place
  return rows.filter(r=>!(r.date&&((f&&r.date<f)||(t&&r.date>t)))).slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time))}
 function fmtDate(s){if(!s)return"";const d=new Date(s+"T12:00:00");return isNaN(d)?s:d.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}
 const cell=(r,k)=>k=="place"&&isDrop(r)?"":k=="date"?fmtDate(r.date):k=="time"?((r.time||"")+(r.time&&tzLabel(r)?" "+tzLabel(r):"")):(r[k]||"");
-const active=()=>(isP()?COLS_S:COLS).filter(([k])=>show[k]&&!(mode=="t"&&k=="name"));
-function period(){if(mode=="t")return"";if(isP())return [(mode=="b"?$("bsub"):$("ssub")).value.trim(),+$("ptotal").value>0?(+$("ptotal").value)+" players":""].filter(Boolean).join(" · ");const f=$("from").value,t=$("to").value;return f&&t?fmtDate(f)+" – "+fmtDate(t):f?"From "+fmtDate(f):t?"Until "+fmtDate(t):""}
+const active=()=>(mode=="u"?COLS_U:mode=="m"?COLS_M:isP()?COLS_S:COLS).filter(([k])=>show[k]&&!(mode=="t"&&k=="name"));
+function period(){if(mode=="t")return"";if(mode=="m")return mPeriod();if(isP())return [(mode=="b"?$("bsub"):mode=="u"?$("usub"):$("ssub")).value.trim(),+$("ptotal").value>0?(+$("ptotal").value)+" players":""].filter(Boolean).join(" · ");const f=$("from").value,t=$("to").value;return f&&t?fmtDate(f)+" – "+fmtDate(t):f?"From "+fmtDate(f):t?"Until "+fmtDate(t):""}
 
 /* outputs */
-function mkText(){if(mode=="b")return mkTextB();if(mode=="t")return TT()+"\n\n"+kv().map(x=>x[0]+": "+x[1]).join("\n");const a=active(),d=data();let s=TT()+"\n"+(period()?period()+"\n":"")+"\n";
+function mkText(){if(mode=="b")return mkTextB();if(mode=="u")return mkTextU();if(mode=="t")return TT()+"\n\n"+kv().map(x=>x[0]+": "+x[1]).join("\n");const a=active(),d=data();let s=TT()+"\n"+(period()?period()+"\n":"")+"\n";
  s+=groupLines(d,r=>a.filter(([k])=>!(k=="place"&&isDrop(r))).map(([k])=>cell(r,k)).join(" | "),l=>l+":");
  return s}
 const SOC=[["discord","Discord","https://discord.gg/"],["twitch","Twitch","https://twitch.tv/"],["bluesky","Bluesky","https://bsky.app/profile/"],["instagram","Instagram","https://instagram.com/"],["twitter","Twitter","https://x.com/"]];
@@ -376,7 +435,7 @@ const normUrl=u=>{u=(u||"").trim();return !u?"":/^[a-z][a-z0-9+.-]*:/i.test(u)?(
 function tzOff(ts,tz){const p={};new Intl.DateTimeFormat("en-US",{timeZone:tz,hourCycle:"h23",year:"numeric",month:"numeric",day:"numeric",hour:"numeric",minute:"numeric",second:"numeric"}).formatToParts(new Date(ts)).forEach(x=>p[x.type]=x.value);return Date.UTC(p.year,p.month-1,p.day,p.hour,p.minute,p.second)-Math.floor(ts/1000)*1000}
  function toEpoch(date,time,tz){const [y,mo,d]=String(date).split("-").map(Number),[h,mi]=(time||"12:00").split(":").map(Number);if(!y||!mo||!d||isNaN(h)||isNaN(mi))return null;const g=Date.UTC(y,mo-1,d,h,mi);try{let e=g-tzOff(g,tz);e=g-tzOff(e,tz);return Math.floor(e/1000)}catch(x){return null}}
  function dcTime(r){const sd=show.date,st=show.time;const ts=r.date?toEpoch(r.date,r.time,r.tz||BTZ):null;if(!ts)return [sd?cell(r,"date"):"",st?cell(r,"time"):""].filter(Boolean).join(" ");if(sd&&st)return r.time?`<t:${ts}:f>`:`<t:${ts}:D>`;if(sd)return `<t:${ts}:D>`;return r.time?`<t:${ts}:t>`:""}
- function mkDiscord(){if(mode=="b")return mkDiscordB();if(mode=="t")return mkDiscordT();if(mode=="p")return mkDiscordP();const d=data();
+ function mkDiscord(){if(mode=="b")return mkDiscordB();if(mode=="u")return mkDiscordU();if(mode=="m")return mkDiscordM();if(mode=="t")return mkDiscordT();if(mode=="p")return mkDiscordP();const d=data();
  let s="## "+TT()+(period()?"\n-# "+period():"")+"\n\n";
  s+=d.map(r=>{const nm=cell(r,"name"),u=normUrl(r.url);
   const f=[];if(show.date||show.time)f.push(dcTime(r));if(show.name)f.push(u&&nm?"["+nm+"](<"+u+">)":nm);if(show.type)f.push(r.type||"");if(show.game)f.push(r.game||"");if(show.fee)f.push(r.fee||"");if(show.store)f.push(r.store||"");if(show.pw)f.push(r.pw||"");
@@ -389,12 +448,12 @@ function mkHTML(){const S=sch(),a=active(),d=data(),so=socials();
   const cellH=(k,r)=>k=="name"&&normUrl(r.url)&&cell(r,k)?`<a href="${esc(normUrl(r.url))}" style="color:${S.tx};text-decoration:underline">${esc(cell(r,k))}</a>`:esc(cell(r,k));
   const legH=legend(d).length?`\n<p style="text-align:center;margin:14px 0 0;font-size:14px">`+legend(d).map(k=>`<span style="display:inline-block;margin:0 12px;white-space:nowrap"><span style="display:inline-block;width:12px;height:12px;background:${PH[k]};vertical-align:middle;margin-right:6px"></span>${esc(phLabel(k))}</span>`).join("")+`</p>`:"";
   const monTd=(r,j)=>hasMons(d)?`<td style="background:${j%2?S.r2:S.r1};padding:6px 14px;text-align:right;white-space:nowrap">${monUrls(r).map((u,n)=>u?`<img src="${esc(u)}" alt="${esc(r[monKeys()[n]])}" width="${monKeys().length>2?40:52}" height="${monKeys().length>2?40:52}" style="vertical-align:middle${isDrop(r)?";opacity:.5":""}">`:"").join("")}</td>`:"";
-  const rowsH=d.map((r,j)=>`<tr>${a.map(([k],ci)=>`<td style="background:${j%2?S.r2:S.r1};color:${S.tx};padding:14px;${ci==0&&phaseOf(r)?"border-left:6px solid "+PH[phaseOf(r)]+";":""}${k=="date"||k=="type"||k=="place"?"font-weight:700;":""}${k=="type"?"color:"+(TC[r.type]||S.tx)+";":""}">${isDrop(r)?`<span style="font-style:italic;opacity:.5">${cellH(k,r)}</span>`:cellH(k,r)}</td>`).join("")}${monTd(r,j)}</tr>`).join("\n");
+  const rowsH=d.map((r,j)=>`<tr>${a.map(([k],ci)=>`<td style="background:${j%2?S.r2:S.r1};color:${S.tx};padding:14px;${ci==0&&phaseOf(r)?"border-left:6px solid "+PH[phaseOf(r)]+";":""}${k=="date"||k=="type"||k=="place"?"font-weight:700;":""}${k=="type"?"color:"+(TC[r.type]||S.tx)+";":""}${k=="record"&&mode=="m"?"color:"+resCol(r.record,S)+";font-weight:700;":""}">${isDrop(r)?`<span style="font-style:italic;opacity:.5">${cellH(k,r)}</span>`:cellH(k,r)}</td>`).join("")}${monTd(r,j)}</tr>`).join("\n");
   const soH=so.length?`\n<p style="text-align:center;margin:22px 0 0">`+so.map(x=>`<a href="${esc(x.url)}" title="${esc(x.name)}" aria-label="${esc(x.name)}" style="display:inline-block;margin:4px 8px;padding:8px 14px;border-radius:8px;background:${S.box};color:${S.boxAcc};font-weight:700;font-size:16px;text-decoration:none"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="#fff" role="img" style="vertical-align:middle;margin-right:8px"><title>${esc(x.name)}</title><path d="${x.path}"/></svg><span style="vertical-align:middle">${esc(x.label)}</span></a>`).join("")+`</p>`:"";
   return `<div style="${F};color:#fff;max-width:1200px;padding-bottom:28px">\n`+
    (1?"":`<div style="height:14px;background:#e0323f"></div><div style="height:5px;background:#ffcb05"></div>\n`)+
    `<div style="background:${S.box};border-bottom:5px solid ${S.boxAcc};border-radius:10px;padding:22px 28px;margin:30px 30px 0;display:flex;align-items:center;justify-content:space-between;gap:20px"><div><div style="font-size:38px;font-weight:800;line-height:1.2">${ttlH}</div>`+(period()?`<div style="font-size:20px;font-weight:600;color:${S.boxAcc};margin-top:8px">${esc(period())}</div>`:"")+`</div>`+((logoUrl||logoData)?`<img src="${esc(logoUrl||logoData)}" alt="" style="max-height:80px;max-width:220px;flex:none">`:"")+`</div>\n`+
-   (mode=="b"?bkHTML(S):`<div style="padding:20px 30px 0;overflow-x:auto">\n<table style="width:100%;border-collapse:separate;border-spacing:0 4px;font-size:15px;color:${S.tx}">\n${tblF()}\n</table>\n</div>`)+legH+soH+`\n</div>`}
+   (mode=="b"?bkHTML(S):mode=="u"?usageHTML(S):`<div style="padding:20px 30px 0;overflow-x:auto">\n<table style="width:100%;border-collapse:separate;border-spacing:0 4px;font-size:15px;color:${S.tx}">\n${tblF()}\n</table>\n</div>`)+legH+soH+`\n</div>`}
  function mkCanvas(){
  const S=sch(),cv=$("cv"),BK=mode=="b"?bkMetrics():null,W=BK?BK.w:1200,a=active(),d=data(),RH=64,RH2=92,top=230,foot=110;
  const wts={date:1.1,time:1.3,name:1.8,game:1.3,type:1,fee:.9,store:1.7,pw:1.2,place:.8,record:1.2,points:1},tot=a.reduce((s,[k])=>s+wts[k],0),X=50,TW=W-100;
@@ -413,7 +472,7 @@ function mkHTML(){const S=sch(),a=active(),d=data(),so=socials();
  const nameW=a.some(([k])=>k=="name")?CW*wts.name/tot-32:0;
  const nl=d.map(r=>nameW?wrap(r.name,nameW):[""]),rh=nl.map(l=>l.length>1?RH2:RH);
  const LG=legend(d),lgH=LG.length?44:0;
- const H=mode=="b"?Math.max(700,top+BK.h+foot):mode=="t"?Math.max(600,top+kv().length*RH+foot):Math.max(700,top+RH+rh.reduce((x,y)=>x+y,0)+foot+lgH);
+ const H=mode=="u"?Math.max(700,top+UM().h+foot):mode=="b"?Math.max(700,top+BK.h+foot):mode=="t"?Math.max(600,top+kv().length*RH+foot):Math.max(700,top+RH+rh.reduce((x,y)=>x+y,0)+foot+lgH);
  cv.width=W;cv.height=H;const c=cv.getContext("2d");
  if(bgImg){const s=Math.max(W/bgImg.width,H/bgImg.height),w=bgImg.width*s,h=bgImg.height*s;c.drawImage(bgImg,(W-w)/2,(H-h)/2,w,h);c.fillStyle=S.ov;c.fillRect(0,0,W,H)}
  else{const g=c.createLinearGradient(0,0,W,H);g.addColorStop(0,S.bg[0]);g.addColorStop(1,S.bg[1]);c.fillStyle=g;c.fillRect(0,0,W,H);
@@ -424,7 +483,8 @@ function mkHTML(){const S=sch(),a=active(),d=data(),so=socials();
  while(c.measureText(TT()).width>W-120-(lw?lw+30:0)&&fs>26){fs-=2;c.font=`800 ${fs}px "Trebuchet MS",sans-serif`}
  c.shadowColor=S.sh;c.shadowBlur=12;c.fillText(TT(),60,95);c.shadowBlur=0;
  c.font='600 28px "Trebuchet MS",sans-serif';c.fillStyle=S.acc;c.fillText(period(),60,150);
- if(mode=="b"){drawBracket(c,S,top,W,BK)}
+ if(mode=="u"){drawUsage(c,S,top,W)}
+ else if(mode=="b"){drawBracket(c,S,top,W,BK)}
  else if(!a.length||!d.length){c.fillStyle=S.tx;c.font='600 30px "Trebuchet MS",sans-serif';c.fillText(a.length?"No tournaments in this time frame.":"Select at least one column.",60,top+60)}
  else if(mode=="t"){drawKV(c,S,X,TW,top,RH)}
  else{
@@ -439,7 +499,7 @@ const ph=phaseOf(r);if(ph){c.fillStyle=PH[ph];c.fillRect(X,y,8,H2-4)}
    a.forEach(([k],i)=>{c.globalAlpha=dr?.5:1;const cw=CW*wts[k]/tot-24;let t=cell(r,k);
 if(k=="name"){c.fillStyle=S.tx;c.font=IT+"500 "+FONT;const cy=y+(H2-4)/2;
  if(nl[j].length>1){c.fillText(nl[j][0],xs[i]+16,cy-15);c.fillText(nl[j][1],xs[i]+16,cy+15)}else c.fillText(nl[j][0],xs[i]+16,cy);return}
-    c.fillStyle=k=="type"?(S.ty[t]||S.tx):S.tx;
+    c.fillStyle=k=="type"?(S.ty[t]||S.tx):(k=="record"&&mode=="m")?resCol(t,S):S.tx;
     c.font=IT+(k=="date"||k=="type"||k=="place"?"700":"500")+' 24px "Trebuchet MS",sans-serif';
     while(c.measureText(t).width>cw&&t.length>1)t=t.slice(0,-2);
     if(t!=cell(r,k))t+="…";c.fillText(t,xs[i]+16,y+(H2-4)/2)});
@@ -460,6 +520,8 @@ if(k=="name"){c.fillStyle=S.tx;c.font=IT+"500 "+FONT;const cy=y+(H2-4)/2;
 }
 
 function render(){
+ if(mode=="m")$("mrec").textContent=mRec()?"Your record: "+mRec():"";
+ if(mode=="u")uInfo();
  const f=document.querySelector("input[name=f]:checked").value;
  $("o-jpg").hidden=f!="jpg";$("o-txt").hidden=f!="txt";$("o-html").hidden=f!="html";$("o-dc").hidden=f!="dc";
  if(f=="jpg")mkCanvas();
@@ -598,7 +660,7 @@ const sprC={};
 function sprImg(u){const e=sprC[u];if(e)return e.ok?e.im:null;
  const im=new Image();im.crossOrigin="anonymous";sprC[u]={im,ok:false};
  im.onload=()=>{sprC[u].ok=true;render()};im.onerror=()=>{};im.src=u;return null}
-const PCOLS=()=>[["place","Place",10],["name","Player",24],["record","Record",13],["points","Points",10]].concat(gameKeys().map((k,i)=>[k,"Pokémon "+(i+1),pgame=="TCG"?15:9]),[["drop","Dropped (rd.)",13]]);
+const PCOLS=()=>(mode=="m"?[["place","Round",10],["name","Opponent",28],["record","Result",16],["points","Table",12]]:[["place","Place",10],["name","Player",24],["record","Record",13],["points","Points",10]]).concat(gameKeys().map((k,i)=>[k,"Pokémon "+(i+1),pgame=="TCG"?15:9]),mode=="m"?[]:[["drop","Dropped (rd.)",13]]);
 function drawPRows(){setTimeout(()=>{if(mode=="b")drawBkRes()},0);const cols=PCOLS(),sum=cols.reduce((x,c)=>x+c[2],0);
  $("ptable").style.minWidth=pgame=="TCG"?"780px":"1100px";
  $("pcg").innerHTML=cols.map(c=>`<col style="width:${(c[2]/sum*100).toFixed(1)}%">`).join("")+'<col style="width:40px">';
@@ -637,7 +699,7 @@ $("plimgo").onclick=()=>{const m=$("plimmsg");
    if(game=="TCG"&&!names.length&&dk.name)names=String(dk.name).split(/\s+/).filter(wd=>monId(wd)).slice(0,2);
    const o={place:String(x.placing||i+1),name:x.name||x.player||"",record:r.wins==null?"":w+"-"+lo+"-"+tt,points:r.wins==null?"":String(w*3+tt),drop:+x.drop>0?String(+x.drop):"",
     url:tid&&typeof x.player=="string"&&x.player?"https://play.limitlesstcg.com/tournament/"+encodeURIComponent(tid)+"/player/"+encodeURIComponent(x.player):""};
-   keys.forEach((k,n)=>{o[k]=names[n]?pretty(names[n]):"";if(game=="VGC")o[k+"i"]=team.length&&tm[n]?tm[n].item:""});return o});
+   o.cards=cardsOf(x);keys.forEach((k,n)=>{o[k]=names[n]?pretty(names[n]):"";if(game=="VGC")o[k+"i"]=team.length&&tm[n]?tm[n].item:""});return o});
   stRows=[];setP(l);$("ptotal").value=l.length;render();m.textContent=l.length+" players imported."}
  catch(e){m.textContent="That is not valid standings JSON. Copy the full response from the Limitless API."}};
 drawPRows();
@@ -736,13 +798,94 @@ function drawBracket(c,S,top,W,B){const{M,N,R,nm,SP,sprW,bw,gap,rowH,slot0,tw}=B
 
 const mq=matchMedia("(min-width:981px)");
 function placeCards(){const pre=mode=="t"?"t":isP()?"p":"",L=$(pre+"colL"),R=$(pre+"colR");(mq.matches?L:R).append($("socialcard"));R.append($("lookcard"),$("resultcard"));render()}
-function buildCols(){$("cols").innerHTML=(isP()?COLS_S:COLS).map(([k,l])=>`<label><input type="checkbox" data-k="${k}">${l}</label>`).join("")}
-function setMode(m){if(mode==m)return;mode=m;if(m=="t"||m=="p"||m=="b")fillSel();show=m=="t"?showT:(m=="p"||m=="b")?showP:showS;buildCols();syncChecks();
- {const B=m=="b";$("bkcard").hidden=!B;$("stitlebox").hidden=B;$("btitlebox").hidden=!B;$("ssubbox").hidden=B;$("bsubbox").hidden=!B;$("pp2box").hidden=B;$("pcutbox").hidden=B;$("phnote").hidden=B;$("colshead").hidden=B;$("cols").hidden=B;
-  $("sdh").textContent=B?"Bracket details":"Standings details";$("htmlLbl").textContent=B?"HTML bracket":"HTML table";if(B)drawBkRes()}
- const nm=document.querySelector('#cols input[data-k="name"]');if(nm)nm.parentElement.hidden=m=="t";placeCards()}
+function buildCols(){$("cols").innerHTML=(mode=="u"?COLS_U:mode=="m"?COLS_M:isP()?COLS_S:COLS).map(([k,l])=>`<label><input type="checkbox" data-k="${k}">${l}</label>`).join("")}
+function setMode(m){if(mode==m)return;const wasM=mode=="m";mode=m;if(wasM&&m!="m"){mRows=stRows;stRows=stSaved}else if(!wasM&&m=="m"){stSaved=stRows;stRows=mRows}if(m=="t"||m=="p"||m=="b"||m=="u"||m=="m")fillSel();show=m=="t"?showT:m=="u"?showU:m=="m"?showM:(m=="p"||m=="b")?showP:showS;buildCols();if(m=="u")[["p2",p2N()],["cut",cutN()]].forEach(([k,n])=>{if(n>0&&!uOff.has(k))autoShow(k,"1")});syncChecks();
+ {const B=m=="b";$("bkcard").hidden=!B;$("stitlebox").hidden=B;$("btitlebox").hidden=!B;$("ssubbox").hidden=B||m=="u"||m=="m";$("usubbox").hidden=m!="u";$("ucard").hidden=m!="u";$("mcard").hidden=m!="m";$("plimcard").hidden=m=="m";$("ptotal").parentElement.hidden=m=="m";$("phd").textContent=m=="m"?"Matchups":"Players";$("pcsvnote").hidden=m=="m";$("pdropnote").hidden=m=="m";$("bsubbox").hidden=!B;$("pp2box").hidden=B||m=="m";$("pcutbox").hidden=B||m=="m";$("phnote").hidden=B||m=="u"||m=="m";$("colshead").hidden=B;$("cols").hidden=B;
+  $("sdh").textContent=B?"Bracket details":m=="u"?"Usage details":m=="m"?"Matchup details":"Standings details";$("htmlLbl").textContent=B?"HTML bracket":"HTML table";if(B)drawBkRes()}
+ const nm=document.querySelector('#cols input[data-k="name"]');if(nm)nm.parentElement.hidden=m=="t";if(m=="m"||wasM)drawPRows();placeCards()}
 mq.addEventListener("change",placeCards);
 drawRows();placeCards();
+
+
+/* ---- Usage ---- */
+const COLS_U=[["all","All players"],["p2","Phase 2"],["cut","Top Cut"]];
+const showU={all:1,p2:0,cut:0};let uRows=[];
+const cardC={},uKey=n=>String(n).trim().toLowerCase(),pf=v=>v==null?"–":(Math.round(v*10)/10)+"%",uHead=()=>pgame=="TCG"?"Card":"Pokémon";
+function cardsOf(x){const dl=x&&x.decklist,out=[];if(!dl||Array.isArray(dl)||typeof dl!="object")return out;
+ Object.values(dl).forEach(a=>Array.isArray(a)&&a.forEach(c=>{const n=c&&c.name;if(n&&!/^Basic .* Energy$/i.test(n)&&!out.includes(n))out.push(n)}));return out}
+function cardImg(term){term=String(term||"").trim();if(!term)return"";const k=term.toLowerCase();if(cardC[k])return cardC[k].url||"";
+ cardC[k]={url:""};
+ fetch("https://api.tcgdex.net/v2/en/cards?name="+encodeURIComponent(term)).then(r=>r.json()).then(a=>{if(!Array.isArray(a))return;
+  const c=a.find(x=>x.image&&String(x.name).toLowerCase()==k)||a.find(x=>x.image);if(c){cardC[k].url=c.image+"/low.png";render()}}).catch(()=>{});return""}
+const uImg=(name,ov)=>{const o=String(ov||"").trim();if(/^https?:\/\//i.test(o))return o;return pgame=="TCG"?cardImg(o||name):monUrl(o||name)};
+function entriesOf(r){const l=pgame=="TCG"?(Array.isArray(r.cards)?r.cards:[]):gameKeys().map(k=>r[k]).filter(v=>v&&String(v).trim());
+ const seen=new Set(),out=[];l.forEach(v=>{const id=pgame=="TCG"?0:monId(v),name=id?dispName(id):String(v).trim(),key=uKey(name);if(!seen.has(key)){seen.add(key);out.push({key,name})}});return out}
+function usageRows(){const rs=data(),p2=p2N(),cu=cutN(),n=r=>+r.place;
+ const G={all:rs,p2:p2?rs.filter(r=>!isDrop(r)&&n(r)>0&&n(r)<=p2):[],cut:cu?rs.filter(r=>!isDrop(r)&&n(r)>0&&n(r)<=cu):[]};
+ const R=new Map(),N={all:0,p2:0,cut:0};
+ ["all","p2","cut"].forEach(g=>G[g].map(entriesOf).filter(e=>e.length).forEach(es=>{N[g]++;es.forEach(e=>{if(!R.has(e.key))R.set(e.key,{key:e.key,name:e.name,c:{all:0,p2:0,cut:0}});R.get(e.key).c[g]++})}));
+ const out=[...R.values()].map(e=>({name:e.name,key:e.key,ov:"",pct:{all:N.all?e.c.all/N.all*100:null,p2:N.p2?e.c.p2/N.p2*100:null,cut:N.cut?e.c.cut/N.cut*100:null}}));
+ const num=v=>{const x=parseFloat(String(v||"").replace(",","."));return isNaN(x)?null:x};
+ uRows.forEach(u=>{const nm=String(u.name||"").trim();if(!nm)return;const k=uKey(nm);let e=out.find(x=>x.key==k);
+  if(!e){e={name:nm,key:k,ov:"",pct:{all:null,p2:null,cut:null}};out.push(e)}
+  ["all","p2","cut"].forEach(g=>{const v=num(u[g]);if(v!=null)e.pct[g]=v});e.ov=u.ov||""});
+ out.sort((a,b)=>(b.pct.all==null?-1:b.pct.all)-(a.pct.all==null?-1:a.pct.all)||a.name.localeCompare(b.name));
+ return{rows:out.slice(0,Math.max(1,+$("utop").value||10)),N}}
+function UM(){const U=usageRows(),rh=pgame=="TCG"?92:68;return{U,rh,cols:active(),h:64+U.rows.length*rh}}
+function uInfo(){const U=usageRows();$("ucount").textContent="Players with "+(pgame=="TCG"?"decklists":"Pokémon")+" – all: "+U.N.all+", Phase 2: "+U.N.p2+", Top Cut: "+U.N.cut+"."}
+function drawUsage(c,S,top,W){const M=UM(),X=50,TW=W-100,RH=64,cw=190,nc=M.cols.length,fw=TW-nc*cw,F=w=>w+' 24px "Trebuchet MS",sans-serif';
+ if(!nc||!M.U.rows.length){c.fillStyle=S.tx;c.font=F(600);c.fillText(nc?"No usage data yet. Add players with "+(pgame=="TCG"?"decklists":"Pokémon")+" or add manual entries.":"Select at least one column.",60,top+60);return}
+ c.fillStyle=S.head;c.fillRect(X,top,TW,RH-8);c.fillStyle=S.hx;c.font=F(800);c.fillText(uHead(),X+16,top+(RH-8)/2);
+ c.textAlign="center";M.cols.forEach(([,l],i)=>c.fillText(l,X+fw+i*cw+cw/2,top+(RH-8)/2));c.textAlign="left";
+ M.U.rows.forEach((r,j)=>{const y=top+RH+j*M.rh,h=M.rh-4,cy=y+h/2;c.fillStyle=j%2?S.r2:S.r1;c.fillRect(X,y,TW,h);
+  let tx=X+16;const u=uImg(r.name,r.ov),im=u?sprImg(u):null;
+  if(pgame=="TCG"){const ih=h-12,iw=ih*.716;if(im)c.drawImage(im,tx,y+6,iw,ih);tx+=iw+16}else{const sz=h-4;if(im)c.drawImage(im,tx-6,y+2,sz,sz);tx+=sz+8}
+  c.fillStyle=S.tx;c.font=F(700);let t=r.name;const mw=fw-(tx-X)-16;while(c.measureText(t).width>mw&&t.length>1)t=t.slice(0,-2);if(t!=r.name)t+="…";c.fillText(t,tx,cy);
+  M.cols.forEach(([k],i)=>{const v=r.pct[k],cx=X+fw+i*cw;c.fillStyle=S.tx;c.font=F(700);c.textAlign="center";c.fillText(pf(v),cx+cw/2,cy-8);c.textAlign="left";
+   c.globalAlpha=.25;c.fillRect(cx+20,cy+16,cw-40,8);c.globalAlpha=1;if(v!=null){c.fillStyle=S.acc;c.fillRect(cx+20,cy+16,(cw-40)*Math.min(100,v)/100,8)}})})}
+function usageHTML(S){const M=UM(),cols=M.cols,tcg=pgame=="TCG";
+ const th=(l,al)=>`<th style="background:${S.head};color:${S.hx};font-weight:800;text-align:${al};padding:14px">${esc(l)}</th>`;
+ const rows=M.U.rows.map((r,j)=>{const bg=j%2?S.r2:S.r1,u=uImg(r.name,r.ov);
+  return `<tr><td style="background:${bg};color:${S.tx};padding:10px 14px;font-weight:700">${u?`<img src="${esc(u)}" alt="" style="height:${tcg?64:48}px;vertical-align:middle;margin-right:12px">`:""}<span style="vertical-align:middle">${esc(r.name)}</span></td>`+cols.map(([k])=>`<td style="background:${bg};color:${S.tx};padding:14px;font-weight:700;text-align:center">${pf(r.pct[k])}</td>`).join("")+`</tr>`}).join("\n");
+ return `<div style="padding:20px 30px 0;overflow-x:auto">\n<table style="width:100%;border-collapse:separate;border-spacing:0 4px;font-size:15px;color:${S.tx}">\n<thead><tr>${th(uHead(),"left")}${cols.map(([,l])=>th(l,"center")).join("")}</tr></thead>\n<tbody>\n${rows}\n</tbody>\n</table>\n</div>`}
+function mkTextU(){const M=UM();return TT()+(period()?"\n"+period():"")+"\n\n"+M.U.rows.map((r,i)=>(i+1)+". "+r.name+(M.cols.length?" – "+M.cols.map(([k,l])=>l+" "+pf(r.pct[k])).join(" | "):"")).join("\n")}
+function mkDiscordU(){const M=UM();return "## "+TT()+(period()?"\n-# "+period():"")+"\n\n"+(M.cols.length?"-# "+uHead()+" | "+M.cols.map(x=>x[1]).join(" | ")+"\n":"")+M.U.rows.map((r,i)=>"**"+(i+1)+".** "+r.name+(M.cols.length?" – "+M.cols.map(([k])=>pf(r.pct[k])).join(" | "):"")).join("\n")}
+function drawURows(){$("urows").innerHTML=uRows.map((u,i)=>"<tr>"+["name","all","p2","cut","ov"].map(k=>`<td><input type="text"${k=="all"||k=="p2"||k=="cut"?' inputmode="decimal" placeholder="%"':k=="ov"?' placeholder="Optional"':""} data-i="${i}" data-k="${k}" value="${esc(u[k])}"></td>`).join("")+`<td><button class="x" data-del="${i}" aria-label="Remove line">×</button></td></tr>`).join("")}
+$("urows").addEventListener("input",e=>{const t=e.target;if(t.dataset.i!=null){uRows[t.dataset.i][t.dataset.k]=t.value;render()}});
+$("urows").addEventListener("click",e=>{const d=e.target.dataset.del;if(d!=null){uRows.splice(d,1);drawURows();render()}});
+$("uadd").onclick=()=>{uRows.push({name:"",all:"",p2:"",cut:"",ov:""});drawURows();render()};
+$("ufill").onclick=()=>{const have=new Set(uRows.map(u=>uKey(u.name)));usageRows().rows.forEach(r=>{if(!have.has(r.key))uRows.push({name:r.name,all:"",p2:"",cut:"",ov:""})});drawURows();render()};
+$("uclear").onclick=()=>{uRows=[];drawURows();render()};
+["utop","usub"].forEach(i=>$(i).addEventListener("input",render));
+["pp2","pcut"].forEach(id=>$(id).addEventListener("input",()=>{if(mode=="u"&&+$(id).value>0){uOff.delete(id=="pp2"?"p2":"cut");autoShow(id=="pp2"?"p2":"cut","1")}}));
+
+
+/* ---- Matchups ---- */
+const COLS_M=[["place","Round"],["name","Opponent"],["record","Result"],["points","Table"]];
+const showM={place:0,name:0,record:0,points:0};let mRows=[{place:"1",name:"",record:"",points:""}],stSaved=null;
+function resCol(t,S){t=String(t||"").trim();const dark=S.tx=="#fff";return /^w/i.test(t)?S.ty.Friendly:/^l/i.test(t)?(dark?"#ff7b7b":"#c0392b"):/^[td]/i.test(t)?S.ty.Cup:S.tx}
+function mRec(){const c={w:0,l:0,t:0};(mode=="m"?stRows:mRows).forEach(r=>{const v=String(r.record||"").trim();if(/^w/i.test(v))c.w++;else if(/^l/i.test(v))c.l++;else if(/^[td]/i.test(v))c.t++});return c.w+c.l+c.t?c.w+"-"+c.l+"-"+c.t:""}
+function mPeriod(){const p=$("mplayer").value.trim(),r=mRec();return [p?p+"’s Matchups":"Matchups",r?"Record "+r:""].filter(Boolean).join(" · ")}
+function mkDiscordM(){const a=active();return "## "+TT()+(period()?"\n-# "+period():"")+"\n\n"+data().map(r=>a.map(([k])=>k=="place"?"**R"+r.place+"**":k=="name"&&r.name?"vs "+r.name:k=="points"&&r.points?"Table "+r.points:cell(r,k)).filter(Boolean).join(" | ")).join("\n")}
+$("mplayer").addEventListener("input",render);
+$("mlink").addEventListener("input",()=>{const a=$("mopen"),v=$("mlink").value,id=tId(v),ok=!!id;
+ a.href=ok?"https://play.limitlesstcg.com/api/tournaments/"+id+"/pairings":"#";a.style.opacity=ok?1:.5;a.style.pointerEvents=ok?"auto":"none";a.setAttribute("aria-disabled",!ok);
+ $("mmsg").textContent=!v.trim()?"":ok?"Tournament "+id+" found.":"Could not find a tournament ID in that link."});
+$("mlimgo").onclick=()=>{const m=$("mlimmsg"),pl=$("mplayer").value.trim().toLowerCase();
+ try{let j=JSON.parse($("mlim").value);if(j&&!Array.isArray(j))j=j.data||j.pairings;if(!Array.isArray(j)||!j.length)throw 0;
+  if(!pl){m.textContent="Enter your player name first, as it appears on Limitless.";return}
+  const L=[];j.forEach(x=>{const a=String(x.player1||"").toLowerCase(),b=String(x.player2||"").toLowerCase();if(a!=pl&&b!=pl)return;
+   const op=a==pl?x.player2:x.player1,w=x.winner;let res="";
+   if(w!=null&&w!=="")res=(w===0||w==="0")?"Tie":String(w).toLowerCase()==pl?"Win":"Loss";
+   if(!op&&!res)res="Win";
+   L.push({place:String(x.round),name:String(op||"BYE"),record:res,points:x.table!=null?String(x.table):""})});
+  if(!L.length){m.textContent="No matchups found for that player name.";return}
+  L.sort((p,q)=>(+p.place||0)-(+q.place||0));stRows=[];setP(L);m.textContent=L.length+" rounds imported."}
+ catch(e){m.textContent="That is not valid pairings JSON. Copy the full response from the Limitless API."}};
+
+(function(){const lab=t=>{const h=[...t.querySelectorAll("thead th")].map(x=>x.textContent.trim());
+ t.querySelectorAll("tbody tr").forEach(tr=>[...tr.children].forEach((td,i)=>{if(h[i])td.dataset.l=h[i];else td.removeAttribute("data-l")}))};
+ document.querySelectorAll("table.ed").forEach(t=>{lab(t);new MutationObserver(()=>lab(t)).observe(t,{childList:true,subtree:true})})})();
 </script>
 </body>
 </html>
