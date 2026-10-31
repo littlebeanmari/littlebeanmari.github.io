@@ -241,7 +241,7 @@ textarea.out{height:260px;font-family:ui-monospace,Consolas,monospace;font-size:
    <label for="mlim">3. Copy everything on that page and paste it here</label>
    <textarea id="mlim" rows="4"></textarea>
    <div class="row" style="margin-top:8px"><button class="btn" id="mlimgo">Import my matchups</button><span class="note" id="mlimmsg"></span></div>
-   <p class="note">The import uses the player name above, which has to match the name on Limitless. Opponents are shown by their Limitless name and their Pokémon are left empty.</p>
+   <p class="note">The import uses the player name above. For the best result, import twice: first paste the standings data (the link from the Standings tab works the same way) and click the button, then open the pairings in step 2, paste them and click the button again. The standings tell the tool your opponents' names and Pokémon.</p>
   </section>
   <section class="card" id="ucard" hidden><h2>Usage</h2>
    <div class="g"><div><label for="utop">Entries to show</label><input type="number" id="utop" min="1" max="40" step="1" inputmode="numeric" value="10"></div></div>
@@ -871,17 +871,33 @@ $("mplayer").addEventListener("input",render);
 $("mlink").addEventListener("input",()=>{const a=$("mopen"),v=$("mlink").value,id=tId(v),ok=!!id;
  a.href=ok?"https://play.limitlesstcg.com/api/tournaments/"+id+"/pairings":"#";a.style.opacity=ok?1:.5;a.style.pointerEvents=ok?"auto":"none";a.setAttribute("aria-disabled",!ok);
  $("mmsg").textContent=!v.trim()?"":ok?"Tournament "+id+" found.":"Could not find a tournament ID in that link."});
+let mMap=null;
 $("mlimgo").onclick=()=>{const m=$("mlimmsg"),pl=$("mplayer").value.trim().toLowerCase();
- try{let j=JSON.parse($("mlim").value);if(j&&!Array.isArray(j))j=j.data||j.pairings;if(!Array.isArray(j)||!j.length)throw 0;
+ try{let j=JSON.parse($("mlim").value);if(j&&!Array.isArray(j))j=j.data||j.pairings||j.standings;if(!Array.isArray(j)||!j.length)throw 0;
+  const pretty=n=>{n=String(n||"").trim();const id=monId(n);return id?dispName(id):n};
+  if(!j.some(x=>x&&("player1" in x||"player2" in x))){
+   const anyTeam=j.some(x=>x&&Array.isArray(x.decklist)&&x.decklist.length),anyIcons=j.some(x=>x&&x.deck&&Array.isArray(x.deck.icons)&&x.deck.icons.length);
+   const game=anyTeam?(pgame=="GO"?"GO":"VGC"):anyIcons?"TCG":pgame;setGame(game);
+   mMap={byId:{},byName:{}};
+   j.forEach(x=>{if(!x)return;const tm=Array.isArray(x.decklist)?x.decklist.map(v=>typeof v=="string"?v:(v&&(v.name||v.id))||"").filter(Boolean):[];
+    const ic=x.deck&&Array.isArray(x.deck.icons)?x.deck.icons.map(String):[],names=(game=="TCG"?ic:(tm.length?tm:ic)).map(pretty);
+    const e={id:String(x.player||"").toLowerCase(),name:x.name||x.player||"",mons:names};
+    if(e.id)mMap.byId[e.id]=e;if(e.name)mMap.byName[String(e.name).toLowerCase()]=e});
+   m.textContent="That is standings data. It was saved ("+j.length+" players), so opponents can be shown with their names and Pokémon. Now open the pairings (step 2), paste them here and click the button again.";return}
   if(!pl){m.textContent="Enter your player name first, as it appears on Limitless.";return}
-  const L=[];j.forEach(x=>{const a=String(x.player1||"").toLowerCase(),b=String(x.player2||"").toLowerCase();if(a!=pl&&b!=pl)return;
-   const op=a==pl?x.player2:x.player1,w=x.winner;let res="";
-   if(w!=null&&w!=="")res=(w===0||w==="0")?"Tie":String(w).toLowerCase()==pl?"Win":"Loss";
+  const me=mMap&&mMap.byName[pl],mine=new Set([pl]);if(me&&me.id)mine.add(me.id);
+  const isMe=v=>mine.has(String(v||"").toLowerCase()),keys=gameKeys(),L=[];
+  j.forEach(x=>{if(!isMe(x.player1)&&!isMe(x.player2))return;
+   const op=isMe(x.player1)?x.player2:x.player1,w=x.winner;let res="";
+   if(w!=null&&w!=="")res=(w===0||w==="0")?"Tie":isMe(w)?"Win":"Loss";
    if(!op&&!res)res="Win";
-   L.push({place:String(x.round),name:String(op||"BYE"),record:res,points:x.table!=null?String(x.table):""})});
-  if(!L.length){m.textContent="No matchups found for that player name.";return}
-  L.sort((p,q)=>(+p.place||0)-(+q.place||0));stRows=[];setP(L);m.textContent=L.length+" rounds imported."}
- catch(e){m.textContent="That is not valid pairings JSON. Copy the full response from the Limitless API."}};
+   const e=op&&mMap?mMap.byId[String(op).toLowerCase()]:null;
+   const o={place:String(x.round),name:e?e.name:String(op||"BYE"),record:res,points:x.table!=null?String(x.table):""};
+   keys.forEach((k,n)=>{o[k]=e&&e.mons[n]?e.mons[n]:""});L.push(o)});
+  if(!L.length){const smp=[...new Set(j.flatMap(x=>[x.player1,x.player2]).filter(Boolean))].slice(0,5).join(", ");
+   m.textContent="No matchups found for that name. Names in this data include: "+smp+". If your Limitless name differs from your username, paste the standings data here first and click the button, then paste the pairings.";return}
+  L.sort((p,q)=>(+p.place||0)-(+q.place||0));stRows=[];setP(L);m.textContent=L.length+" rounds imported."+(mMap?"":" Tip: paste the standings data first to also get opponent names and Pokémon.")}
+ catch(e){m.textContent="That is not valid Limitless JSON. Copy the full response from the Limitless API."}};
 
 (function(){const lab=t=>{const h=[...t.querySelectorAll("thead th")].map(x=>x.textContent.trim());
  t.querySelectorAll("tbody tr").forEach(tr=>[...tr.children].forEach((td,i)=>{if(h[i])td.dataset.l=h[i];else td.removeAttribute("data-l")}))};
