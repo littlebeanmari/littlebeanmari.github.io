@@ -30,6 +30,7 @@ input[type=text],input[type=number],input[type=url],input[type=date],input[type=
 .g{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 .btn{background:var(--ink);color:var(--bg);border:0;border-radius:6px;padding:8px 14px;font-weight:700;cursor:pointer}
 .ed input.bad{border-color:#e0323f}
+.ed input.item{margin-top:4px;font-size:12px;padding:5px 8px}
 .btn.seg{background:none;border:1px solid var(--line);color:var(--ink)}.btn.seg[aria-pressed=true]{background:var(--ink);color:var(--bg)}
 .btn.acc{background:var(--acc);color:#fff}.btn.ghost{background:none;border:1px solid var(--line);color:var(--ink)}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
@@ -116,13 +117,13 @@ textarea.out{height:260px;font-family:ui-monospace,Consolas,monospace;font-size:
     <div><button class="btn ghost" id="lgx" style="margin-top:8px" hidden>Remove logo</button></div></div>
   </div>
   <button class="btn ghost" id="bgx" style="margin-top:8px" hidden>Remove background</button>
-  <h2 style="margin-top:16px">Show columns</h2>
+  <h2 style="margin-top:16px" id="colshead">Show columns</h2>
   <div class="checks" id="cols"></div>
   <h2 style="margin-top:8px">Output</h2>
   <div class="radios" id="fmt">
    <label><input type="radio" name="f" value="jpg" checked>JPG graphic</label>
    <label><input type="radio" name="f" value="txt">Plain text</label>
-   <label><input type="radio" name="f" value="html">HTML table</label>
+   <label><input type="radio" name="f" value="html"><span id="htmlLbl">HTML table</span></label>
    <label><input type="radio" name="f" value="dc">Discord message</label>
   </div>
  </section>
@@ -168,19 +169,30 @@ textarea.out{height:260px;font-family:ui-monospace,Consolas,monospace;font-size:
 
 <main id="standings" hidden>
  <div style="grid-column:1/-1">
-  <section class="card"><h2>Standings details</h2>
+  <section class="card"><h2 id="sdh">Standings details</h2>
    <div class="g">
     <div style="grid-column:1/-1"><label for="psel">Load from Schedule tab</label><select id="psel"></select></div>
-    <div style="grid-column:1/-1"><label for="stitle">Title</label><input type="text" id="stitle" value="Tournament Standings"></div>
-    <div><label for="ssub">Subtitle (optional)</label><input type="text" id="ssub" placeholder="e.g. Friday Night Cup, 6 Nov 2026"></div>
+    <div style="grid-column:1/-1" id="stitlebox"><label for="stitle">Title</label><input type="text" id="stitle" value="Tournament Name"></div>
+    <div style="grid-column:1/-1" id="btitlebox" hidden><label for="btitle">Title</label><input type="text" id="btitle" value="Tournament Name"></div>
+    <div id="ssubbox"><label for="ssub">Subtitle (optional)</label><input type="text" id="ssub" value="Standings" placeholder="e.g. Standings"></div>
+    <div id="bsubbox" hidden><label for="bsub">Subtitle (optional)</label><input type="text" id="bsub" value="Top Cut" placeholder="e.g. Top Cut"></div>
     <div><label for="ptotal">Total players</label><input type="number" id="ptotal" min="0" step="1" inputmode="numeric" placeholder="e.g. 32"></div>
-    <div><label for="pp2">Players advancing to Phase 2</label><input type="number" id="pp2" min="0" step="1" inputmode="numeric" placeholder="e.g. 64"></div>
-    <div><label for="pcut">Players in Top Cut</label><input type="number" id="pcut" min="0" step="1" inputmode="numeric" placeholder="e.g. 8"></div>
+    <div id="pp2box"><label for="pp2">Players advancing to Phase 2</label><input type="number" id="pp2" min="0" step="1" inputmode="numeric" placeholder="e.g. 64"></div>
+    <div id="pcutbox"><label for="pcut">Players in Top Cut</label><input type="number" id="pcut" min="0" step="1" inputmode="numeric" placeholder="e.g. 8"></div>
    </div>
    <label style="margin-top:12px">Game</label>
    <div class="row" id="pgame"><button class="btn seg" data-g="TCG" aria-pressed="true">TCG</button><button class="btn seg" data-g="VGC" aria-pressed="false">VGC</button><button class="btn seg" data-g="GO" aria-pressed="false">GO</button></div>
    <p class="note" id="pnote"></p>
-   <p class="note">Phase 2 and Top Cut: placements up to the Top Cut number are marked gold and the following placements up to the Phase 2 number are marked blue. In the JPG and HTML this is a colored bar with a legend; in the plain text and Discord outputs the players are grouped under headings. Dropped players are not marked.</p>
+   <p class="note" id="phnote">Phase 2 and Top Cut: placements up to the Top Cut number are marked gold and the following placements up to the Phase 2 number are marked blue. In the JPG and HTML this is a colored bar with a legend; in the plain text and Discord outputs the players are grouped under headings. Dropped players are not marked.</p>
+  </section>
+  <section class="card" id="bkcard" hidden><h2>Bracket</h2>
+   <label>Bracket size</label>
+   <div class="row" id="bksize"><button class="btn seg" data-n="32" aria-pressed="false">Top 32</button><button class="btn seg" data-n="16" aria-pressed="false">Top 16</button><button class="btn seg" data-n="8" aria-pressed="true">Top 8</button><button class="btn seg" data-n="4" aria-pressed="false">Top 4</button><button class="btn seg" data-n="2" aria-pressed="false">Top 2</button></div>
+   <div class="g" style="margin-top:12px"><div><label for="bkP">Players in the bracket</label><input type="number" id="bkP" min="2" max="8" step="1" inputmode="numeric" placeholder="8"></div></div>
+   <p class="note">The bracket is seeded from the Players table: the best placements come first and dropped players are skipped. If the bracket has fewer players than its size, the top seeds get a bye. Data loaded or entered in the Standings tab is used automatically.</p>
+   <h2 style="margin-top:16px">Match results (optional)</h2>
+   <p class="note" style="margin:0 0 4px">Pick the winner of a match to move that player into the next round. The score is optional.</p>
+   <div id="bkres"></div>
   </section>
   <section class="card"><h2>Players</h2>
    <div class="tw"><table class="ed" id="ptable"><colgroup id="pcg"></colgroup><thead><tr id="phr"></tr></thead><tbody id="prows"></tbody></table></div>
@@ -244,7 +256,7 @@ let bgImg=null,bgUrl="";let logoImg=null,logoUrl="",logoData="";
 
 /* tabs */
 const TABS=[["t-sch","schedule"],["t-trn","tournament"],["t-std","standings"],["t-bra","bracket"],["t-use","usage"],["t-mat","matchups"]];
-function tab(id){TABS.forEach(([b,m])=>{$(m).hidden=b!=id;$(b).setAttribute("aria-selected",b==id)});if(id=="t-sch")setMode("s");if(id=="t-trn")setMode("t");if(id=="t-std")setMode("p")}
+function tab(id){TABS.forEach(([b,m])=>{$(m).hidden=b!=id;$(b).setAttribute("aria-selected",b==id)});if(id=="t-sch")setMode("s");if(id=="t-trn")setMode("t");$("standings").hidden=!(id=="t-std"||id=="t-bra");$("bracket").hidden=true;if(id=="t-std")setMode("p");if(id=="t-bra"){autoBracket();setMode("b")}}
 TABS.forEach(([b])=>$(b).onclick=()=>tab(b));
 
 /* column toggles */
@@ -312,14 +324,14 @@ $("limgo").onclick=()=>{const m=$("limmsg");
  catch(e){m.textContent="That is not valid JSON. Copy the full response from the Limitless API."}};
 
 /* data */
-let mode="s";
+let mode="s";const isP=()=>mode=="p"||mode=="b";
 const T={date:"",time:"18:00",tz:BTZ,type:"Friendly",game:"",fee:"",store:"",pw:"",url:"",name:""};
 const showT={name:0,date:0,time:0,game:0,type:0,fee:0,store:0,pw:0};const showS=show;
-const TT=()=>mode=="t"?$("ttitle").value:mode=="p"?$("stitle").value:$("title").value;
+const TT=()=>mode=="t"?$("ttitle").value:mode=="b"?$("btitle").value:mode=="p"?$("stitle").value:$("title").value;
 const COLS_S=[["place","Place"],["name","Player"],["record","Record"],["points","Points"]];
 const showP={place:1,name:0,record:0,points:0};let pgame="TCG";let stRows=[{place:"1",name:"",record:"",points:"",drop:"",mon1:"",mon2:""}];
 const dropN=r=>{const n=parseInt(String(r&&r.drop||"").replace(/\D/g,""),10);return n>0?n:0};
-const isDrop=r=>mode=="p"&&dropN(r)>0;
+const isDrop=r=>isP()&&dropN(r)>0;
 const cutN=()=>Math.max(0,+$("pcut").value||0),p2N=()=>Math.max(0,+$("pp2").value||0);
 const PH={cut:"#f5b301",p2:"#3aa0ff"};
 const phaseOf=r=>{if(mode!="p"||isDrop(r))return"";const n=+r.place;if(!(n>0))return"";const c=cutN(),q=p2N();return c&&n<=c?"cut":q&&n<=q?"p2":""};
@@ -340,15 +352,15 @@ function mkDiscordT(){const u=normUrl(T.url),t=TT();let s="## "+(u&&t?"["+t+"](<
  if(show.date||show.time){const v=dcTime(T);if(v)L.push("**Date & time:** "+v)}
  [["type","Type"],["game","Game"],["fee","Entry fee"],["store","Store"],["pw","Password"]].forEach(([k,l])=>{if(show[k]&&T[k])L.push("**"+l+":** "+T[k])});
  return s+L.join("\n")}
-function data(){if(mode=="t")return [T];if(mode=="p")return stRows.filter(r=>r.place||r.name||r.record).slice().sort((a,b)=>(dropN(a)>0)-(dropN(b)>0)||dropN(a)-dropN(b)||(+a.place||999)-(+b.place||999));const f=$("from").value,t=$("to").value;
+function data(){if(mode=="t")return [T];if(isP())return stRows.filter(r=>r.place||r.name||r.record).slice().sort((a,b)=>(dropN(a)>0)-(dropN(b)>0)||dropN(a)-dropN(b)||(+a.place||999)-(+b.place||999));const f=$("from").value,t=$("to").value;
  return rows.filter(r=>!(r.date&&((f&&r.date<f)||(t&&r.date>t)))).slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time))}
 function fmtDate(s){if(!s)return"";const d=new Date(s+"T12:00:00");return isNaN(d)?s:d.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}
 const cell=(r,k)=>k=="place"&&isDrop(r)?"":k=="date"?fmtDate(r.date):k=="time"?((r.time||"")+(r.time&&tzLabel(r)?" "+tzLabel(r):"")):(r[k]||"");
-const active=()=>(mode=="p"?COLS_S:COLS).filter(([k])=>show[k]&&!(mode=="t"&&k=="name"));
-function period(){if(mode=="t")return"";if(mode=="p")return [$("ssub").value.trim(),+$("ptotal").value>0?(+$("ptotal").value)+" players":""].filter(Boolean).join(" · ");const f=$("from").value,t=$("to").value;return f&&t?fmtDate(f)+" – "+fmtDate(t):f?"From "+fmtDate(f):t?"Until "+fmtDate(t):""}
+const active=()=>(isP()?COLS_S:COLS).filter(([k])=>show[k]&&!(mode=="t"&&k=="name"));
+function period(){if(mode=="t")return"";if(isP())return [(mode=="b"?$("bsub"):$("ssub")).value.trim(),+$("ptotal").value>0?(+$("ptotal").value)+" players":""].filter(Boolean).join(" · ");const f=$("from").value,t=$("to").value;return f&&t?fmtDate(f)+" – "+fmtDate(t):f?"From "+fmtDate(f):t?"Until "+fmtDate(t):""}
 
 /* outputs */
-function mkText(){if(mode=="t")return TT()+"\n\n"+kv().map(x=>x[0]+": "+x[1]).join("\n");const a=active(),d=data();let s=TT()+"\n"+(period()?period()+"\n":"")+"\n";
+function mkText(){if(mode=="b")return mkTextB();if(mode=="t")return TT()+"\n\n"+kv().map(x=>x[0]+": "+x[1]).join("\n");const a=active(),d=data();let s=TT()+"\n"+(period()?period()+"\n":"")+"\n";
  s+=groupLines(d,r=>a.filter(([k])=>!(k=="place"&&isDrop(r))).map(([k])=>cell(r,k)).join(" | "),l=>l+":");
  return s}
 const SOC=[["discord","Discord","https://discord.gg/"],["twitch","Twitch","https://twitch.tv/"],["bluesky","Bluesky","https://bsky.app/profile/"],["instagram","Instagram","https://instagram.com/"],["twitter","Twitter","https://x.com/"]];
@@ -364,7 +376,7 @@ const normUrl=u=>{u=(u||"").trim();return !u?"":/^[a-z][a-z0-9+.-]*:/i.test(u)?(
 function tzOff(ts,tz){const p={};new Intl.DateTimeFormat("en-US",{timeZone:tz,hourCycle:"h23",year:"numeric",month:"numeric",day:"numeric",hour:"numeric",minute:"numeric",second:"numeric"}).formatToParts(new Date(ts)).forEach(x=>p[x.type]=x.value);return Date.UTC(p.year,p.month-1,p.day,p.hour,p.minute,p.second)-Math.floor(ts/1000)*1000}
  function toEpoch(date,time,tz){const [y,mo,d]=String(date).split("-").map(Number),[h,mi]=(time||"12:00").split(":").map(Number);if(!y||!mo||!d||isNaN(h)||isNaN(mi))return null;const g=Date.UTC(y,mo-1,d,h,mi);try{let e=g-tzOff(g,tz);e=g-tzOff(e,tz);return Math.floor(e/1000)}catch(x){return null}}
  function dcTime(r){const sd=show.date,st=show.time;const ts=r.date?toEpoch(r.date,r.time,r.tz||BTZ):null;if(!ts)return [sd?cell(r,"date"):"",st?cell(r,"time"):""].filter(Boolean).join(" ");if(sd&&st)return r.time?`<t:${ts}:f>`:`<t:${ts}:D>`;if(sd)return `<t:${ts}:D>`;return r.time?`<t:${ts}:t>`:""}
- function mkDiscord(){if(mode=="t")return mkDiscordT();if(mode=="p")return mkDiscordP();const d=data();
+ function mkDiscord(){if(mode=="b")return mkDiscordB();if(mode=="t")return mkDiscordT();if(mode=="p")return mkDiscordP();const d=data();
  let s="## "+TT()+(period()?"\n-# "+period():"")+"\n\n";
  s+=d.map(r=>{const nm=cell(r,"name"),u=normUrl(r.url);
   const f=[];if(show.date||show.time)f.push(dcTime(r));if(show.name)f.push(u&&nm?"["+nm+"](<"+u+">)":nm);if(show.type)f.push(r.type||"");if(show.game)f.push(r.game||"");if(show.fee)f.push(r.fee||"");if(show.store)f.push(r.store||"");if(show.pw)f.push(r.pw||"");
@@ -382,9 +394,9 @@ function mkHTML(){const S=sch(),a=active(),d=data(),so=socials();
   return `<div style="${F};color:#fff;max-width:1200px;padding-bottom:28px">\n`+
    (1?"":`<div style="height:14px;background:#e0323f"></div><div style="height:5px;background:#ffcb05"></div>\n`)+
    `<div style="background:${S.box};border-bottom:5px solid ${S.boxAcc};border-radius:10px;padding:22px 28px;margin:30px 30px 0;display:flex;align-items:center;justify-content:space-between;gap:20px"><div><div style="font-size:38px;font-weight:800;line-height:1.2">${ttlH}</div>`+(period()?`<div style="font-size:20px;font-weight:600;color:${S.boxAcc};margin-top:8px">${esc(period())}</div>`:"")+`</div>`+((logoUrl||logoData)?`<img src="${esc(logoUrl||logoData)}" alt="" style="max-height:80px;max-width:220px;flex:none">`:"")+`</div>\n`+
-   `<div style="padding:20px 30px 0;overflow-x:auto">\n<table style="width:100%;border-collapse:separate;border-spacing:0 4px;font-size:15px;color:${S.tx}">\n${tblF()}\n</table>\n</div>`+legH+soH+`\n</div>`}
+   (mode=="b"?bkHTML(S):`<div style="padding:20px 30px 0;overflow-x:auto">\n<table style="width:100%;border-collapse:separate;border-spacing:0 4px;font-size:15px;color:${S.tx}">\n${tblF()}\n</table>\n</div>`)+legH+soH+`\n</div>`}
  function mkCanvas(){
- const S=sch(),cv=$("cv"),W=1200,a=active(),d=data(),RH=64,RH2=92,top=230,foot=110;
+ const S=sch(),cv=$("cv"),BK=mode=="b"?bkMetrics():null,W=BK?BK.w:1200,a=active(),d=data(),RH=64,RH2=92,top=230,foot=110;
  const wts={date:1.1,time:1.3,name:1.8,game:1.3,type:1,fee:.9,store:1.7,pw:1.2,place:.8,record:1.2,points:1},tot=a.reduce((s,[k])=>s+wts[k],0),X=50,TW=W-100;
  const NM=monKeys().length,SPR=NM>2?46:56,sp=hasMons(d)?NM*SPR+(NM-1)*4+28:0,CW=TW-sp;
  const FONT='24px "Trebuchet MS",sans-serif',m=document.createElement("canvas").getContext("2d");m.font="500 "+FONT;
@@ -401,7 +413,7 @@ function mkHTML(){const S=sch(),a=active(),d=data(),so=socials();
  const nameW=a.some(([k])=>k=="name")?CW*wts.name/tot-32:0;
  const nl=d.map(r=>nameW?wrap(r.name,nameW):[""]),rh=nl.map(l=>l.length>1?RH2:RH);
  const LG=legend(d),lgH=LG.length?44:0;
- const H=mode=="t"?Math.max(600,top+kv().length*RH+foot):Math.max(700,top+RH+rh.reduce((x,y)=>x+y,0)+foot+lgH);
+ const H=mode=="b"?Math.max(700,top+BK.h+foot):mode=="t"?Math.max(600,top+kv().length*RH+foot):Math.max(700,top+RH+rh.reduce((x,y)=>x+y,0)+foot+lgH);
  cv.width=W;cv.height=H;const c=cv.getContext("2d");
  if(bgImg){const s=Math.max(W/bgImg.width,H/bgImg.height),w=bgImg.width*s,h=bgImg.height*s;c.drawImage(bgImg,(W-w)/2,(H-h)/2,w,h);c.fillStyle=S.ov;c.fillRect(0,0,W,H)}
  else{const g=c.createLinearGradient(0,0,W,H);g.addColorStop(0,S.bg[0]);g.addColorStop(1,S.bg[1]);c.fillStyle=g;c.fillRect(0,0,W,H);
@@ -412,7 +424,8 @@ function mkHTML(){const S=sch(),a=active(),d=data(),so=socials();
  while(c.measureText(TT()).width>W-120-(lw?lw+30:0)&&fs>26){fs-=2;c.font=`800 ${fs}px "Trebuchet MS",sans-serif`}
  c.shadowColor=S.sh;c.shadowBlur=12;c.fillText(TT(),60,95);c.shadowBlur=0;
  c.font='600 28px "Trebuchet MS",sans-serif';c.fillStyle=S.acc;c.fillText(period(),60,150);
- if(!a.length||!d.length){c.fillStyle=S.tx;c.font='600 30px "Trebuchet MS",sans-serif';c.fillText(a.length?"No tournaments in this time frame.":"Select at least one column.",60,top+60)}
+ if(mode=="b"){drawBracket(c,S,top,W,BK)}
+ else if(!a.length||!d.length){c.fillStyle=S.tx;c.font='600 30px "Trebuchet MS",sans-serif';c.fillText(a.length?"No tournaments in this time frame.":"Select at least one column.",60,top+60)}
  else if(mode=="t"){drawKV(c,S,X,TW,top,RH)}
  else{
   let x=X;const xs=a.map(([k])=>{const o=x;x+=CW*wts[k]/tot;return o});
@@ -454,7 +467,7 @@ function render(){
  if(f=="dc"){const m=mkDiscord();$("dc").value=m;$("dccount").textContent=m.length+" / 2000 characters"+(m.length>2000?" – too long for one Discord message":"")}
  if(f=="html"){const h=mkHTML();$("htm").value=h;$("hprev").innerHTML=h}
 }
-["title","from","to",...SOC.map(x=>"soc-"+x[0])].forEach(i=>$(i).addEventListener("input",render));
+["title","from","to","btitle","bsub","bkP",...SOC.map(x=>"soc-"+x[0])].forEach(i=>$(i).addEventListener("input",render));
 $("fmt").onchange=render;
 
 $("bg").onchange=e=>{const f=e.target.files[0];if(!f)return;const im=new Image();
@@ -522,8 +535,7 @@ function fillSel(){const o=rows.map((r,i)=>[r,i]).filter(([r])=>r.date||r.name||
 $("tsel").onchange=e=>{const r=rows[e.target.value];if(!r)return;if(r.name||r.store)$("ttitle").value=r.name||r.store;
  fillT({date:r.date,time:r.time,tz:r.tz||"",type:r.type,game:r.game,fee:r.fee,store:r.store,pw:r.pw,url:r.url})};
 $("psel").onchange=e=>{const r=rows[e.target.value];if(!r)return;
- const dt=r.date?new Date(r.date+"T12:00:00").toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}):"";
- $("ssub").value=[r.name||r.store||"",dt].filter(Boolean).join(", ");
+ {const nm=r.name||r.store||r.game||"";if(nm){$("stitle").value=nm;$("btitle").value=nm}}
  if(+r.players>0)$("ptotal").value=r.players;
  if(/limitlesstcg\.com/i.test(r.url||"")){const g=gameOf(r.game);if(g&&g!=pgame){setGame(g);return}}
  render()};
@@ -537,7 +549,7 @@ $("tlimgo").onclick=()=>{const m=$("tlimmsg");
   const p=n=>String(n).padStart(2,"0"),d=new Date(j.date),o={type:"Online",game:j.game||""};
   if(!isNaN(d)){o.date=d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate());o.time=p(d.getHours())+":"+p(d.getMinutes());o.tz=BTZ}
   if(j.id)o.url="https://play.limitlesstcg.com/tournament/"+j.id;
-  if(j.name)$("ttitle").value=j.name;
+  if(j.name){$("ttitle").value=j.name;$("stitle").value=j.name;$("btitle").value=j.name}
   if(+j.players>0)$("ptotal").value=+j.players;
   {const g=gameOf(j.game);if(g)setGame(g)}
   fillT(o);m.textContent="Tournament imported. Times use your local time zone."}
@@ -569,29 +581,36 @@ function monId(v){v=String(v||"").trim();if(!v)return 0;if(/^\d+$/.test(v))retur
   if(!best||m>bm||(m==bm&&(x<bx||(x==bx&&e.def&&!best.def))))best=e,bm=m,bx=x}
  if(!best&&ft.every(w=>w=="male"||w=="female")){const d=c.find(e=>e.def);return d?d.id:sp}
  return best?best.id:0}
-const monUrl=v=>{const i=monId(v);return i?"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/"+i+".png":""};
+function megaId(v,item){const id=monId(v);if(!id||!item)return id;if(/(^|-)mega(-|$)/.test(IDN[id]))return id;
+ const m=String(item).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z\s]/g,"").trim().match(/^([a-z]+)ite(?:\s+([xyz]))?$/);if(!m)return id;
+ const sp=SPOF[id],stem=m[1],spn=SPI[sp].replace(/-/g,""),L=Math.min(5,stem.length);
+ if(stem.length<4||spn.slice(0,L)!=stem.slice(0,L))return id;
+ const spt=SPI[sp].split("-"),base=IDN[id].split("-").filter(w=>!spt.includes(w));let best=null,bs=-1;
+ for(const e of ENT[sp]||[]){if(!e.t.includes("mega"))continue;if(m[2]&&e.t[e.t.length-1]!=m[2])continue;const sc=base.filter(w=>e.t.includes(w)).length;if(sc>bs){best=e;bs=sc}}
+ return best?best.id:id}
+const monUrl=(v,item)=>{const i=megaId(v,item);return i?"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/"+i+".png":""};
 const gameKeys=()=>pgame=="TCG"?["mon1","mon2"]:pgame=="VGC"?["vgc1","vgc2","vgc3","vgc4","vgc5","vgc6"]:pgame=="GO"?["go1","go2","go3","go4","go5","go6"]:[];
-const monKeys=()=>mode=="p"?gameKeys():[];
+const monKeys=()=>isP()?gameKeys():[];
 const isMonKey=k=>/^(mon|vgc|go)\d$/.test(k);
-const monUrls=r=>monKeys().map(k=>monUrl(r[k]));
+const monUrls=r=>monKeys().map(k=>monUrl(r[k],r[k+"i"]));
 const hasMons=d=>monKeys().length>0&&d.some(r=>monUrls(r).some(Boolean));
 const sprC={};
 function sprImg(u){const e=sprC[u];if(e)return e.ok?e.im:null;
  const im=new Image();im.crossOrigin="anonymous";sprC[u]={im,ok:false};
  im.onload=()=>{sprC[u].ok=true;render()};im.onerror=()=>{};im.src=u;return null}
 const PCOLS=()=>[["place","Place",10],["name","Player",24],["record","Record",13],["points","Points",10]].concat(gameKeys().map((k,i)=>[k,"Pokémon "+(i+1),pgame=="TCG"?15:9]),[["drop","Dropped (rd.)",13]]);
-function drawPRows(){const cols=PCOLS(),sum=cols.reduce((x,c)=>x+c[2],0);
+function drawPRows(){setTimeout(()=>{if(mode=="b")drawBkRes()},0);const cols=PCOLS(),sum=cols.reduce((x,c)=>x+c[2],0);
  $("ptable").style.minWidth=pgame=="TCG"?"780px":"1100px";
  $("pcg").innerHTML=cols.map(c=>`<col style="width:${(c[2]/sum*100).toFixed(1)}%">`).join("")+'<col style="width:40px">';
  $("phr").innerHTML=cols.map(([k,l])=>`<th${k=="drop"?' title="Round in which the player dropped. Leave empty if the player did not drop. Not shown in the outputs."':""}>${l}</th>`).join("")+"<th></th>";
- $("prows").innerHTML=stRows.map((r,i)=>`<tr>${cols.map(([k])=>`<td><input type="text"${k=="drop"?' inputmode="numeric" placeholder="–" aria-label="Round dropped"':""}${isMonKey(k)?' list="pkmn" autocomplete="off" placeholder="Pokémon"'+(r[k]&&r[k].trim()&&!monId(r[k])?' class="bad"':""):""} data-i="${i}" data-k="${k}" value="${esc(r[k])}"></td>`).join("")}<td><button class="x" data-del="${i}" aria-label="Remove line">×</button></td></tr>`).join("")}
-$("prows").addEventListener("input",e=>{const t=e.target;if(t.dataset.i!=null){stRows[t.dataset.i][t.dataset.k]=t.value;if(isMonKey(t.dataset.k))t.classList.toggle("bad",!!t.value.trim()&&!monId(t.value));autoShow(t.dataset.k,t.value);render()}});
+ $("prows").innerHTML=stRows.map((r,i)=>`<tr>${cols.map(([k])=>`<td><input type="text"${k=="drop"?' inputmode="numeric" placeholder="–" aria-label="Round dropped"':""}${isMonKey(k)?' list="pkmn" autocomplete="off" placeholder="Pokémon"'+(r[k]&&r[k].trim()&&!monId(r[k])?' class="bad"':""):""} data-i="${i}" data-k="${k}" value="${esc(r[k])}">${pgame=="VGC"&&isMonKey(k)?`<input type="text" class="item" placeholder="Item (optional)" aria-label="Held item" autocomplete="off" data-i="${i}" data-k="${k}i" value="${esc(r[k+"i"])}">`:""}</td>`).join("")}<td><button class="x" data-del="${i}" aria-label="Remove line">×</button></td></tr>`).join("")}
+$("prows").addEventListener("input",e=>{const t=e.target;if(mode=="b")setTimeout(drawBkRes,0);if(t.dataset.i!=null){stRows[t.dataset.i][t.dataset.k]=t.value;if(isMonKey(t.dataset.k))t.classList.toggle("bad",!!t.value.trim()&&!monId(t.value));autoShow(t.dataset.k,t.value);render()}});
 $("prows").addEventListener("click",e=>{const d=e.target.dataset.del;if(d!=null){stRows.splice(d,1);drawPRows();render()}});
 $("padd").onclick=()=>{stRows.push({place:String(stRows.length+1),name:"",record:"",points:"",drop:"",mon1:"",mon2:""});drawPRows();render()};
 $("pclear").onclick=()=>{stRows=[];drawPRows();render()};
 ["stitle","ssub","ptotal","pp2","pcut"].forEach(i=>$(i).addEventListener("input",render));
 const PGAMES={TCG:"Pokémon TCG",VGC:"Pokémon VGC",GO:"Pokémon GO"};
-function pNote(){$("pnote").textContent=pgame=="GO"?"Pokémon GO: enter up to six Pokémon per player (their team). Their sprites appear at the end of that player's line in the JPG and HTML outputs.":pgame=="VGC"?"Pokémon VGC: enter up to six Pokémon per player (their team). Their sprites appear at the end of that player's line in the JPG and HTML outputs.":pgame=="TCG"?"Pokémon TCG: enter up to two Pokémon per player (the deck archetype). Their sprites appear at the end of that player's line in the JPG and HTML outputs.":PGAMES[pgame]+" options are a placeholder and will be added later."}
+function pNote(){$("pnote").textContent=pgame=="GO"?"Pokémon GO: enter up to six Pokémon per player (their team). Their sprites appear at the end of that player's line in the JPG and HTML outputs.":pgame=="VGC"?"Pokémon VGC: enter up to six Pokémon per player (their team), each with an optional held item. Their sprites appear at the end of that player's line in the JPG and HTML outputs. If a Pokémon holds its mega stone, its mega sprite is shown.":pgame=="TCG"?"Pokémon TCG: enter up to two Pokémon per player (the deck archetype). Their sprites appear at the end of that player's line in the JPG and HTML outputs.":PGAMES[pgame]+" options are a placeholder and will be added later."}
 const gameOf=v=>{v=String(v||"").trim().toUpperCase();return v=="PTCG"||v=="TCG"?"TCG":v=="VGC"?"VGC":v=="GO"?"GO":""};
 function setGame(g){if(!PGAMES[g])return;pgame=g;document.querySelectorAll("#pgame [data-g]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.g==g));pNote();drawPRows();render()}
 document.querySelectorAll("#pgame [data-g]").forEach(b=>b.onclick=()=>setGame(b.dataset.g));
@@ -613,22 +632,115 @@ $("plimgo").onclick=()=>{const m=$("plimmsg");
   const pretty=n=>{n=String(n||"").trim();const id=monId(n);return id?dispName(id):n};
   const l=j.map((x,i)=>{const r=x.record||{},w=+r.wins||0,lo=+r.losses||0,tt=+r.ties||0;
    const dk=x.deck&&typeof x.deck=="object"?x.deck:{},ic=Array.isArray(dk.icons)?dk.icons.map(String):[];
-   const team=Array.isArray(x.decklist)?x.decklist.map(m=>typeof m=="string"?m:(m&&(m.name||m.id))||"").filter(Boolean):[];
+   const tm=Array.isArray(x.decklist)?x.decklist.map(m=>typeof m=="string"?{name:m,item:""}:{name:(m&&(m.name||m.id))||"",item:(m&&typeof m.item=="string"&&m.item)||""}).filter(m=>m.name):[],team=tm.map(m=>m.name);
    let names=game=="TCG"?ic:(team.length?team:ic);
    if(game=="TCG"&&!names.length&&dk.name)names=String(dk.name).split(/\s+/).filter(wd=>monId(wd)).slice(0,2);
    const o={place:String(x.placing||i+1),name:x.name||x.player||"",record:r.wins==null?"":w+"-"+lo+"-"+tt,points:r.wins==null?"":String(w*3+tt),drop:+x.drop>0?String(+x.drop):"",
     url:tid&&typeof x.player=="string"&&x.player?"https://play.limitlesstcg.com/tournament/"+encodeURIComponent(tid)+"/player/"+encodeURIComponent(x.player):""};
-   keys.forEach((k,n)=>o[k]=names[n]?pretty(names[n]):"");return o});
+   keys.forEach((k,n)=>{o[k]=names[n]?pretty(names[n]):"";if(game=="VGC")o[k+"i"]=team.length&&tm[n]?tm[n].item:""});return o});
   stRows=[];setP(l);$("ptotal").value=l.length;render();m.textContent=l.length+" players imported."}
  catch(e){m.textContent="That is not valid standings JSON. Copy the full response from the Limitless API."}};
 drawPRows();
 ["orglink","lim","tlink","tlim","plink","plim",...SOC.map(x=>"soc-"+x[0])].forEach(id=>{
  try{const v=localStorage.getItem("tgs:"+id);if(v!=null){$(id).value=v;$(id).dispatchEvent(new Event("input"))}}catch(e){}
  $(id).addEventListener("input",()=>{try{localStorage.setItem("tgs:"+id,$(id).value)}catch(e){}})});
+/* ===== Single elimination bracket ===== */
+let bk={n:8,res:{},touched:false};
+const seedOrder=n=>{let a=[1];while(a.length<n){const L=a.length*2+1;a=a.flatMap(x=>[x,L-x])}return a};
+const RNAME=(N,r)=>{const q=N/2**r;return q==2?"Final":q==4?"Semifinals":q==8?"Quarterfinals":"Round of "+q};
+function bkModel(){const N=bk.n,P=Math.min(N,Math.max(2,Math.floor(+$("bkP").value)||N));
+ const pl=data().filter(r=>!isDrop(r)&&String(r.name||"").trim());
+ const seed=i=>i>P?null:{seed:i,name:pl[i-1]?String(pl[i-1].name).trim():"Seed "+i,r:pl[i-1]||null};
+ const ord=seedOrder(N),rounds=[];let prev=null;
+ for(let r=0;r<Math.log2(N);r++){const cnt=N/2**(r+1),rd=[];
+  for(let m=0;m<cnt;m++){let a,b;if(r==0){a=seed(ord[2*m]);b=seed(ord[2*m+1])}else{a=prev[2*m].w;b=prev[2*m+1].w}
+   const bye=r==0&&(!a||!b),res=bk.res[r+"-"+m]||{},mm={a,b,bye,s:res.s||"",w:null};
+   if(bye)mm.w=a||b;else if(a&&b){const ws=+res.w;mm.w=ws==a.seed?a:ws==b.seed?b:null}
+   rd.push(mm)}
+  rounds.push(rd);prev=rd}
+ return{N,P,rounds,champ:rounds[rounds.length-1][0].w}}
+function setBkSize(n,touch){const prev=bk.n,p=$("bkP");bk.n=n;if(touch)bk.touched=true;bk.res={};
+ document.querySelectorAll("#bksize [data-n]").forEach(b=>b.setAttribute("aria-pressed",+b.dataset.n==n));
+ p.max=n;p.placeholder=n;if(!p.value||+p.value>n||+p.value==prev)p.value=n;}
+function autoBracket(){if(bk.touched)return;const c=cutN();if([2,4,8,16,32].includes(c)){setBkSize(c,false);$("bkP").value=c}}
+document.querySelectorAll("#bksize [data-n]").forEach(b=>b.onclick=()=>{setBkSize(+b.dataset.n,true);drawBkRes();render()});
+$("bkP").addEventListener("input",()=>{drawBkRes()});
+function drawBkRes(){const M=bkModel();
+ $("bkres").innerHTML=M.rounds.map((rd,r)=>`<div style="margin-top:10px"><label>${esc(RNAME(M.N,r))}</label>`+rd.map((m,i)=>{
+  if(m.bye)return`<div class="note" style="margin:4px 0">#${(m.a||m.b).seed} ${esc((m.a||m.b).name)} – bye</div>`;
+  const ok=m.a&&m.b,w=(bk.res[r+"-"+i]||{}).w,opt=x=>`<option value="${x.seed}"${+w==x.seed?" selected":""}>#${x.seed} ${esc(x.name)}</option>`;
+  return`<div class="row" style="margin:4px 0"><select data-r="${r}" data-m="${i}" data-k="w"${ok?"":" disabled"} style="flex:1;min-width:200px"><option value="0">${ok?"Winner…":"Waiting for the previous round"}</option>${m.a?opt(m.a):""}${m.b?opt(m.b):""}</select><input type="text" data-r="${r}" data-m="${i}" data-k="s" placeholder="Score (optional)" value="${esc((bk.res[r+"-"+i]||{}).s||"")}"${ok?"":" disabled"} style="width:150px"></div>`}).join("")+`</div>`).join("")}
+$("bkres").addEventListener("change",e=>{const t=e.target;if(t.dataset.r==null)return;const key=t.dataset.r+"-"+t.dataset.m,cur=bk.res[key]||(bk.res[key]={});
+ if(t.dataset.k=="w")cur.w=+t.value||0;else cur.s=t.value.trim();drawBkRes();render()});
+
+/* text outputs */
+const bTag=p=>p?"#"+p.seed+" "+p.name:"TBD";
+function mkTextB(){const M=bkModel();let s=TT()+"\n"+(period()?period()+"\n":"")+"\n";
+ M.rounds.forEach((rd,r)=>{s+=RNAME(M.N,r)+"\n";rd.forEach(m=>{
+  if(m.bye){s+=bTag(m.a||m.b)+" – BYE\n";return}
+  s+=bTag(m.a)+" vs "+bTag(m.b)+(m.w?" → "+m.w.name+(m.s?" ("+m.s+")":""):"")+"\n"});s+="\n"});
+ if(M.champ)s+="Champion: "+M.champ.name;return s.trim()}
+function mkDiscordB(){const M=bkModel();let s="## "+TT()+(period()?"\n-# "+period():"")+"\n\n";
+ const nm=(p,win)=>{if(!p)return"TBD";const u=normUrl(p.r&&p.r.url),t=u?"["+p.name+"](<"+u+">)":p.name;return win?"**"+t+"**":t},tg=p=>p?"#"+p.seed+" ":"";
+ M.rounds.forEach((rd,r)=>{s+="**"+RNAME(M.N,r)+"**\n";rd.forEach(m=>{
+  if(m.bye){const p=m.a||m.b;s+=tg(p)+nm(p)+" – BYE\n";return}
+  s+=tg(m.a)+nm(m.a,m.w&&m.w==m.a)+" vs "+tg(m.b)+nm(m.b,m.w&&m.w==m.b)+(m.s?" ("+m.s+")":"")+"\n"});s+="\n"});
+ if(M.champ)s+="🏆 **Champion:** "+nm(M.champ);return s.trim()}
+
+/* HTML output */
+function bkHTML(S){const M=bkModel(),NMk=monKeys().length;
+ const spr=r=>r?monUrls(r).map((u,n)=>u?`<img src="${esc(u)}" alt="${esc(r[monKeys()[n]])}" width="26" height="26" style="vertical-align:middle">`:"").join(""):"";
+ const row=(p,m,j)=>{const win=m.w&&m.w==p,lose=m.w&&p&&m.w!=p,u=p&&p.r&&normUrl(p.r.url);
+  const nameH=p?(u?`<a href="${esc(u)}" style="color:${S.tx};text-decoration:underline">${esc(p.name)}</a>`:esc(p.name)):`<span style="opacity:.5;font-style:italic">${m.bye?"BYE":"TBD"}</span>`;
+  return`<div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:${j?S.r2:S.r1};color:${S.tx};border-left:5px solid ${win?S.acc:"transparent"};${win?"font-weight:800;":""}${lose?"opacity:.6;":""}"><span style="min-width:22px;font-size:12px;opacity:.8">${p?p.seed:""}</span><span style="flex:1">${nameH}</span><span style="white-space:nowrap">${p?spr(p.r):""}</span></div>`};
+ const col=(title,inner)=>`<div style="display:flex;flex-direction:column;flex:1;min-width:${230+NMk*28}px"><div style="font-weight:800;color:${S.boxAcc};margin-bottom:8px;text-align:center">${esc(title)}</div><div style="flex:1;display:flex;flex-direction:column;justify-content:space-around;gap:10px">${inner}</div></div>`;
+ const cols=M.rounds.map((rd,r)=>col(RNAME(M.N,r),rd.map(m=>`<div style="border-radius:8px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,.35)">${row(m.a,m,0)}${row(m.b,m,1)}${m.s&&!m.bye?`<div style="text-align:right;font-size:12px;padding:2px 10px;background:${S.head};color:${S.hx}">${esc(m.s)}</div>`:""}</div>`).join(""))).join("");
+ const ch=col("Champion",`<div style="border-radius:8px;overflow:hidden;background:${S.head};color:${S.hx};padding:14px;text-align:center;font-weight:800;font-size:18px">${M.champ?"🏆 "+esc(M.champ.name)+`<div style="margin-top:6px">${spr(M.champ.r)}</div>`:`<span style="opacity:.5">TBD</span>`}</div>`);
+ return`<div style="padding:20px 30px 0;overflow-x:auto"><div style="display:flex;gap:26px;align-items:stretch">${cols}${ch}</div></div>`}
+
+/* JPG output */
+function bkMetrics(){const M=bkModel(),N=M.N,R=Math.log2(N),nm=monKeys().length;
+ const has=nm>0&&M.rounds[0].some(m=>[m.a,m.b].some(p=>p&&p.r&&monUrls(p.r).some(Boolean)));
+ const SP=26,sprW=has?nm*(SP+2)+6:0,bw=230+sprW,gap=76,rowH=40,slot0=rowH*2+22,tw=(R+1)*bw+R*gap;
+ return{M,N,R,nm,SP,sprW,bw,gap,rowH,slot0,tw,h:(N/2)*slot0+60,w:Math.max(1200,tw+100)}}
+function drawBracket(c,S,top,W,B){const{M,N,R,nm,SP,sprW,bw,gap,rowH,slot0,tw}=B,x0=(W-tw)/2,y0=top+34,cy=(r,m)=>y0+slot0*2**r*(m+.5);
+ const fit=(t,w,f)=>{c.font=f;let x=String(t);if(c.measureText(x).width<=w)return x;while(x.length>1&&c.measureText(x+"…").width>w)x=x.slice(0,-1);return x+"…"};
+ const px=r=>x0+r*(bw+gap);
+ c.textBaseline="middle";
+ for(let r=0;r<=R;r++){c.textAlign="center";c.fillStyle=S.acc;c.font='800 22px "Trebuchet MS",sans-serif';c.fillText(r==R?"Champion":RNAME(N,r),px(r)+bw/2,top+8)}
+ c.textAlign="left";
+ const sprites=(p,x,y)=>{if(!p||!p.r||!sprW)return;monUrls(p.r).forEach((u,i)=>{const im=u&&sprImg(u);if(im)c.drawImage(im,x+i*(SP+2),y+(rowH-SP)/2,SP,SP)})};
+ const drawRow=(x,y,p,m,j)=>{const win=m.w&&m.w==p,lose=m.w&&p&&m.w!=p;
+  c.globalAlpha=lose?.55:1;c.fillStyle=j?S.r2:S.r1;c.fillRect(x,y,bw,rowH);
+  if(win){c.fillStyle=S.acc;c.fillRect(x,y,6,rowH)}
+  c.textAlign="left";c.fillStyle=S.tx;
+  if(p){c.globalAlpha=(lose?.55:1)*.8;c.font='700 15px "Trebuchet MS",sans-serif';c.fillText(String(p.seed),x+14,y+rowH/2);c.globalAlpha=lose?.55:1;
+   c.font=(win?"800":"600")+' 21px "Trebuchet MS",sans-serif';c.fillText(fit(p.name,bw-46-sprW-8,c.font),x+42,y+rowH/2);sprites(p,x+bw-sprW,y)}
+  else{c.globalAlpha=.5;c.font='italic 600 19px "Trebuchet MS",sans-serif';c.fillText(m.bye?"BYE":"TBD",x+42,y+rowH/2)}
+  c.globalAlpha=1};
+ c.lineWidth=3;c.lineJoin="round";
+ M.rounds.forEach((rd,r)=>rd.forEach((m,i)=>{const x=px(r),yc=cy(r,i);
+  c.strokeStyle=S.acc;c.globalAlpha=.85;c.beginPath();c.moveTo(x+bw,yc);c.lineTo(x+bw+gap/2,yc);
+  if(r<R-1){if(i%2==0){const y2=cy(r,i+1);c.moveTo(x+bw+gap/2,yc);c.lineTo(x+bw+gap/2,y2);c.moveTo(x+bw+gap/2,(yc+y2)/2);c.lineTo(x+bw+gap,(yc+y2)/2)}}
+  else{c.lineTo(x+bw+gap,yc)}
+  c.stroke();c.globalAlpha=1;
+  drawRow(x,yc-rowH,m.a,m,0);drawRow(x,yc,m.b,m,1);
+  if(m.s&&!m.bye){c.textAlign="left";c.fillStyle=S.acc;c.fillText(fit(m.s,gap/2-6,'700 15px "Trebuchet MS",sans-serif'),x+bw+6,yc-11)}}));
+ const xc=px(R),yc=cy(R-1,0),ch=M.champ;
+ c.fillStyle=S.head;c.fillRect(xc,yc-rowH,bw,rowH*2);
+ c.textAlign="center";c.fillStyle=S.hx;
+ if(ch){c.font='800 22px "Trebuchet MS",sans-serif';c.fillText("★ "+fit(ch.name,bw-50,'800 22px "Trebuchet MS",sans-serif'),xc+bw/2,yc-rowH/2);
+  if(ch.r&&sprW){const u=monUrls(ch.r),w=nm*(SP+2)-2,sx=xc+(bw-w)/2;u.forEach((q,i)=>{const im=q&&sprImg(q);if(im)c.drawImage(im,sx+i*(SP+2),yc+(rowH-SP)/2,SP,SP)})}}
+ else{c.globalAlpha=.6;c.font='italic 600 20px "Trebuchet MS",sans-serif';c.fillText("TBD",xc+bw/2,yc);c.globalAlpha=1}
+ c.textAlign="left"}
+
 const mq=matchMedia("(min-width:981px)");
-function placeCards(){const pre=mode=="t"?"t":mode=="p"?"p":"",L=$(pre+"colL"),R=$(pre+"colR");(mq.matches?L:R).append($("socialcard"));R.append($("lookcard"),$("resultcard"));render()}
-function buildCols(){$("cols").innerHTML=(mode=="p"?COLS_S:COLS).map(([k,l])=>`<label><input type="checkbox" data-k="${k}">${l}</label>`).join("")}
-function setMode(m){if(mode==m)return;mode=m;if(m=="t"||m=="p")fillSel();show=m=="t"?showT:m=="p"?showP:showS;buildCols();syncChecks();const nm=document.querySelector('#cols input[data-k="name"]');if(nm)nm.parentElement.hidden=m=="t";placeCards()}
+function placeCards(){const pre=mode=="t"?"t":isP()?"p":"",L=$(pre+"colL"),R=$(pre+"colR");(mq.matches?L:R).append($("socialcard"));R.append($("lookcard"),$("resultcard"));render()}
+function buildCols(){$("cols").innerHTML=(isP()?COLS_S:COLS).map(([k,l])=>`<label><input type="checkbox" data-k="${k}">${l}</label>`).join("")}
+function setMode(m){if(mode==m)return;mode=m;if(m=="t"||m=="p"||m=="b")fillSel();show=m=="t"?showT:(m=="p"||m=="b")?showP:showS;buildCols();syncChecks();
+ {const B=m=="b";$("bkcard").hidden=!B;$("stitlebox").hidden=B;$("btitlebox").hidden=!B;$("ssubbox").hidden=B;$("bsubbox").hidden=!B;$("pp2box").hidden=B;$("pcutbox").hidden=B;$("phnote").hidden=B;$("colshead").hidden=B;$("cols").hidden=B;
+  $("sdh").textContent=B?"Bracket details":"Standings details";$("htmlLbl").textContent=B?"HTML bracket":"HTML table";if(B)drawBkRes()}
+ const nm=document.querySelector('#cols input[data-k="name"]');if(nm)nm.parentElement.hidden=m=="t";placeCards()}
 mq.addEventListener("change",placeCards);
 drawRows();placeCards();
 </script>
