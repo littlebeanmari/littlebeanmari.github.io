@@ -189,7 +189,7 @@ textarea.out{height:260px;font-family:ui-monospace,Consolas,monospace;font-size:
   <h2 style="margin-top:16px">Row colours</h2>
   <p class="note" style="margin-top:0">Give tournaments a background colour based on their data, for example every VGC tournament in red or every tournament of one store in purple. The first rule that matches a tournament is used. This applies to the JPG and HTML outputs.</p>
   <div id="rules"></div><button class="btn ghost" id="addrule">Add colour rule</button>
-  <datalist id="dl-game"></datalist><datalist id="dl-store"></datalist><datalist id="dl-name"></datalist><datalist id="dl-fee"></datalist></div>
+  <datalist id="dl-game"></datalist><datalist id="dl-type"><option value="Friendly"><option value="Challenge"><option value="Cup"><option value="Online"></datalist><datalist id="dl-tz"></datalist><datalist id="dl-store"></datalist><datalist id="dl-name"></datalist><datalist id="dl-fee"></datalist></div>
   <h2 style="margin-top:16px" id="colshead">Show columns</h2>
   <div class="checks" id="cols"></div>
   <h2 style="margin-top:8px">Output</h2>
@@ -201,7 +201,7 @@ textarea.out{height:260px;font-family:ui-monospace,Consolas,monospace;font-size:
   </div>
  </section>
  <section class="card" id="resultcard"><h2>Result</h2>
-  <div id="o-jpg"><canvas id="cv"></canvas><div class="row" style="margin-top:10px"><button class="btn acc" id="dl">Download JPG</button></div></div>
+  <div id="o-jpg"><div style="margin-bottom:10px"><label for="ar">Aspect ratio</label><select id="ar" style="max-width:280px"><option value="">Original (one image)</option><option value="1:1">1:1 (square)</option><option value="4:3">4:3</option><option value="4:5">4:5 (portrait)</option><option value="16:9">16:9 (widescreen)</option></select><p class="note">With a fixed ratio, long lists are split into several numbered pages.</p></div><canvas id="cv"></canvas><div id="pagebox" hidden></div><div class="row" style="margin-top:10px"><button class="btn acc" id="dl">Download JPG</button></div></div>
   <div id="o-txt" hidden><textarea class="out" id="txt" readonly></textarea><div class="row" style="margin-top:10px"><button class="btn acc" data-copy="txt" data-label="Copy text">Copy text</button></div></div>
   <div id="o-dc" hidden><textarea class="out" id="dc" readonly></textarea><div class="row" style="margin-top:10px"><button class="btn acc" data-copy="dc" data-label="Copy message">Copy message</button><span class="note" id="dccount"></span></div></div>
   <div id="o-html" hidden><textarea class="out" id="htm" readonly></textarea><div class="row" style="margin-top:10px"><button class="btn acc" data-copy="htm" data-label="Copy HTML">Copy HTML</button></div><div class="prev" id="hprev"></div></div>
@@ -329,20 +329,27 @@ textarea.out{height:260px;font-family:ui-monospace,Consolas,monospace;font-size:
  <button class="btn acc" id="privok">Got it</button>
 </div>
 <script>
-const COLS=[["date","Date"],["time","Time"],["name","Tournament name"],["type","Type"],["game","Game"],["fee","Entry fee"],["store","Store"],["pw","Password"]];
+const COLS=[["date","Date"],["time","Time"],["tz","Time zone"],["name","Tournament name"],["type","Type"],["game","Game"],["fee","Entry fee"],["store","Store"],["pw","Password"]];
 const TYPES=["Friendly","Challenge","Cup","Online"];
 const fType=new Set(TYPES),gOff=new Set();let rules=[];
 function rowCol(r){if(mode!="s")return null;for(const u of rules){const v=String(u.value||"").trim().toLowerCase();if(!v)continue;const x=String(r[u.field]||"").trim().toLowerCase();if(u.op=="contains"?x.includes(v):x==v){const c=hexRgb(u.color);return{bg:`rgba(${c.join(",")},.9)`,tx:lum(u.color)>.45?"#111111":"#ffffff"}}}return null}
 const BTZ=Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC";
 const TZS=["UTC","Europe/London","Europe/Berlin","Europe/Athens","America/New_York","America/Chicago","America/Denver","America/Los_Angeles","America/Sao_Paulo","Asia/Tokyo","Australia/Sydney"];
 if(!TZS.includes(BTZ))TZS.unshift(BTZ);
-const tzOpts=v=>`<option value=""${v?"":" selected"}>None</option>`+TZS.map(z=>`<option value="${z}"${z==v?" selected":""}>${z.replace("_"," ")}</option>`).join("");
+const TZABB={"Asia/Tokyo":"JST","America/Sao_Paulo":"BRT"};
+function tzInfo(z,date){const ds=/^\d{4}-\d\d-\d\d$/.test(date||"")?date:new Date().toISOString().slice(0,10),d=new Date(ds+"T12:00:00Z");let off="UTC",ok=false;
+ try{const p=new Intl.DateTimeFormat("en-US",{timeZone:z,timeZoneName:"longOffset"}).formatToParts(d).find(x=>x.type=="timeZoneName"),m=p&&p.value.match(/GMT([+-])(\d\d):(\d\d)/);ok=true;if(m)off="UTC"+m[1]+(+m[2])+(m[3]!="00"?":"+m[3]:"")}catch(e){}
+ let ab=z=="UTC"?"UTC":TZABB[z]||tzLabel({tz:z,date:ds});
+ if(z!="UTC"&&(!ab||/^GMT[+-]/.test(ab)||ab==z)){try{const q=new Intl.DateTimeFormat("en-AU",{timeZone:z,timeZoneName:"short"}).formatToParts(d).find(x=>x.type=="timeZoneName");ab=q?q.value:""}catch(e){ab=""}}
+ if(z!="UTC"&&(!ab||/^GMT[+-]/.test(ab)||ab==z))ab="";return{ab,off,ok}}
+function tzCol(r){if(!r.tz)return"";const i=tzInfo(r.tz,r.date);if(!i.ok)return r.tz;return i.ab=="UTC"?"UTC":i.ab?i.ab+" ("+i.off+")":i.off}
+function tzOpts(v,date){const zs=v&&!TZS.includes(v)?[v].concat(TZS):TZS;return`<option value=""${v?"":" selected"}>No time zone</option>`+zs.map(z=>{const i=tzInfo(z,date);return`<option value="${z}"${z==v?" selected":""}>${i.ab=="UTC"?"UTC – Coordinated Universal Time":(i.ab?i.ab+" ("+i.off+")":i.off)+" – "+z.replace(/_/g," ")}</option>`}).join("")}
 function tzLabel(r){if(!r.tz)return"";const d=new Date((r.date||new Date().toISOString().slice(0,10))+"T12:00:00Z");if(isNaN(d))return"";if(r.tz=="UTC")return"UTC";
  const get=l=>{try{const p=new Intl.DateTimeFormat(l,{timeZone:r.tz,timeZoneName:"short"}).formatToParts(d).find(x=>x.type=="timeZoneName");return p?p.value:""}catch(e){return""}};
  const a=get("en-US");if(a&&!/^GMT[+-]/.test(a))return a;return get("en-GB")||r.tz}
 const $=id=>document.getElementById(id);
 let rows=[{date:"",time:"18:00",game:"",name:"",url:"",pw:"",type:"Friendly",fee:"",store:"",tz:BTZ}];
-let show={name:0,date:0,time:0,game:0,type:0,fee:0,store:0,pw:0};
+let show={name:0,date:0,time:0,tz:0,game:0,type:0,fee:0,store:0,pw:0};
 const TYD={Cup:"#ffcb05",Challenge:"#7fd1ff",Friendly:"#9be58b",Online:"#d9a7ff"};
 const mk=(n,bg,bars,head,acc,box,boxAcc,rgb)=>({n,bg,bars,ov:`rgba(${rgb},.55)`,sh:"rgba(0,0,0,.6)",head,hx:"#fff",r1:`rgba(${rgb},.8)`,r2:`rgba(${rgb},.62)`,tx:"#fff",acc,box,boxAcc,ty:TYD});
 const SCHEMES={
@@ -369,7 +376,7 @@ function syncP(){stRows.forEach(r=>Object.keys(showP).forEach(k=>{if(!showP[k]&&
 $("cols").onchange=e=>{const k=e.target.dataset.k;show[k]=e.target.checked?1:0;if(mode=="u")e.target.checked?uOff.delete(k):uOff.add(k);if(mode=="p"||mode=="b")e.target.checked?pOff.delete(k):pOff.add(k);render()};
 function syncChecks(){document.querySelectorAll("#cols input").forEach(i=>i.checked=!!show[i.dataset.k])}
 function autoShow(k,v){if(k in show&&String(v||"").trim()&&!show[k]){show[k]=1;syncChecks()}}
-function autoAll(list){list.forEach(r=>Object.keys(show).forEach(k=>autoShow(k,r[k])))}
+function autoAll(list){list.forEach(r=>Object.keys(show).forEach(k=>{if(k!="tz")autoShow(k,r[k])}))}
 
 /* editor */
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -377,9 +384,9 @@ function drawRows(){
  $("rows").innerHTML=rows.map((r,i)=>`<tr>
  <td><input type="date" data-i="${i}" data-k="date" value="${esc(r.date)}"></td>
  <td><input type="time" data-i="${i}" data-k="time" value="${esc(r.time)}"></td>
- <td><select data-i="${i}" data-k="tz">${tzOpts(r.tz)}</select></td>
+ <td><input type="text" list="dl-tz" data-i="${i}" data-k="tz" value="${esc(r.tz)}" placeholder="e.g. CET" aria-label="Time zone"></td>
  <td><input type="text" data-i="${i}" data-k="name" value="${esc(r.name)}"></td>
- <td><select data-i="${i}" data-k="type">${TYPES.map(t=>`<option${t==r.type?" selected":""}>${t}</option>`).join("")}</select></td>
+ <td><input type="text" list="dl-type" data-i="${i}" data-k="type" value="${esc(r.type)}" aria-label="Type"></td>
  <td><input type="text" data-i="${i}" data-k="game" value="${esc(r.game)}"></td>
  <td><input type="text" data-i="${i}" data-k="fee" value="${esc(r.fee)}"></td>
  <td><input type="text" data-i="${i}" data-k="store" value="${esc(r.store)}"></td>
@@ -404,7 +411,7 @@ function parseCSV(t){const out=[];let r=[],c="",q=false;
 $("csv").onchange=async e=>{const f=e.target.files[0];if(!f)return;
  let d=parseCSV(await f.text());
  if(d.length&&/date|time|game/i.test(d[0].join(" ")))d.shift();
- const added=d.map(c=>({date:(c[0]||"").trim(),time:(c[1]||"").trim(),game:(c[2]||"").trim(),type:TYPES.find(t=>t.toLowerCase()==(c[3]||"").trim().toLowerCase())||"Friendly",fee:(c[4]||"").trim(),name:(c[7]||"").trim(),url:(c[8]||"").trim(),pw:(c[9]||"").trim(),store:(c[5]||"").trim(),tz:TZS.find(z=>z.toLowerCase()==(c[6]||"").trim().toLowerCase())||BTZ}));
+ const added=d.map(c=>({date:(c[0]||"").trim(),time:(c[1]||"").trim(),game:(c[2]||"").trim(),type:TYPES.find(t=>t.toLowerCase()==(c[3]||"").trim().toLowerCase())||(c[3]||"").trim()||"Friendly",fee:(c[4]||"").trim(),name:(c[7]||"").trim(),url:(c[8]||"").trim(),pw:(c[9]||"").trim(),store:(c[5]||"").trim(),tz:TZS.find(z=>z.toLowerCase()==(c[6]||"").trim().toLowerCase())||BTZ}));
  if(rows.length==1&&!rows[0].date&&!rows[0].store)rows=[];
  rows=rows.concat(added);autoAll(added);e.target.value="";drawRows();render()};
 
@@ -431,7 +438,7 @@ $("limgo").onclick=()=>{const m=$("limmsg");
 /* data */
 let mode="s";const isP=()=>mode=="p"||mode=="b"||mode=="u"||mode=="m";
 const T={date:"",time:"18:00",tz:BTZ,type:"Friendly",game:"",fee:"",store:"",pw:"",url:"",name:""};
-const showT={name:0,date:0,time:0,game:0,type:0,fee:0,store:0,pw:0};const showS=show;
+const showT={name:0,date:0,time:0,tz:0,game:0,type:0,fee:0,store:0,pw:0};const showS=show;
 const TT=()=>mode=="t"?$("ttitle").value:mode=="b"?$("btitle").value:(mode=="p"||mode=="u"||mode=="m")?$("stitle").value:$("title").value;
 const COLS_S=[["place","Place"],["name","Player"],["record","Record"],["points","Points"]];
 const showP={place:1,name:0,record:0,points:0};let pgame="TCG";let stRows=[{place:"1",name:"",record:"",points:"",drop:"",mon1:"",mon2:""}];
@@ -445,8 +452,8 @@ const legend=d=>mode=="p"?["cut","p2"].filter(k=>d.some(r=>phaseOf(r)==k)):[];
 function groupLines(d,lineFn,head){if(mode!="p"||!(cutN()||p2N()))return d.map(lineFn).join("\n");
  const o=[];let prev="#";d.forEach(r=>{const ph=phaseOf(r);if(ph!=prev){if(o.length)o.push("");if(ph)o.push(head(phLabel(ph)));prev=ph}o.push(lineFn(r))});return o.join("\n")}
 const kv=()=>active().map(([k,l])=>[l,cell(T,k)]).filter(x=>x[1]);
-function drawKV(c,S,X,TW,top,RH){const lw=TW*.32;
- kv().forEach(([l,v],j)=>{const y=top+j*RH;
+function drawKV(c,S,X,TW,top,RH,s0=0,e0=1e9){const lw=TW*.32;
+ kv().slice(s0,e0).forEach(([l,v],j)=>{const y=top+j*RH;
   c.fillStyle=S.head;c.fillRect(X,y,lw,RH-4);c.fillStyle=j%2?S.r2:S.r1;c.fillRect(X+lw,y,TW-lw,RH-4);
   c.fillStyle=S.hx;c.font='800 24px "Trebuchet MS",sans-serif';c.fillText(l,X+16,y+(RH-4)/2);
   c.fillStyle=l=="Type"?(S.ty[T.type]||S.tx):S.tx;c.font='700 26px "Trebuchet MS",sans-serif';
@@ -458,9 +465,9 @@ function mkDiscordT(){const u=normUrl(T.url),t=TT();let s="## "+(u&&t?"["+t+"](<
  [["type","Type"],["game","Game"],["fee","Entry fee"],["store","Store"],["pw","Password"]].forEach(([k,l])=>{if(show[k]&&T[k])L.push("**"+l+":** "+T[k])});
  return s+L.join("\n")}
 function data(){if(mode=="t")return [T];if(isP())return stRows.filter(r=>r.place||r.name||r.record).slice().sort((a,b)=>(dropN(a)>0)-(dropN(b)>0)||dropN(a)-dropN(b)||(+a.place||999)-(+b.place||999));const f=$("from").value,t=$("to").value;
- return rows.filter(r=>!(r.date&&((f&&r.date<f)||(t&&r.date>t)))&&fType.has(r.type)&&!gOff.has((r.game||"").trim())).slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time))}
+ return rows.filter(r=>!(r.date&&((f&&r.date<f)||(t&&r.date>t)))&&(!TYPES.includes(r.type)||fType.has(r.type))&&!gOff.has((r.game||"").trim())).slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time))}
 function fmtDate(s){if(!s)return"";const d=new Date(s+"T12:00:00");return isNaN(d)?s:d.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}
-const cell=(r,k)=>k=="place"&&isDrop(r)?"":k=="date"?fmtDate(r.date):k=="time"?((r.time||"")+(r.time&&tzLabel(r)?" "+tzLabel(r):"")):(r[k]||"");
+const cell=(r,k)=>k=="place"&&isDrop(r)?"":k=="date"?fmtDate(r.date):k=="time"?(r.time||""):k=="tz"?tzCol(r):(r[k]||"");
 const active=()=>(mode=="u"?COLS_U:mode=="m"?COLS_M:isP()?COLS_S:COLS).filter(([k])=>show[k]&&!(mode=="t"&&k=="name"));
 function period(){if(mode=="t")return"";if(mode=="m")return mPeriod();if(isP())return [divLabel(),(mode=="b"?$("bsub"):mode=="u"?$("usub"):$("ssub")).value.trim(),+$("ptotal").value>0?(+$("ptotal").value)+" players":""].filter(Boolean).join(" · ");const f=$("from").value,t=$("to").value;return f&&t?fmtDate(f)+" – "+fmtDate(t):f?"From "+fmtDate(f):t?"Until "+fmtDate(t):""}
 
@@ -500,10 +507,10 @@ function mkHTML(){const S=sch(),a=active(),d=data(),so=socials();
    (1?"":`<div style="height:14px;background:#e0323f"></div><div style="height:5px;background:#ffcb05"></div>\n`)+
    `<div style="background:${S.box};border-bottom:5px solid ${S.boxAcc};border-radius:10px;padding:22px 28px;margin:30px 30px 0;display:flex;align-items:center;justify-content:space-between;gap:20px"><div><div style="font-size:38px;font-weight:800;line-height:1.2">${ttlH}</div>`+(period()?`<div style="font-size:20px;font-weight:600;color:${S.boxAcc};margin-top:8px">${esc(period())}</div>`:"")+`</div>`+((logoUrl||logoData)?`<img src="${esc(logoUrl||logoData)}" alt="" style="max-height:80px;max-width:220px;flex:none">`:"")+`</div>\n`+
    (mode=="b"?bkHTML(S):mode=="u"?usageHTML(S):`<div style="padding:20px 30px 0;overflow-x:auto">\n<table style="width:100%;border-collapse:separate;border-spacing:0 4px;font-size:15px;color:${S.tx}">\n${tblF()}\n</table>\n</div>`)+legH+soH+`\n</div>`}
- function mkCanvas(){
- const S=sch(),cv=$("cv"),BK=mode=="b"?bkMetrics():null,W=BK?BK.w:1200,a=active(),d=data(),RH=((mode=="p"||mode=="m")&&hasMons(d))?72:64,RH2=92,top=230,foot=110;
- const wts={date:1.1,time:1.3,name:1.8,game:1.3,type:1,fee:.9,store:1.7,pw:1.2,place:.8,record:1.2,points:1},tot=a.reduce((s,[k])=>s+wts[k],0),X=50,TW=W-100;
- const NM=monKeys().length,SPR=NM>2?54:64,sp=hasMons(d)?NM*SPR+(NM-1)*4+28:0,CW=TW-sp;
+ function drawOne(pg){
+ const S=sch(),cv=(pg&&pg.cv)||$("cv"),BK=mode=="b"?bkMetrics():null,W=BK?BK.w:1200,a=active(),HM=hasMons(data()),d=((x)=>pg&&pg.s!=null&&!pg.plan&&mode!="t"&&mode!="u"?x.slice(pg.s,pg.e):x)(data()),RH=((mode=="p"||mode=="m")&&HM)?72:64,RH2=92,top=(pg&&pg.i>0)?140:230,foot=110;
+ const wts={date:1.1,time:1.3,name:1.8,game:1.3,type:1,fee:.9,store:1.7,pw:1.2,tz:1.4,place:.8,record:1.2,points:1},tot=a.reduce((s,[k])=>s+wts[k],0),X=50,TW=W-100;
+ const NM=monKeys().length,SPR=NM>2?54:64,sp=HM?NM*SPR+(NM-1)*4+28:0,CW=TW-sp;
  const FONT='24px "Trebuchet MS",sans-serif',m=document.createElement("canvas").getContext("2d");m.font="500 "+FONT;
  const ell=(t,w)=>{while(t.length>1&&m.measureText(t+"…").width>w)t=t.slice(0,-1);return t+"…"};
  const wrap=(t,w)=>{t=String(t||"").trim();if(m.measureText(t).width<=w)return[t];
@@ -518,28 +525,29 @@ function mkHTML(){const S=sch(),a=active(),d=data(),so=socials();
  const nameW=a.some(([k])=>k=="name")?CW*wts.name/tot-32:0;
  const nl=d.map(r=>nameW?wrap(r.name,nameW):[""]),rh=nl.map(l=>l.length>1?RH2:RH);
  const LG=legend(d),lgH=LG.length?44:0;
- const H=mode=="u"?Math.max(700,top+UM().h+foot):mode=="b"?Math.max(700,top+BK.h+foot):mode=="t"?Math.max(600,top+kv().length*RH+foot):Math.max(700,top+RH+rh.reduce((x,y)=>x+y,0)+foot+lgH);
+ if(pg&&pg.plan)return mode=="u"?{hs:UM().U.rows.map(()=>UM().rh),head:64,lg:0}:mode=="t"?{hs:kv().map(()=>RH),head:0,lg:0}:{hs:rh,head:RH,lg:lgH};
+ const H=pg&&pg.H?pg.H:mode=="u"?Math.max(700,top+UM().h+foot):mode=="b"?Math.max(700,top+BK.h+foot):mode=="t"?Math.max(600,top+kv().length*RH+foot):Math.max(700,top+RH+rh.reduce((x,y)=>x+y,0)+foot+lgH);
  cv.width=W;cv.height=H;const c=cv.getContext("2d");
  if(bgImg){const s=Math.max(W/bgImg.width,H/bgImg.height),w=bgImg.width*s,h=bgImg.height*s;c.drawImage(bgImg,(W-w)/2,(H-h)/2,w,h);c.fillStyle=S.ov;c.fillRect(0,0,W,H)}
  else{const g=c.createLinearGradient(0,0,W,H);g.addColorStop(0,S.bg[0]);g.addColorStop(1,S.bg[1]);c.fillStyle=g;c.fillRect(0,0,W,H);
   c.fillStyle=S.bars[0];c.fillRect(0,0,W,14);c.fillStyle=S.bars[1];c.fillRect(0,14,W,5)}
  c.textBaseline="middle";c.fillStyle=S.tx;
- let lw=0,lh=0;if(logoImg){const sc=Math.min(260/logoImg.width,110/logoImg.height,1.5);lw=logoImg.width*sc;lh=logoImg.height*sc;c.drawImage(logoImg,W-60-lw,95-lh/2,lw,lh)}
- let fs=64;c.font=`800 ${fs}px "Trebuchet MS",sans-serif`;
+ let lw=0,lh=0;if(logoImg&&!(pg&&pg.i>0)){const sc=Math.min(260/logoImg.width,110/logoImg.height,1.5);lw=logoImg.width*sc;lh=logoImg.height*sc;c.drawImage(logoImg,W-60-lw,95-lh/2,lw,lh)}
+ let fs=pg&&pg.i>0?38:64;c.font=`800 ${fs}px "Trebuchet MS",sans-serif`;
  while(c.measureText(TT()).width>W-120-(lw?lw+30:0)&&fs>26){fs-=2;c.font=`800 ${fs}px "Trebuchet MS",sans-serif`}
- c.shadowColor=S.sh;c.shadowBlur=12;c.fillText(TT(),60,95);c.shadowBlur=0;
- c.font='600 28px "Trebuchet MS",sans-serif';c.fillStyle=S.acc;c.fillText(period(),60,150);
- if(mode=="u"){drawUsage(c,S,top,W)}
+ c.shadowColor=S.sh;c.shadowBlur=12;c.fillText(TT(),60,pg&&pg.i>0?78:95);c.shadowBlur=0;
+ c.font='600 28px "Trebuchet MS",sans-serif';c.fillStyle=S.acc;if(!(pg&&pg.i>0))c.fillText(period(),60,150);
+ if(mode=="u"){drawUsage(c,S,top,W,pg)}
  else if(mode=="b"){drawBracket(c,S,top,W,BK)}
  else if(!a.length||!d.length){c.fillStyle=S.tx;c.font='600 30px "Trebuchet MS",sans-serif';c.fillText(a.length?"No tournaments in this time frame.":"Select at least one column.",60,top+60)}
- else if(mode=="t"){drawKV(c,S,X,TW,top,RH)}
+ else if(mode=="t"){drawKV(c,S,X,TW,top,RH,pg?pg.s:0,pg?pg.e:1e9)}
  else{
   let x=X;const xs=a.map(([k])=>{const o=x;x+=CW*wts[k]/tot;return o});
   c.fillStyle=S.head;c.fillRect(X,top,TW,RH-8);
   c.fillStyle=S.hx;c.font='800 24px "Trebuchet MS",sans-serif';
   a.forEach(([,l],i)=>c.fillText(l,xs[i]+16,top+(RH-8)/2));
   let yy=top+RH;d.forEach((r,j)=>{const y=yy,H2=rh[j];yy+=H2;
-const RC=rowCol(r);c.fillStyle=RC?RC.bg:(j%2?S.r2:S.r1);c.fillRect(X,y,TW,H2-4);
+const RC=rowCol(r);c.fillStyle=RC?RC.bg:((j+(pg&&pg.s||0))%2?S.r2:S.r1);c.fillRect(X,y,TW,H2-4);
 const ph=phaseOf(r);if(ph){c.fillStyle=PH[ph];c.fillRect(X,y,8,H2-4)}
    const dr=isDrop(r),IT=dr?"italic ":"";
    a.forEach(([k],i)=>{c.globalAlpha=dr?.5:1;const cw=CW*wts[k]/tot-24;let t=cell(r,k);
@@ -563,7 +571,25 @@ if(k=="name"){c.fillStyle=RC?RC.tx:S.tx;c.font=IT+"500 "+FONT;const cy=y+(H2-4)/
   let x=(W-tot)/2;const y=H-55;c.textAlign="left";
   items.forEach(i=>{c.save();c.translate(x,y-i.ic/2);c.scale(i.ic/24,i.ic/24);c.fillStyle=S.tx;c.fill(new Path2D(i.x.path));c.restore();
    c.fillStyle=S.acc;c.font=`700 ${fz}px "Trebuchet MS",sans-serif`;c.fillText(i.x.label,x+i.ic+10,y);x+=i.ic+10+i.tw+gap})}
+ if(pg&&pg.n){c.textAlign="right";c.globalAlpha=.9;c.font='700 26px "Trebuchet MS",sans-serif';c.fillStyle=S.tx;c.fillText((pg.i+1)+" / "+pg.n,W-40,H-30);c.globalAlpha=1;c.textAlign="left"}
 }
+
+function aspect(){const v=$("ar").value;if(!v)return null;const q=v.split(":").map(Number);return{w:q[0],h:q[1]}}
+let pageCvs=[];
+function mkCanvas(){const AR=aspect(),pb=$("pagebox"),cv=$("cv");
+ if(!AR){pb.innerHTML="";pb.hidden=true;cv.hidden=false;pageCvs=[];$("dl").textContent="Download JPG";drawOne(null);return}
+ const pages=[];
+ if(mode=="b"){const nat=document.createElement("canvas");drawOne({cv:nat});
+  const cw=Math.max(nat.width,Math.ceil(nat.height*AR.w/AR.h)),ch=Math.round(cw*AR.h/AR.w),out=document.createElement("canvas");out.width=cw;out.height=ch;
+  const c=out.getContext("2d"),S=sch();const g=c.createLinearGradient(0,0,cw,ch);g.addColorStop(0,S.bg[0]);g.addColorStop(1,S.bg[1]);c.fillStyle=g;c.fillRect(0,0,cw,ch);
+  if(bgImg){const k=Math.max(cw/bgImg.width,ch/bgImg.height),w=bgImg.width*k,h=bgImg.height*k;c.drawImage(bgImg,(cw-w)/2,(ch-h)/2,w,h);c.fillStyle=S.ov;c.fillRect(0,0,cw,ch)}
+  c.drawImage(nat,(cw-nat.width)/2,(ch-nat.height)/2);
+  c.textAlign="right";c.textBaseline="middle";c.font='700 26px "Trebuchet MS",sans-serif';c.fillStyle=S.tx;c.fillText("1 / 1",cw-40,ch-30);pages.push(out)}
+ else{const PH=Math.round(1200*AR.h/AR.w),info=drawOne({plan:true}),cap1=PH-230-info.head-110-info.lg,cap2=PH-140-info.head-110-info.lg,R=[];
+  let s=0,acc=0,cap=cap1;info.hs.forEach((h,i)=>{if(acc+h>cap&&i>s){R.push([s,i]);s=i;acc=0;cap=cap2}acc+=h});R.push([s,info.hs.length]);
+  R.forEach(([a,b],i)=>{const c2=document.createElement("canvas");drawOne({cv:c2,i,n:R.length,s:a,e:b,H:PH});pages.push(c2)})}
+ pb.innerHTML="";pages.forEach(c2=>{c2.style.cssText="max-width:100%;height:auto;border:1px solid var(--line);border-radius:6px;display:block;margin-bottom:10px";pb.appendChild(c2)});
+ pb.hidden=false;cv.hidden=true;pageCvs=pages;$("dl").textContent=pages.length>1?"Download all "+pages.length+" pages":"Download JPG"}
 
 function render(){
  if(mode=="s"){drawGF();dlUpd()}
@@ -617,7 +643,10 @@ $("bgx").onclick=()=>{bgImg=null;bgUrl="";$("bg").value="";$("bgurl").value="";$
 async function saveFile(name,data,mime){
  try{if(window.claude&&claude.use){const dl=await claude.use("downloads");if(dl){await dl.save({filename:name,data});return}}}catch(e){if(e&&e.code=="declined")return}
  const b=data instanceof Blob?data:new Blob([data],{type:mime});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
-$("dl").onclick=()=>{mkCanvas();const fn=(TT()||"schedule").replace(/[^\w-]+/g,"_")+".jpg";$("cv").toBlob(b=>saveFile(fn,b,"image/jpeg"),"image/jpeg",.92)};
+$("dl").onclick=async()=>{mkCanvas();const base=(TT()||"graphic").replace(/[^\w-]+/g,"_");
+ if(!aspect()){$("cv").toBlob(b=>saveFile(base+".jpg",b,"image/jpeg"),"image/jpeg",.92);return}
+ for(let i=0;i<pageCvs.length;i++){const b=await new Promise(r=>pageCvs[i].toBlob(r,"image/jpeg",.92));await saveFile(base+(pageCvs.length>1?"_"+(i+1):"")+".jpg",b,"image/jpeg")}};
+$("ar").onchange=render;
 $("tpl").onclick=()=>saveFile("tournament-template.csv","\ufeff"+[
  "date;time;game;type;fee;store;timezone;name;link;password",
  "2026-11-06;18:00;Pokémon TCG;Cup;€5;Example Store;Europe/Berlin;Friday Night Cup;https://example.com/event;secret",
@@ -629,7 +658,7 @@ document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=async()=>{const t=
  const f=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
  $("from").value=f(new Date(y,m,1));$("to").value=f(new Date(y,m+1,0))})();
 
-$("t-tz").innerHTML=tzOpts(T.tz);$("t-type").innerHTML=TYPES.map(t=>`<option${t==T.type?" selected":""}>${t}</option>`).join("");
+$("t-tz").innerHTML=tzOpts(T.tz,T.date);$("t-type").innerHTML=TYPES.map(t=>`<option${t==T.type?" selected":""}>${t}</option>`).join("");
 const TF={"t-date":"date","t-time":"time","t-tz":"tz","t-type":"type","t-game":"game","t-fee":"fee","t-store":"store","t-pw":"pw","t-url":"url"};
 let tTouched=false,tAuto=false,pTouched=false,pAuto=false;
 Object.entries(TF).forEach(([id,k])=>$(id).addEventListener("input",()=>{T[k]=$(id).value;autoShow(k,$(id).value);render()}));
@@ -637,7 +666,7 @@ $("ttitle").addEventListener("input",render);[...Object.keys(TF),"ttitle"].forEa
 function tsAuto(){if(tTouched||mode!="t")return;const now=new Date(),p=n=>String(n).padStart(2,"0"),today=now.getFullYear()+"-"+p(now.getMonth()+1)+"-"+p(now.getDate());
  const c=rows.map((r,i)=>[r,i]).filter(([r])=>r.date&&r.date>=today).sort((a,b)=>(a[0].date+(a[0].time||"")).localeCompare(b[0].date+(b[0].time||"")))[0];
  if(!c)return;tAuto=true;const s=$("tsel");s.value=String(c[1]);s.dispatchEvent(new Event("change"));tAuto=false}
-function fillT(o){if(!tAuto)tTouched=true;Object.entries(TF).forEach(([id,k])=>{if(o[k]!=null){T[k]=o[k];$(id).value=o[k]}});autoAll([T]);render()}
+function fillT(o){if(!tAuto)tTouched=true;Object.entries(TF).forEach(([id,k])=>{if(o[k]!=null){T[k]=o[k];$(id).value=o[k]}});$("t-tz").innerHTML=tzOpts(T.tz,T.date);autoAll([T]);render()}
 $("tcsv").onchange=async e=>{const f=e.target.files[0];if(!f)return;let d=parseCSV(await f.text());
  if(d.length&&/date|time|game/i.test(d[0].join(" ")))d.shift();const c=d[0];e.target.value="";if(!c)return;
  const g=i=>(c[i]||"").trim();if(g(7))$("ttitle").value=g(7);
@@ -860,7 +889,7 @@ let lastRows="";
 function saveRows(){try{const j=JSON.stringify(rows);if(j!==lastRows){localStorage.setItem("tgs:rows",j);lastRows=j}}catch(e){}}
 try{const sv=localStorage.getItem("tgs:rows");if(sv){const a=JSON.parse(sv);if(Array.isArray(a)&&a.every(r=>r&&typeof r=="object")){
  rows=a.map(r=>Object.assign({date:"",time:"18:00",tz:BTZ,name:"",type:"Friendly",game:"",fee:"",store:"",pw:"",url:""},r));
- rows.forEach(r=>{if(!TYPES.includes(r.type))r.type="Friendly"});lastRows=JSON.stringify(rows);autoAll(rows)}}}catch(e){}
+ lastRows=JSON.stringify(rows);autoAll(rows)}}}catch(e){}
 drawRows();placeCards();
 
 
@@ -891,11 +920,11 @@ function usageRows(){const rs=data(),p2=p2N(),cu=cutN(),n=r=>+r.place;
  return{rows:out.slice(0,Math.max(1,+$("utop").value||10)),N}}
 function UM(){const U=usageRows(),rh=68;return{U,rh,cols:active(),h:64+U.rows.length*rh}}
 function uInfo(){const U=usageRows();$("ucount").textContent="Players with "+(pgame=="TCG"?"decks":"Pokémon")+" – all: "+U.N.all+", Phase 2: "+U.N.p2+", Top Cut: "+U.N.cut+"."}
-function drawUsage(c,S,top,W){const M=UM(),X=50,TW=W-100,RH=64,cw=190,nc=M.cols.length,fw=TW-nc*cw,F=w=>w+' 24px "Trebuchet MS",sans-serif';
+function drawUsage(c,S,top,W,pg){const M=UM(),X=50,TW=W-100,RH=64,cw=190,nc=M.cols.length,fw=TW-nc*cw,F=w=>w+' 24px "Trebuchet MS",sans-serif';
  if(!nc||!M.U.rows.length){c.fillStyle=S.tx;c.font=F(600);c.fillText(nc?"No usage data yet. Add players with "+(pgame=="TCG"?"decks (Pokémon 1 and 2)":"Pokémon")+" or add manual entries.":"Select at least one column.",60,top+60);return}
  c.fillStyle=S.head;c.fillRect(X,top,TW,RH-8);c.fillStyle=S.hx;c.font=F(800);c.fillText(uHead(),X+16,top+(RH-8)/2);
  c.textAlign="center";M.cols.forEach(([,l],i)=>c.fillText(l,X+fw+i*cw+cw/2,top+(RH-8)/2));c.textAlign="left";
- M.U.rows.forEach((r,j)=>{const y=top+RH+j*M.rh,h=M.rh-4,cy=y+h/2;c.fillStyle=j%2?S.r2:S.r1;c.fillRect(X,y,TW,h);
+ M.U.rows.slice(pg?pg.s:0,pg?pg.e:1e9).forEach((r,j)=>{const y=top+RH+j*M.rh,h=M.rh-4,cy=y+h/2;c.fillStyle=j%2?S.r2:S.r1;c.fillRect(X,y,TW,h);
   let tx=X+16;
   const sz=h-4;uImgs(r).forEach(u=>{const im=sprImg(u);if(im)c.drawImage(im,tx-6,y+2,sz,sz);tx+=sz*.8});tx+=sz*.2+8;
   c.fillStyle=S.tx;c.font=F(700);let t=r.name;const mw=fw-(tx-X)-16;while(c.measureText(t).width>mw&&t.length>1)t=t.slice(0,-2);if(t!=r.name)t+="…";c.fillText(t,tx,cy);
@@ -1002,12 +1031,21 @@ function psAuto(){if(pTouched||!(mode=="p"||mode=="b"||mode=="u"))return;const n
 const RF=[["game","Game"],["store","Store"],["type","Type"],["name","Name"],["fee","Entry fee"]],RCOL=["#c62828","#6a1b9a","#1565c0","#2e7d32","#ef6c00"];
 const saveRules=()=>{try{localStorage.setItem("tgs:rules",JSON.stringify(rules))}catch(e){}};
 function dlUpd(){["game","store","name","fee"].forEach(k=>{const el=$("dl-"+k);if(!el)return;el.innerHTML=[...new Set(rows.map(r=>String(r[k]||"").trim()).filter(Boolean))].map(v=>`<option value="${esc(v)}">`).join("")})}
-function drawRules(){$("rules").innerHTML=rules.map((u,i)=>`<div class="rule"><select data-i="${i}" data-r="field" aria-label="Field">${RF.map(([k,l])=>`<option value="${k}"${u.field==k?" selected":""}>${l}</option>`).join("")}</select><select data-i="${i}" data-r="op" aria-label="Condition"><option value="is"${u.op=="is"?" selected":""}>is</option><option value="contains"${u.op=="contains"?" selected":""}>contains</option></select>${u.field=="type"?`<select data-i="${i}" data-r="value" aria-label="Value">${TYPES.map(t=>`<option${t==u.value?" selected":""}>${t}</option>`).join("")}</select>`:`<input type="text" list="dl-${u.field}" data-i="${i}" data-r="value" value="${esc(u.value)}" placeholder="Value" aria-label="Value">`}<input type="color" data-i="${i}" data-r="color" value="${esc(u.color)}" aria-label="Colour"><button class="x" data-del="${i}" aria-label="Remove rule">×</button></div>`).join("")}
+function drawRules(){$("rules").innerHTML=rules.map((u,i)=>`<div class="rule"><select data-i="${i}" data-r="field" aria-label="Field">${RF.map(([k,l])=>`<option value="${k}"${u.field==k?" selected":""}>${l}</option>`).join("")}</select><select data-i="${i}" data-r="op" aria-label="Condition"><option value="is"${u.op=="is"?" selected":""}>is</option><option value="contains"${u.op=="contains"?" selected":""}>contains</option></select>${false?`<select data-i="${i}" data-r="value" aria-label="Value">${TYPES.map(t=>`<option${t==u.value?" selected":""}>${t}</option>`).join("")}</select>`:`<input type="text" list="dl-${u.field}" data-i="${i}" data-r="value" value="${esc(u.value)}" placeholder="Value" aria-label="Value">`}<input type="color" data-i="${i}" data-r="color" value="${esc(u.color)}" aria-label="Colour"><button class="x" data-del="${i}" aria-label="Remove rule">×</button></div>`).join("")}
 $("rules").addEventListener("input",e=>{const t=e.target,i=t.dataset.i;if(i==null||t.dataset.r=="field")return;rules[i][t.dataset.r]=t.value;saveRules();render()});
 $("rules").addEventListener("change",e=>{const t=e.target,i=t.dataset.i;if(i==null||t.dataset.r!="field")return;const u=rules[i];u.field=t.value;if(u.field=="type"&&!TYPES.includes(u.value))u.value="Friendly";if(u.field!="type"&&TYPES.includes(u.value))u.value="";drawRules();saveRules();render()});
 $("rules").addEventListener("click",e=>{const d=e.target.dataset.del;if(d!=null){rules.splice(d,1);drawRules();saveRules();render()}});
 $("addrule").onclick=()=>{rules.push({field:"game",op:"is",value:"",color:RCOL[rules.length%RCOL.length]});drawRules();saveRules();render()};
 try{const sv=JSON.parse(localStorage.getItem("tgs:rules")||"[]");if(Array.isArray(sv)){rules=sv.filter(u=>u&&typeof u=="object").map(u=>({field:RF.some(f=>f[0]==u.field)?u.field:"game",op:u.op=="contains"?"contains":"is",value:String(u.value||""),color:/^#[0-9a-f]{6}$/i.test(u.color)?u.color:"#c62828"}));drawRules();render()}}catch(e){}
+function fillDlTz(date){$("dl-tz").innerHTML=TZS.map(z=>{const i=tzInfo(z,date),lb=(i.ab=="UTC"?"UTC":i.ab?i.ab+" ("+i.off+")":i.off)+" – "+z.replace(/_/g," ");return`<option value="${z}" label="${esc(lb)}">`}).join("")}
+fillDlTz("");
+$("rows").addEventListener("change",e=>{const t=e.target;if(!t.dataset||t.dataset.k!="tz"||t.tagName!="INPUT")return;
+ const tr=t.closest("tr"),v=t.value.trim().toLowerCase();if(!v)return;
+ const z=TZS.find(z=>z.toLowerCase()==v)||TZS.find(z=>["2026-01-15","2026-07-15"].some(dt=>{const i=tzInfo(z,dt);return i.ab&&i.ab.toLowerCase()==v}));
+ if(z&&z!=t.value){t.value=z;t.dispatchEvent(new Event("input",{bubbles:true}))}});
+$("t-date").addEventListener("input",()=>{const sel=$("t-tz");sel.innerHTML=tzOpts(sel.value,$("t-date").value)});
+$("rows").addEventListener("input",e=>{const t=e.target;if(t.dataset&&t.dataset.k=="date"){const tr=t.closest("tr"),sel=tr&&tr.querySelector("select[data-k=tz]");if(sel)sel.innerHTML=tzOpts(sel.value,t.value)}});
+$("rows").addEventListener("focusin",e=>{const k=e.target.dataset&&e.target.dataset.k;if(k=="type"||k=="tz")e.target.select();if(k=="tz"){const dt=e.target.closest("tr").querySelector("[data-k=date]");fillDlTz(dt?dt.value:"")}});
 (function(){const lab=t=>{const h=[...t.querySelectorAll("thead th")].map(x=>x.textContent.trim());
  t.querySelectorAll("tbody tr").forEach(tr=>[...tr.children].forEach((td,i)=>{if(h[i])td.dataset.l=h[i];else td.removeAttribute("data-l")}))};
  document.querySelectorAll("table.ed").forEach(t=>{lab(t);new MutationObserver(()=>lab(t)).observe(t,{childList:true,subtree:true})})})();
