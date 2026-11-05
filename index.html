@@ -53,10 +53,10 @@ textarea.out{height:260px;font-family:ui-monospace,Consolas,monospace;font-size:
 .cgrid label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mute);margin:0}
 .cgrid input[type=color]{width:100%;height:40px;padding:2px;border:1px solid var(--line);border-radius:6px;background:var(--bg);cursor:pointer}
 .fl{font-weight:700;flex:0 0 auto;min-width:70px}
-#faddsel{max-width:340px}
-.rule{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:8px}
-.rule select,.rule input[type=text]{flex:1 1 110px;width:auto;min-width:0}
-.rule input[type=color]{width:48px;height:40px;padding:2px;border:1px solid var(--line);border-radius:6px;background:var(--bg);cursor:pointer}
+.rcrow{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.rcv{flex:1;min-width:0;overflow-wrap:anywhere}
+.rcrow input[type=color]{width:52px;height:38px;padding:2px;border:1px solid var(--line);border-radius:6px;background:var(--bg);cursor:pointer;flex:none}
+.rcrow input.unset{opacity:.4}
 /* ---- privacy notice ---- */
 #privacy{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));max-width:760px;margin:0 auto;z-index:50;background:var(--panel);color:var(--ink);border:2px solid var(--acc);border-radius:12px;padding:14px 16px;box-shadow:0 8px 30px rgba(0,0,0,.35);display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 #privacy p{margin:0;flex:1 1 320px;font-size:14px;line-height:1.5}
@@ -90,6 +90,12 @@ textarea.out{height:260px;font-family:ui-monospace,Consolas,monospace;font-size:
  table.ed td:has([data-k="name"]),table.ed td:has([data-k="store"]),table.ed td:has([data-k="url"]),table.ed td:has([data-k="ov"]),table.ed td:has([data-k="game"]),table.ed td:last-child{grid-column:1/-1}
  table.ed input,table.ed select{font-size:16px;padding:8px 9px}
  table.ed input.item{font-size:14px}
+ table.ed td.selc{text-align:left}
+ table.ed td:has([data-k="on"]){grid-column:1/-1}
+ table.ed td.selc input{width:24px;height:24px}
+ table.ed .pkgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ table.ed tr.pk1{margin-bottom:0;border-bottom:0;border-radius:8px 8px 0 0;padding-bottom:0}
+ table.ed tr.pk2{border-top:0;border-radius:0 0 8px 8px;padding-top:6px}
  .x{width:100%;height:44px}
  canvas{width:100%}
  textarea.out{height:200px}
@@ -112,6 +118,15 @@ th .hdrw{display:flex;align-items:center;gap:2px}
 table.ed th input.hdr{background:transparent;border:0;border-bottom:1px dashed var(--mute);border-radius:0;padding:2px 0;font-size:12px;font-weight:700;color:var(--ink);width:100%;min-width:0}
 table.ed th input.hdr:focus{outline:none;border-bottom:1px solid var(--acc)}
 .hx{background:none;border:0;color:var(--acc);cursor:pointer;font-weight:700;padding:0 4px;font-size:15px}
+.pkgrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
+.pk{display:flex;flex-direction:column;gap:4px;min-width:0}
+.pkl{font-size:12px;color:var(--mute);font-weight:700}
+.pk input,.pk select{width:100%}
+table.ed tr.pk2 td{padding:0 3px 12px;border-bottom:1px solid var(--line)}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+th.selc,td.selc{text-align:center}
+table.ed td.selc input,table.ed th.selc input{width:18px;height:18px;padding:0;accent-color:var(--acc);cursor:pointer;vertical-align:middle;margin:0}
+table.ed tr.off td:not(.selc){opacity:.45}
 .colchk{width:15px;height:15px;margin:0 6px 0 0;vertical-align:middle;accent-color:var(--acc);flex:none;cursor:pointer}
 .th-t{display:inline-flex;align-items:center;margin:0;font-size:12px;color:var(--mute);font-weight:700;cursor:pointer;white-space:nowrap}
 label>.colchk{margin-right:6px}
@@ -150,7 +165,8 @@ label>.colchk{margin-right:6px}
    <button class="btn ghost" id="tpl">Download CSV template</button>
   </div>
   <p class="note">CSV columns: date, time, game, type, fee, store, and optionally time zone (e.g. Europe/Berlin), tournament name, link URL and password, followed by any extra columns in the order they appear in the table. Date as YYYY-MM-DD. A header row is optional.</p>
-  <p class="note">Click the Store or Password header to rename it. "Add column" creates an extra column after Link; its name can be edited as well. Column names are saved in this browser.</p>
+  <p class="note">Untick the checkbox at the start of a tournament to leave it out of the outputs. Click the Store or Password header to rename it. "Add column" creates an extra column after Link; its name can be edited as well. Column names are saved in this browser.</p>
+  <p class="note" id="fnote"></p>
  </section>
 </div>
 <div id="colL">
@@ -202,14 +218,10 @@ label>.colchk{margin-right:6px}
     <div><button class="btn ghost" id="lgx" style="margin-top:8px" hidden>Remove logo</button></div></div>
   </div>
   <button class="btn ghost" id="bgx" style="margin-top:8px" hidden>Remove background</button>
-  <div id="filterbox"><h2 style="margin-top:16px">Filter schedule</h2>
-  <p class="note" style="margin-top:0">Only tournaments that match every filter are used in the outputs. Choose a column from the list to add a filter, and remove it with the × button.</p>
-  <div id="filters"></div>
-  <select id="faddsel" aria-label="Add a filter"></select>
-  <p class="note" id="fnote"></p>
-  <h2 style="margin-top:16px">Row colours</h2>
-  <p class="note" style="margin-top:0">Give tournaments a background colour based on their data, for example every VGC tournament in red or every tournament of one store in purple. The first rule that matches a tournament is used. This applies to the JPG and HTML outputs. The Tag field can match "Double Header", which is added automatically when a store runs a Challenge and a Cup of the same game on the same day.</p>
-  <div id="rules"></div><button class="btn ghost" id="addrule">Add colour rule</button>
+  <div id="filterbox"><h2 style="margin-top:16px">Row colours</h2>
+  <p class="note" style="margin-top:0">Choose a tab, then pick a colour for each entry in it. Tournaments with that entry get the colour as their background in the JPG and HTML outputs. Double Header is listed under Type once a store runs a Challenge and a Cup of the same game on the same day. If a tournament has more than one coloured entry, Double Header comes first, then Type, Game, Store and the extra columns.</p>
+  <div class="row" id="rctabs" role="tablist" aria-label="Colour rows by"></div>
+  <div id="rclist" style="margin-top:12px"></div>
   <datalist id="dl-game"></datalist><datalist id="dl-tag"><option value="Double Header"></datalist><datalist id="dl-type"><option value="Friendly"><option value="Challenge"><option value="Cup"><option value="Online"></datalist><datalist id="dl-tz"></datalist><datalist id="dl-store"></datalist><datalist id="dl-name"></datalist><datalist id="dl-fee"></datalist></div>
   <h2 style="margin-top:8px">Output</h2>
   <div class="radios" id="fmt">
@@ -346,19 +358,21 @@ label>.colchk{margin-right:6px}
 </main>
 
 <div id="privacy" role="region" aria-label="Data storage notice" hidden>
- <p><strong>Your data stays on your device.</strong> To save you retyping, this tool remembers some of your inputs (the tournaments and colour rules on the Schedule tab, the Limitless links and pasted data, your custom colours, and your social media links) in your browser’s local storage. <strong>Nothing is sent to a server, nothing is shared, and no cookies are used.</strong> The only outside requests are for pictures, such as Pokémon sprites, which are looked up by Pokémon name. To delete the saved data, clear this site’s data in your browser settings.</p>
+ <p><strong>Your data stays on your device.</strong> To save you retyping, this tool remembers some of your inputs (the tournaments and row colours on the Schedule tab, the Limitless links and pasted data, your custom colours, and your social media links) in your browser’s local storage. <strong>Nothing is sent to a server, nothing is shared, and no cookies are used.</strong> The only outside requests are for pictures, such as Pokémon sprites, which are looked up by Pokémon name. To delete the saved data, clear this site’s data in your browser settings.</p>
  <button class="btn acc" id="privok">Got it</button>
 </div>
 <script>
 const COLS=[["date","Date"],["time","Time"],["tz","Time zone"],["name","Tournament name"],["type","Type"],["game","Game"],["fee","Entry fee"],["store","Store"],["pw","Password"]];
 const TYPES=["Friendly","Challenge","Cup","Online"];
-let rules=[],filters=[],DH=new WeakSet();
+let rowColors={},DH=new WeakSet();
 function dhKey(r){return r.date+"|"+String(r.store||"").trim().toLowerCase()+"|"+String(r.game||"").trim().toLowerCase()}
 function dhCompute(){DH=new WeakSet();const g={};rows.forEach(r=>{const t=String(r.type||"").trim().toLowerCase();if(!r.date||!String(r.store||"").trim()||(t!="challenge"&&t!="cup"))return;(g[dhKey(r)]=g[dhKey(r)]||[]).push([r,t])});
  Object.values(g).forEach(a=>{if(a.some(x=>x[1]=="challenge")&&a.some(x=>x[1]=="cup"))a.forEach(x=>DH.add(x[0]))})}
 function dhGroup(a){const seen=new Set(),res=[];a.forEach(r=>{if(!DH.has(r)){res.push(r);return}const k=dhKey(r);if(seen.has(k))return;seen.add(k);a.filter(x=>DH.has(x)&&dhKey(x)==k).forEach(x=>res.push(x))});return res}
-function fOK(r){return filters.every(f=>{const v=String(f.v||"").trim().toLowerCase();if(!v)return true;const x=String(r[f.k]??"").trim().toLowerCase();return f.op=="not"?x!=v:f.op=="has"?x.includes(v):f.op=="nhas"?!x.includes(v):x==v})}
-function rowCol(r){if(mode!="s")return null;for(const u of rules){const v=String(u.value||"").trim().toLowerCase();if(!v)continue;const x=u.field=="tag"?(DH.has(r)?"double header":""):String(r[u.field]||"").trim().toLowerCase();if(u.op=="contains"?x.includes(v):x==v){const c=hexRgb(u.color);return{bg:`rgba(${c.join(",")},.9)`,tx:lum(u.color)>.45?"#111111":"#ffffff"}}}return null}
+function rowCol(r){if(mode!="s")return null;const order=["tag","type","game","store"].concat(colCfg.custom.map(c=>c.k));
+ for(const k of order){const m=rowColors[k];if(!m)continue;const v=k=="tag"?(DH.has(r)?"double header":""):String(r[k]||"").trim().toLowerCase();
+  if(v&&m[v]){const c=m[v],x=hexRgb(c);return{bg:`rgba(${x.join(",")},.9)`,tx:lum(c)>.45?"#111111":"#ffffff"}}}
+ return null}
 const BTZ=Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC";
 const TZS=["UTC","Europe/London","Europe/Berlin","Europe/Athens","America/New_York","America/Chicago","America/Denver","America/Los_Angeles","America/Sao_Paulo","Asia/Tokyo","Australia/Sydney"];
 if(!TZS.includes(BTZ))TZS.unshift(BTZ);
@@ -406,14 +420,14 @@ function autoAll(list){list.forEach(r=>Object.keys(show).forEach(k=>{if(k!="tz")
 
 /* editor */
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const FIXEDC=[["date","Date",114],["time","Time",92],["tz","Time zone",134],["name","Name",182],["type","Type",100],["game","Game",120],["fee","Entry fee",98],["store","Store",136],["pw","Password",110],["url","Link",132]];
+const FIXEDC=[["on","",46],["date","Date",114],["time","Time",92],["tz","Time zone",134],["name","Name",182],["type","Type",100],["game","Game",120],["fee","Entry fee",98],["store","Store",136],["pw","Password",110],["url","Link",132]];
 function drawHead(){
- const cols=FIXEDC.map(([k,l,w])=>({k,l:COLDEF[k]?lbl(k):l,w,ed:!!COLDEF[k],tg:k!="url"})).concat(colCfg.custom.map(c=>({k:c.k,l:c.l,w:150,ed:true,del:true,tg:true})));
+ const cols=FIXEDC.map(([k,l,w])=>({k,l:COLDEF[k]?lbl(k):l,w,ed:!!COLDEF[k],tg:k!="url"&&k!="on"})).concat(colCfg.custom.map(c=>({k:c.k,l:c.l,w:150,ed:true,del:true,tg:true})));
  $("rcg").innerHTML=cols.map(c=>`<col style="width:${c.w}px">`).join("")+'<col style="width:44px">';
  $("rtab").style.minWidth=(cols.reduce((x,c)=>x+c.w,0)+44)+"px";
- $("rhr").innerHTML=cols.map(c=>c.ed?`<th><div class="hdrw">${tog(c.k)}<input type="text" class="hdr" data-hk="${c.k}" value="${esc(c.l)}" maxlength="40" aria-label="Column name" title="Click to rename this column">${c.del?`<button class="hx" type="button" data-hdel="${c.k}" aria-label="Remove column" title="Remove column">×</button>`:""}</div></th>`:c.tg?`<th><label class="th-t">${tog(c.k)}${esc(c.l)}</label></th>`:`<th>${esc(c.l)}</th>`).join("")+"<th></th>";
+ $("rhr").innerHTML=cols.map(c=>c.k=="on"?`<th class="selc"><label class="th-t" title="Show or hide all tournaments"><input type="checkbox" id="rall" aria-label="Show all tournaments"><span class="vh">Show on graphic</span></label></th>`:c.ed?`<th><div class="hdrw">${tog(c.k)}<input type="text" class="hdr" data-hk="${c.k}" value="${esc(c.l)}" maxlength="40" aria-label="Column name" title="Click to rename this column">${c.del?`<button class="hx" type="button" data-hdel="${c.k}" aria-label="Remove column" title="Remove column">×</button>`:""}</div></th>`:c.tg?`<th><label class="th-t">${tog(c.k)}${esc(c.l)}</label></th>`:`<th>${esc(c.l)}</th>`).join("")+"<th></th>";
  $("colpanel").innerHTML="<label>Columns shown in the output, and column names</label>"+cols.filter(c=>c.tg).map(c=>c.ed?`<div class="crow">${tog(c.k)}<div><input type="text" id="cp-${c.k}" data-hk="${c.k}" value="${esc(c.l)}" maxlength="40" aria-label="${c.del?"Extra column name":esc(COLDEF[c.k])+" column name"}"></div>${c.del?`<button class="btn ghost" type="button" data-hdel="${c.k}" aria-label="Remove column">Remove</button>`:""}</div>`:`<div class="crow"><label class="th-t">${tog(c.k)}${esc(c.l)}</label></div>`).join("");syncChecks()}
-function afterCols(){applyCols();saveCols();if(typeof drawFilters=="function")drawFilters();if(typeof RF!="undefined"){RF[1][1]=lbl("store");drawRules()}buildCols();syncChecks();if(window.relabelTables)relabelTables();render()}
+function afterCols(){applyCols();saveCols();if(window.rcReady)drawRC(true);buildCols();syncChecks();if(window.relabelTables)relabelTables();render()}
 function onHdr(e){const t=e.target,k=t.dataset&&t.dataset.hk;if(k==null)return;const v=t.value.trim().slice(0,40);
  if(COLDEF[k]){if(v)colCfg.labels[k]=v;else delete colCfg.labels[k]}else{const c=colCfg.custom.find(u=>u.k==k);if(c)c.l=v}
  document.querySelectorAll('[data-hk="'+k+'"]').forEach(x=>{if(x!==t)x.value=t.value});afterCols()}
@@ -425,7 +439,8 @@ document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest
  if(rows.some(r=>String(r[k]||"").trim())&&!confirm("Remove the column \u201c"+(c.l||"Column")+"\u201d and all its entries?"))return;
  colCfg.custom=colCfg.custom.filter(u=>u.k!=k);rows.forEach(r=>{delete r[k]});delete show[k];drawHead();drawRows();afterCols()});
 function drawRows(){
- $("rows").innerHTML=rows.map((r,i)=>`<tr>
+ $("rows").innerHTML=rows.map((r,i)=>`<tr${r.on===false?' class="off"':""}>
+ <td class="selc"><input type="checkbox" data-i="${i}" data-k="on"${r.on===false?"":" checked"} aria-label="Show this tournament on the graphic" title="Show this tournament on the graphic"></td>
  <td><input type="date" data-i="${i}" data-k="date" value="${esc(r.date)}"></td>
  <td><input type="time" data-i="${i}" data-k="time" value="${esc(r.time)}"></td>
  <td><input type="text" list="dl-tz" data-i="${i}" data-k="tz" value="${esc(r.tz)}" placeholder="e.g. CET" aria-label="Time zone"></td>
@@ -437,9 +452,11 @@ function drawRows(){
  <td><input type="text" data-i="${i}" data-k="pw" value="${esc(r.pw)}"></td>
  <td><input type="url" data-i="${i}" data-k="url" placeholder="https://…" value="${esc(r.url)}"></td>${colCfg.custom.map(c=>`
  <td><input type="text" data-i="${i}" data-k="${c.k}" value="${esc(r[c.k])}" aria-label="${esc(c.l)}"></td>`).join("")}
- <td><button class="x" data-del="${i}" aria-label="Remove line">×</button></td></tr>`).join("");
+ <td><button class="x" data-del="${i}" aria-label="Remove line">×</button></td></tr>`).join("");syncRall();
 }
-$("rows").addEventListener("input",e=>{const t=e.target;if(t.dataset.i!=null){rows[t.dataset.i][t.dataset.k]=t.value;autoShow(t.dataset.k,t.value);render()}});
+function syncRall(){const a=$("rall");if(!a)return;const n=rows.filter(r=>r.on!==false).length;a.checked=rows.length>0&&n==rows.length;a.indeterminate=n>0&&n<rows.length}
+document.addEventListener("change",e=>{if(e.target.id=="rall"){const v=e.target.checked;rows.forEach(r=>{r.on=v});drawRows();render()}});
+$("rows").addEventListener("input",e=>{const t=e.target;if(t.type=="checkbox"&&t.dataset.k=="on"){rows[t.dataset.i].on=t.checked;t.closest("tr").classList.toggle("off",!t.checked);syncRall();render();return}if(t.dataset.i!=null){rows[t.dataset.i][t.dataset.k]=t.value;autoShow(t.dataset.k,t.value);render()}});
 $("rows").addEventListener("click",e=>{const d=e.target.dataset.del;if(d!=null){rows.splice(d,1);drawRows();render()}});
 $("add").onclick=()=>{const l=rows[rows.length-1]||{};rows.push({date:l.date||"",time:l.time||"18:00",tz:l.tz===undefined?BTZ:l.tz,name:"",url:"",pw:"",game:l.game||"",type:l.type||"Friendly",fee:l.fee||"",store:l.store||""});drawRows();render()};
 $("clear").onclick=()=>{rows=[];drawRows();render()};
@@ -526,7 +543,7 @@ function mkDiscordT(){const u=normUrl(T.url),t=TT();let s="## "+(u&&t?"["+t+"](<
  [["type","Type"],["game","Game"],["fee","Entry fee"],["store",lbl("store")],["pw",lbl("pw")]].forEach(([k,l])=>{if(show[k]&&T[k])L.push("**"+l+":** "+T[k])});
  return s+L.join("\n")}
 function data(){if(mode=="t")return [T];if(isP())return stRows.filter(r=>r.place||r.name||r.record).slice().sort((a,b)=>(dropN(a)>0)-(dropN(b)>0)||dropN(a)-dropN(b)||(+a.place||999)-(+b.place||999));const f=$("from").value,t=$("to").value;
- dhCompute();return dhGroup(rows.filter(r=>!(r.date&&((f&&r.date<f)||(t&&r.date>t)))&&fOK(r)).slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)))}
+ dhCompute();return dhGroup(rows.filter(r=>!(r.date&&((f&&r.date<f)||(t&&r.date>t)))&&r.on!==false).slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)))}
 function fmtDate(s){if(!s)return"";const d=new Date(s+"T12:00:00");return isNaN(d)?s:d.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}
 const cell=(r,k)=>k=="place"&&isDrop(r)?"":k=="date"?fmtDate(r.date):k=="time"?(r.time||""):k=="tz"?tzCol(r):(r[k]||"");
 const active=()=>(mode=="u"?COLS_U:mode=="m"?COLS_M:isP()?COLS_S:COLS).filter(([k])=>show[k]&&!(mode=="t"&&k=="name"));
@@ -657,7 +674,7 @@ function mkCanvas(){const AR=aspect(),pb=$("pagebox"),cv=$("cv");
  pb.hidden=false;cv.hidden=true;pageCvs=pages;$("dl").textContent=pages.length>1?"Download all "+pages.length+" pages":"Download JPG"}
 
 function render(){
- if(mode=="s"){drawGF();dlUpd()}
+ if(mode=="s"){drawFnote();dlUpd();if(window.rcReady)drawRC()}
  saveRows();
  if(mode=="m")$("mrec").textContent=mRec()?"Your record: "+mRec():"";
  if(mode=="u")uInfo();
@@ -813,13 +830,17 @@ function sprImg(u){const e=sprC[u];if(e)return e.ok?e.im:null;
  const im=new Image();im.crossOrigin="anonymous";sprC[u]={im,ok:false};
  im.onload=()=>{sprC[u].ok=true;render()};im.onerror=()=>{};im.src=u;return null}
 const PCOLS=()=>(mode=="m"?[["place","Round",10],["name","Opponent",28],["record","Result",16],["points","Table",12]]:[["place","Place",10],["name","Player",24],["record","Record",13],["points","Points",10]]).concat(gameKeys().map((k,i)=>[k,"Pokémon "+(i+1),pgame=="TCG"?15:9]),mode=="m"?[]:[["drop","Dropped (rd.)",13]]);
-function drawPRows(){setTimeout(()=>{if(mode=="b")drawBkRes()},0);const cols=PCOLS(),sum=cols.reduce((x,c)=>x+c[2],0);
- $("ptable").style.minWidth=pgame=="TCG"?"780px":"1100px";
+function drawPRows(){setTimeout(()=>{if(mode=="b")drawBkRes()},0);const two=pgame=="VGC"||pgame=="GO",cols=PCOLS().filter(c=>!(two&&isMonKey(c[0]))),sum=cols.reduce((x,c)=>x+c[2],0);
+ $("ptable").style.minWidth="780px";
  $("pcg").innerHTML=cols.map(c=>`<col style="width:${(c[2]/sum*100).toFixed(1)}%">`).join("")+'<col style="width:40px">';
  const TK=mode=="b"?[]:["place","name","record","points"];
  $("phr").innerHTML=cols.map(([k,l])=>TK.includes(k)?`<th><label class="th-t">${tog(k)}${l}</label></th>`:`<th${k=="drop"?' title="Round in which the player dropped. Leave empty if the player did not drop. Not shown in the outputs."':""}>${l}</th>`).join("")+"<th></th>";
  $("ppanel").innerHTML=TK.length?"<label>Columns shown in the output</label>"+cols.filter(c=>TK.includes(c[0])).map(([k,l])=>`<div class="crow"><label class="th-t">${tog(k)}${l}</label></div>`).join(""):"";
- $("prows").innerHTML=stRows.map((r,i)=>`<tr>${cols.map(([k])=>`<td><input type="text"${k=="drop"?' inputmode="numeric" placeholder="–" aria-label="Round dropped"':""}${isMonKey(k)?' list="pkmn" autocomplete="off" placeholder="Pokémon"'+(r[k]&&r[k].trim()&&!monId(r[k])?' class="bad"':""):""} data-i="${i}" data-k="${k}" value="${esc(r[k])}">${pgame=="VGC"&&isMonKey(k)?`<input type="text" class="item" placeholder="Item (optional)" aria-label="Held item" autocomplete="off" data-i="${i}" data-k="${k}i" value="${esc(r[k+"i"])}">`:""}${pgame=="GO"&&isMonKey(k)?`<select class="item" aria-label="Shadow or Purified" data-i="${i}" data-k="${k}s"><option value="">Regular</option><option${r[k+"s"]=="Shadow"?" selected":""}>Shadow</option><option${r[k+"s"]=="Purified"?" selected":""}>Purified</option></select>`:""}</td>`).join("")}<td><button class="x" data-del="${i}" aria-label="Remove line">×</button></td></tr>`).join("");syncChecks()}
+ const monIn=(r,i,k)=>`<input type="text" list="pkmn" autocomplete="off" placeholder="Pokémon" aria-label="Pokémon"${r[k]&&r[k].trim()&&!monId(r[k])?' class="bad"':""} data-i="${i}" data-k="${k}" value="${esc(r[k])}">${pgame=="VGC"?`<input type="text" class="item" placeholder="Item (optional)" aria-label="Held item" autocomplete="off" data-i="${i}" data-k="${k}i" value="${esc(r[k+"i"])}">`:""}${pgame=="GO"?`<select class="item" aria-label="Shadow or Purified" data-i="${i}" data-k="${k}s"><option value="">Regular</option><option${r[k+"s"]=="Shadow"?" selected":""}>Shadow</option><option${r[k+"s"]=="Purified"?" selected":""}>Purified</option></select>`:""}`;
+ const plIn=(r,i,k)=>`<input type="text"${k=="drop"?' inputmode="numeric" placeholder="–" aria-label="Round dropped"':""} data-i="${i}" data-k="${k}" value="${esc(r[k])}">`;
+ $("prows").innerHTML=stRows.map((r,i)=>{const del=`<td><button class="x" data-del="${i}" aria-label="Remove line">×</button></td>`;
+  if(!two)return`<tr>${cols.map(([k])=>`<td>${isMonKey(k)?monIn(r,i,k):plIn(r,i,k)}</td>`).join("")}${del}</tr>`;
+  return`<tr class="pk1">${cols.map(([k])=>`<td>${plIn(r,i,k)}</td>`).join("")}${del}</tr><tr class="pk2"><td class="pk2c" colspan="${cols.length+1}"><div class="pkgrid">${gameKeys().map((k,n)=>`<div class="pk"><span class="pkl">Pokémon ${n+1}</span>${monIn(r,i,k)}</div>`).join("")}</div></td></tr>`}).join("");syncChecks()}
 $("prows").addEventListener("input",e=>{const t=e.target;if(mode=="b")setTimeout(drawBkRes,0);if(t.dataset.i!=null){stRows[t.dataset.i][t.dataset.k]=t.value;if(isMonKey(t.dataset.k))t.classList.toggle("bad",!!t.value.trim()&&!monId(t.value));autoShow(t.dataset.k,t.value);render()}});
 $("prows").addEventListener("click",e=>{const d=e.target.dataset.del;if(d!=null){stRows.splice(d,1);drawPRows();render()}});
 $("padd").onclick=()=>{stRows.push({place:String(stRows.length+1),name:"",record:"",points:"",drop:"",mon1:"",mon2:""});drawPRows();render()};
@@ -1076,21 +1097,7 @@ $("mlimgo").onclick=()=>{const m=$("mlimmsg"),pl=$("mplayer").value.trim().toLow
  window.addEventListener("hashchange",()=>{const id=from();if(id!=cur){tab(id);sync(id)}});
  TABS.forEach(([b])=>document.getElementById(b).addEventListener("click",()=>{sync(b);const h="#"+R[b];if(location.hash!=h)location.hash=h}));
  const id0=from();if(id0!="t-sch")tab(id0);sync(id0)})();
-/* filters: added and removed by the user, using the headers of the data input table */
-const fCols=()=>FIXEDC.map(([k,l])=>[k,COLDEF[k]?lbl(k):l]).concat(colCfg.custom.map(c=>[c.k,c.l||"Column"]));
-function drawFilters(){const C=fCols(),L=Object.fromEntries(C);filters=filters.filter(f=>L[f.k]);
- $("filters").innerHTML=filters.map((f,i)=>`<div class="rule"><span class="fl">${esc(L[f.k])}</span><select data-i="${i}" data-f="op" aria-label="Condition">${[["is","is"],["not","is not"],["has","contains"],["nhas","does not contain"]].map(([v,t])=>`<option value="${v}"${f.op==v?" selected":""}>${t}</option>`).join("")}</select><input type="text" list="dlf-${i}" data-i="${i}" data-f="v" value="${esc(f.v)}" placeholder="Value" aria-label="Value"><datalist id="dlf-${i}"></datalist><button class="x" data-fdel="${i}" aria-label="Remove filter">×</button></div>`).join("");
- $("faddsel").innerHTML='<option value="">Add a filter…</option>'+C.map(([k,l])=>`<option value="${k}">${esc(l)}</option>`).join("");
- fillFDl();drawFnote()}
-function fillFDl(){filters.forEach((f,i)=>{const dl=$("dlf-"+i);if(!dl)return;const vals=[...new Set(rows.map(r=>String(r[f.k]??"").trim()).filter(Boolean))].slice(0,60),key=vals.join("\u0001");
- if(dl.dataset.k!==key){dl.dataset.k=key;dl.innerHTML=vals.map(v=>`<option value="${esc(v)}">`).join("")}})}
-function drawFnote(){if(mode!="s")return;const n=data().length,all=rows.length;$("fnote").textContent=n==all?"":n+" of "+all+" tournaments shown."}
-function drawGF(){fillFDl();drawFnote()}
-$("faddsel").onchange=e=>{const k=e.target.value;if(!k)return;filters.push({k,op:"is",v:""});drawFilters();render();const inp=$("filters").querySelector('[data-i="'+(filters.length-1)+'"][data-f="v"]');if(inp)inp.focus()};
-$("filters").addEventListener("input",e=>{const t=e.target;if(t.dataset.f=="v"&&filters[t.dataset.i]){filters[t.dataset.i].v=t.value;render()}});
-$("filters").addEventListener("change",e=>{const t=e.target;if(t.dataset.f=="op"&&filters[t.dataset.i]){filters[t.dataset.i].op=t.value;render()}});
-$("filters").addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-fdel]");if(!b)return;filters.splice(b.dataset.fdel,1);drawFilters();render()});
-drawFilters();
+function drawFnote(){if(mode!="s")return;const n=data().length,all=rows.length;$("fnote").textContent=n==all?"":n+" of "+all+" tournaments are used in the outputs."}
 document.querySelectorAll("[data-clear]").forEach(b=>b.onclick=()=>{const ids=b.dataset.clear.split(",");ids.forEach(id=>{const e=$(id);if(!e)return;if(e.tagName=="SPAN")e.textContent="";else{e.value="";e.dispatchEvent(new Event("input",{bubbles:true}))}});if(ids.includes("mlim"))mMap=null});
 /* custom colours */
 const CUS_DEF={bg1:"#1b2750",bg2:"#0d1330",head:"#e0323f",hx:"#ffffff",row:"#080c1e",tx:"#ffffff",acc:"#ffcb05",box:"#1b2750"},CUS=Object.assign({},CUS_DEF);
@@ -1109,16 +1116,29 @@ $("plimgo").addEventListener("click",()=>{pTouched=true});
 function psAuto(){if(pTouched||!(mode=="p"||mode=="b"||mode=="u"))return;const now=new Date(),q=n=>String(n).padStart(2,"0"),today=now.getFullYear()+"-"+q(now.getMonth()+1)+"-"+q(now.getDate());
  const c=rows.map((r,i)=>[r,i]).filter(([r])=>r.date&&r.date<=today).sort((a,b)=>(b[0].date+(b[0].time||"")).localeCompare(a[0].date+(a[0].time||"")))[0];
  if(!c)return;pAuto=true;const s=$("psel");s.value=String(c[1]);s.dispatchEvent(new Event("change"));pAuto=false}
-/* row colour rules */
-const RF=[["game","Game"],["store",lbl("store")],["type","Type"],["name","Name"],["fee","Entry fee"],["tag","Tag"]],RCOL=["#c62828","#6a1b9a","#1565c0","#2e7d32","#ef6c00"];
-const saveRules=()=>{try{localStorage.setItem("tgs:rules",JSON.stringify(rules))}catch(e){}};
 function dlUpd(){["game","store","name","fee"].forEach(k=>{const el=$("dl-"+k);if(!el)return;el.innerHTML=[...new Set(rows.map(r=>String(r[k]||"").trim()).filter(Boolean))].map(v=>`<option value="${esc(v)}">`).join("")})}
-function drawRules(){$("rules").innerHTML=rules.map((u,i)=>`<div class="rule"><select data-i="${i}" data-r="field" aria-label="Field">${RF.map(([k,l])=>`<option value="${k}"${u.field==k?" selected":""}>${l}</option>`).join("")}</select><select data-i="${i}" data-r="op" aria-label="Condition"><option value="is"${u.op=="is"?" selected":""}>is</option><option value="contains"${u.op=="contains"?" selected":""}>contains</option></select>${false?`<select data-i="${i}" data-r="value" aria-label="Value">${TYPES.map(t=>`<option${t==u.value?" selected":""}>${t}</option>`).join("")}</select>`:`<input type="text" list="dl-${u.field}" data-i="${i}" data-r="value" value="${esc(u.value)}" placeholder="Value" aria-label="Value">`}<input type="color" data-i="${i}" data-r="color" value="${esc(u.color)}" aria-label="Colour"><button class="x" data-del="${i}" aria-label="Remove rule">×</button></div>`).join("")}
-$("rules").addEventListener("input",e=>{const t=e.target,i=t.dataset.i;if(i==null||t.dataset.r=="field")return;rules[i][t.dataset.r]=t.value;saveRules();render()});
-$("rules").addEventListener("change",e=>{const t=e.target,i=t.dataset.i;if(i==null||t.dataset.r!="field")return;const u=rules[i];u.field=t.value;if(u.field=="type"&&!TYPES.includes(u.value))u.value="Friendly";if(u.field=="tag"&&!u.value)u.value="Double Header";if(u.field!="type"&&TYPES.includes(u.value))u.value="";drawRules();saveRules();render()});
-$("rules").addEventListener("click",e=>{const d=e.target.dataset.del;if(d!=null){rules.splice(d,1);drawRules();saveRules();render()}});
-$("addrule").onclick=()=>{rules.push({field:"game",op:"is",value:"",color:RCOL[rules.length%RCOL.length]});drawRules();saveRules();render()};
-try{const sv=JSON.parse(localStorage.getItem("tgs:rules")||"[]");if(Array.isArray(sv)){rules=sv.filter(u=>u&&typeof u=="object").map(u=>({field:RF.some(f=>f[0]==u.field)?u.field:"game",op:u.op=="contains"?"contains":"is",value:String(u.value||""),color:/^#[0-9a-f]{6}$/i.test(u.color)?u.color:"#c62828"}));drawRules();render()}}catch(e){}
+/* row colours: one colour per entry of Type, Game, Store and the extra columns */
+let rcTab="type";
+const saveRC=()=>{try{localStorage.setItem("tgs:rowcol",JSON.stringify(rowColors))}catch(e){}};
+try{const sv=JSON.parse(localStorage.getItem("tgs:rowcol")||"null");
+ if(sv&&typeof sv=="object"){for(const k of Object.keys(sv)){if(sv[k]&&typeof sv[k]=="object"){rowColors[k]={};for(const [v,c] of Object.entries(sv[k]))if(/^#[0-9a-f]{6}$/i.test(c))rowColors[k][v]=c}}}
+ else{const old=JSON.parse(localStorage.getItem("tgs:rules")||"[]");if(Array.isArray(old)){old.forEach(u=>{if(u&&u.op=="is"&&["type","game","store","tag"].includes(u.field)&&u.value&&/^#[0-9a-f]{6}$/i.test(u.color))(rowColors[u.field]=rowColors[u.field]||{})[String(u.value).trim().toLowerCase()]=u.color});saveRC()}}}catch(e){}
+const rcKeys=()=>[["type","Type"],["game","Game"],["store",lbl("store")]].concat(colCfg.custom.map(c=>[c.k,c.l||"Column"]));
+function rcUniq(k){const m=new Map();
+ rows.forEach(r=>{const raw=String(r[k]||"").trim();if(!raw)return;const key=raw.toLowerCase(),e=m.get(key)||{label:raw,n:0};e.n++;m.set(key,e)});
+ const out=[...m].sort((a,b)=>a[1].label.localeCompare(b[1].label));
+ if(k=="type"){dhCompute();const n=rows.filter(r=>DH.has(r)).length;if(n)out.push(["double header",{label:"Double Header",n,g:"tag"}])}
+ return out}
+function drawRC(force){const keys=rcKeys();if(!keys.some(c=>c[0]==rcTab))rcTab="type";
+ const tabs=$("rctabs"),st=keys.map(c=>c[0]+c[1]).join("|")+"|"+rcTab;
+ if(force||tabs.dataset.s!==st){tabs.dataset.s=st;tabs.innerHTML=keys.map(([k,l])=>`<button class="btn seg" type="button" role="tab" data-rc="${k}" aria-pressed="${k==rcTab}">${esc(l)}</button>`).join("")}
+ const U=rcUniq(rcTab),sg=rcTab+"|"+U.map(([v,e])=>v+":"+e.n+(e.g||"")).join(","),L=$("rclist");
+ if(force||L.dataset.s!==sg){L.dataset.s=sg;
+  L.innerHTML=U.length?U.map(([v,e])=>{const g=e.g||rcTab,c=(rowColors[g]||{})[v];return`<div class="rcrow"><span class="rcv">${esc(e.label)} <span class="note">(${e.n})</span></span><input type="color" data-v="${esc(v)}" data-g="${g}" value="${c||"#888888"}"${c?"":' class="unset"'} aria-label="Colour for ${esc(e.label)}"><button class="btn ghost" type="button" data-rcreset="${esc(v)}" data-g="${g}"${c?"":" disabled"}>Reset</button></div>`}).join(""):`<p class="note">Entries appear here once you add tournaments.</p>`}}
+$("rctabs").addEventListener("click",e=>{const b=e.target.closest("[data-rc]");if(!b)return;rcTab=b.dataset.rc;drawRC(true)});
+$("rclist").addEventListener("input",e=>{const t=e.target;if(t.type!="color")return;const g=t.dataset.g||rcTab;(rowColors[g]=rowColors[g]||{})[t.dataset.v]=t.value;t.classList.remove("unset");const rb=t.parentElement.querySelector("[data-rcreset]");if(rb)rb.disabled=false;saveRC();render()});
+$("rclist").addEventListener("click",e=>{const b=e.target.closest("[data-rcreset]");if(!b)return;{const g=b.dataset.g||rcTab;if(rowColors[g])delete rowColors[g][b.dataset.rcreset]}saveRC();drawRC(true);render()});
+window.rcReady=true;drawRC(true);render();
 function fillDlTz(date){$("dl-tz").innerHTML=TZS.map(z=>{const i=tzInfo(z,date),lb=(i.ab=="UTC"?"UTC":i.ab?i.ab+" ("+i.off+")":i.off)+" – "+z.replace(/_/g," ");return`<option value="${z}" label="${esc(lb)}">`}).join("")}
 fillDlTz("");
 $("rows").addEventListener("change",e=>{const t=e.target;if(!t.dataset||t.dataset.k!="tz"||t.tagName!="INPUT")return;
@@ -1129,7 +1149,7 @@ $("t-date").addEventListener("input",()=>{const sel=$("t-tz");sel.innerHTML=tzOp
 $("rows").addEventListener("input",e=>{const t=e.target;if(t.dataset&&t.dataset.k=="date"){const tr=t.closest("tr"),sel=tr&&tr.querySelector("select[data-k=tz]");if(sel)sel.innerHTML=tzOpts(sel.value,t.value)}});
 $("rows").addEventListener("focusin",e=>{const k=e.target.dataset&&e.target.dataset.k;if(k=="type"||k=="tz")e.target.select();if(k=="tz"){const dt=e.target.closest("tr").querySelector("[data-k=date]");fillDlTz(dt?dt.value:"")}});
 (function(){const lab=t=>{const h=[...t.querySelectorAll("thead th")].map(x=>{const i=x.querySelector("input.hdr");return(i?i.value:x.textContent).trim()});
- t.querySelectorAll("tbody tr").forEach(tr=>[...tr.children].forEach((td,i)=>{if(h[i])td.dataset.l=h[i];else td.removeAttribute("data-l")}))};
+ t.querySelectorAll("tbody tr").forEach(tr=>[...tr.children].forEach((td,i)=>{if(h[i]&&!td.classList.contains("pk2c"))td.dataset.l=h[i];else td.removeAttribute("data-l")}))};
  document.querySelectorAll("table.ed").forEach(t=>{lab(t);new MutationObserver(()=>lab(t)).observe(t,{childList:true,subtree:true})});window.relabelTables=()=>document.querySelectorAll("table.ed").forEach(lab)})();
 </script>
 </body>
