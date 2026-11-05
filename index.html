@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head> <!--random comment-->
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mari’s Graphic Generation Tool</title>
@@ -53,6 +53,11 @@ textarea.out{height:260px;font-family:ui-monospace,Consolas,monospace;font-size:
 .cgrid label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mute);margin:0}
 .cgrid input[type=color]{width:100%;height:40px;padding:2px;border:1px solid var(--line);border-radius:6px;background:var(--bg);cursor:pointer}
 .fl{font-weight:700;flex:0 0 auto;min-width:70px}
+.qb{display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:var(--bg);border:1px solid var(--ink);border-radius:999px;padding:6px 14px;font-weight:700;cursor:pointer;font-size:14px}
+.qb .n{opacity:.7;font-weight:400}
+.qb.off{background:none;color:var(--mute);border-color:var(--line);text-decoration:line-through}
+.qb.mix{background:none;color:var(--ink);border:1px dashed var(--ink)}
+@media (max-width:720px){.qb{min-height:40px}}
 .rcrow{display:flex;align-items:center;gap:10px;margin-bottom:8px}
 .rcv{flex:1;min-width:0;overflow-wrap:anywhere}
 .rcrow input[type=color]{width:52px;height:38px;padding:2px;border:1px solid var(--line);border-radius:6px;background:var(--bg);cursor:pointer;flex:none}
@@ -167,6 +172,10 @@ label>.colchk{margin-right:6px}
   <p class="note">CSV columns: date, time, game, type, fee, store, and optionally time zone (e.g. Europe/Berlin), tournament name, link URL and password, followed by any extra columns in the order they appear in the table. Date as YYYY-MM-DD. A header row is optional.</p>
   <p class="note">Untick the checkbox at the start of a tournament to leave it out of the outputs. Click the Store or Password header to rename it. "Add column" creates an extra column after Link; its name can be edited as well. Column names are saved in this browser.</p>
   <p class="note" id="fnote"></p>
+  <div id="qsel" style="margin-top:14px"><label>Unselect tournaments by entry</label>
+   <div class="row" id="qstabs" role="tablist" aria-label="Unselect by column"></div>
+   <div class="row" id="qslist" style="margin-top:10px"></div>
+   <p class="note">Click an entry to unselect every tournament that has it, and click it again to select them again. Entries with only some tournaments selected show a dashed outline.</p></div>
  </section>
 </div>
 <div id="colL">
@@ -428,7 +437,7 @@ function drawHead(){
  $("rtab").style.minWidth=(cols.reduce((x,c)=>x+c.w,0)+44)+"px";
  $("rhr").innerHTML=cols.map(c=>c.k=="on"?`<th class="selc"><label class="th-t" title="Show or hide all tournaments"><input type="checkbox" id="rall" aria-label="Show all tournaments"><span class="vh">Show on graphic</span></label></th>`:c.ed?`<th><div class="hdrw">${tog(c.k)}<input type="text" class="hdr" data-hk="${c.k}" value="${esc(c.l)}" maxlength="40" aria-label="Column name" title="Click to rename this column">${c.del?`<button class="hx" type="button" data-hdel="${c.k}" aria-label="Remove column" title="Remove column">×</button>`:""}</div></th>`:c.tg?`<th><label class="th-t">${tog(c.k)}${esc(c.l)}</label></th>`:`<th>${esc(c.l)}</th>`).join("")+"<th></th>";
  $("colpanel").innerHTML="<label>Columns shown in the output, and column names</label>"+cols.filter(c=>c.tg).map(c=>c.ed?`<div class="crow">${tog(c.k)}<div><input type="text" id="cp-${c.k}" data-hk="${c.k}" value="${esc(c.l)}" maxlength="40" aria-label="${c.del?"Extra column name":esc(COLDEF[c.k])+" column name"}"></div>${c.del?`<button class="btn ghost" type="button" data-hdel="${c.k}" aria-label="Remove column">Remove</button>`:""}</div>`:`<div class="crow"><label class="th-t">${tog(c.k)}${esc(c.l)}</label></div>`).join("");syncChecks()}
-function afterCols(){applyCols();saveCols();if(window.rcReady)drawRC(true);buildCols();syncChecks();if(window.relabelTables)relabelTables();render()}
+function afterCols(){applyCols();saveCols();if(window.rcReady){drawRC(true);drawQS(true)}buildCols();syncChecks();if(window.relabelTables)relabelTables();render()}
 function onHdr(e){const t=e.target,k=t.dataset&&t.dataset.hk;if(k==null)return;const v=t.value.trim().slice(0,40);
  if(COLDEF[k]){if(v)colCfg.labels[k]=v;else delete colCfg.labels[k]}else{const c=colCfg.custom.find(u=>u.k==k);if(c)c.l=v}
  document.querySelectorAll('[data-hk="'+k+'"]').forEach(x=>{if(x!==t)x.value=t.value});afterCols()}
@@ -680,7 +689,7 @@ function mkCanvas(){const AR=aspect(),pb=$("pagebox"),cv=$("cv");
  pb.hidden=false;cv.hidden=true;pageCvs=pages;$("dl").textContent=pages.length>1?"Download all "+pages.length+" pages":"Download JPG"}
 
 function render(){
- if(mode=="s"){drawFnote();dlUpd();if(window.rcReady)drawRC()}
+ if(mode=="s"){drawFnote();dlUpd();if(window.rcReady){drawRC();drawQS()}}
  saveRows();
  if(mode=="m")$("mrec").textContent=mRec()?"Your record: "+mRec():"";
  if(mode=="u")uInfo();
@@ -1145,7 +1154,20 @@ function drawRC(force){const keys=rcKeys();if(!keys.some(c=>c[0]==rcTab))rcTab="
 $("rctabs").addEventListener("click",e=>{const b=e.target.closest("[data-rc]");if(!b)return;rcTab=b.dataset.rc;drawRC(true)});
 $("rclist").addEventListener("input",e=>{const t=e.target;if(t.type!="color")return;const g=t.dataset.g||rcTab;(rowColors[g]=rowColors[g]||{})[t.dataset.v]=t.value;t.classList.remove("unset");const rb=t.parentElement.querySelector("[data-rcreset]");if(rb)rb.disabled=false;saveRC();render()});
 $("rclist").addEventListener("click",e=>{const b=e.target.closest("[data-rcreset]");if(!b)return;{const g=b.dataset.g||rcTab;if(rowColors[g])delete rowColors[g][b.dataset.rcreset]}saveRC();drawRC(true);render()});
-window.rcReady=true;drawRC(true);render();
+/* quick unselect: one button per entry of Type, Game, Store and the extra columns */
+let qsTab="type";
+function drawQS(force){if(!window.rcReady)return;const keys=rcKeys();if(!keys.some(c=>c[0]==qsTab))qsTab="type";
+ const tabs=$("qstabs"),st=keys.map(c=>c[0]+c[1]).join("|")+"|"+qsTab;
+ if(force||tabs.dataset.s!==st){tabs.dataset.s=st;tabs.innerHTML=keys.map(([k,l])=>`<button class="btn seg" type="button" data-qt="${k}" aria-pressed="${k==qsTab}">${esc(l)}</button>`).join("")}
+ const U=rcUniq(qsTab),items=U.map(([v,e])=>{const m=rows.filter(r=>e.g=="tag"?DH.has(r):String(r[qsTab]||"").trim().toLowerCase()==v);return{v,e,n:m.length,on:m.filter(r=>r.on!==false).length}});
+ const sg=qsTab+"|"+items.map(i=>i.v+":"+i.n+":"+i.on).join(","),L=$("qslist");
+ if(force||L.dataset.s!==sg){L.dataset.s=sg;
+  L.innerHTML=items.length?items.map(i=>`<button class="qb${i.on==0?" off":i.on<i.n?" mix":""}" type="button" data-qv="${esc(i.v)}" data-qg="${i.e.g||""}" aria-pressed="${i.on>0}" title="${i.on==0?"Select":"Unselect"} all tournaments with this entry">${esc(i.e.label)} <span class="n">${i.on==i.n?i.n:i.on+"/"+i.n}</span></button>`).join(""):'<p class="note" style="margin:0">Entries appear here once you add tournaments.</p>'}}
+$("qstabs").addEventListener("click",e=>{const b=e.target.closest("[data-qt]");if(!b)return;qsTab=b.dataset.qt;drawQS(true)});
+$("qslist").addEventListener("click",e=>{const b=e.target.closest("[data-qv]");if(!b)return;const v=b.dataset.qv,tag=b.dataset.qg=="tag";if(tag)dhCompute();
+ const m=rows.filter(r=>tag?DH.has(r):String(r[qsTab]||"").trim().toLowerCase()==v),anyOn=m.some(r=>r.on!==false);
+ m.forEach(r=>{r.on=!anyOn});drawRows();render();drawQS(true)});
+window.rcReady=true;drawRC(true);drawQS(true);render();
 function fillDlTz(date){$("dl-tz").innerHTML=TZS.map(z=>{const i=tzInfo(z,date),lb=(i.ab=="UTC"?"UTC":i.ab?i.ab+" ("+i.off+")":i.off)+" – "+z.replace(/_/g," ");return`<option value="${z}" label="${esc(lb)}">`}).join("")}
 fillDlTz("");
 $("rows").addEventListener("change",e=>{const t=e.target;if(!t.dataset||t.dataset.k!="tz"||t.tagName!="INPUT")return;
