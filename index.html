@@ -31,6 +31,7 @@ input[type=text],input[type=number],input[type=url],input[type=date],input[type=
 .btn{background:var(--ink);color:var(--bg);border:0;border-radius:6px;padding:8px 14px;font-weight:700;cursor:pointer}
 .ed input.bad{border-color:#e0323f}
 .ed input.item{margin-top:4px;font-size:12px;padding:5px 8px}
+.ed select.item{margin-top:4px;font-size:12px;padding:5px 8px}
 .btn.seg{background:none;border:1px solid var(--line);color:var(--ink)}.btn.seg[aria-pressed=true]{background:var(--ink);color:var(--bg)}
 .btn.acc{background:var(--acc);color:#fff}.btn.ghost{background:none;border:1px solid var(--line);color:var(--ink)}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
@@ -207,9 +208,9 @@ label>.colchk{margin-right:6px}
   <select id="faddsel" aria-label="Add a filter"></select>
   <p class="note" id="fnote"></p>
   <h2 style="margin-top:16px">Row colours</h2>
-  <p class="note" style="margin-top:0">Give tournaments a background colour based on their data, for example every VGC tournament in red or every tournament of one store in purple. The first rule that matches a tournament is used. This applies to the JPG and HTML outputs.</p>
+  <p class="note" style="margin-top:0">Give tournaments a background colour based on their data, for example every VGC tournament in red or every tournament of one store in purple. The first rule that matches a tournament is used. This applies to the JPG and HTML outputs. The Tag field can match "Double Header", which is added automatically when a store runs a Challenge and a Cup of the same game on the same day.</p>
   <div id="rules"></div><button class="btn ghost" id="addrule">Add colour rule</button>
-  <datalist id="dl-game"></datalist><datalist id="dl-type"><option value="Friendly"><option value="Challenge"><option value="Cup"><option value="Online"></datalist><datalist id="dl-tz"></datalist><datalist id="dl-store"></datalist><datalist id="dl-name"></datalist><datalist id="dl-fee"></datalist></div>
+  <datalist id="dl-game"></datalist><datalist id="dl-tag"><option value="Double Header"></datalist><datalist id="dl-type"><option value="Friendly"><option value="Challenge"><option value="Cup"><option value="Online"></datalist><datalist id="dl-tz"></datalist><datalist id="dl-store"></datalist><datalist id="dl-name"></datalist><datalist id="dl-fee"></datalist></div>
   <h2 style="margin-top:8px">Output</h2>
   <div class="radios" id="fmt">
    <label><input type="radio" name="f" value="jpg" checked>JPG graphic</label>
@@ -351,9 +352,13 @@ label>.colchk{margin-right:6px}
 <script>
 const COLS=[["date","Date"],["time","Time"],["tz","Time zone"],["name","Tournament name"],["type","Type"],["game","Game"],["fee","Entry fee"],["store","Store"],["pw","Password"]];
 const TYPES=["Friendly","Challenge","Cup","Online"];
-let rules=[],filters=[];
+let rules=[],filters=[],DH=new WeakSet();
+function dhKey(r){return r.date+"|"+String(r.store||"").trim().toLowerCase()+"|"+String(r.game||"").trim().toLowerCase()}
+function dhCompute(){DH=new WeakSet();const g={};rows.forEach(r=>{const t=String(r.type||"").trim().toLowerCase();if(!r.date||!String(r.store||"").trim()||(t!="challenge"&&t!="cup"))return;(g[dhKey(r)]=g[dhKey(r)]||[]).push([r,t])});
+ Object.values(g).forEach(a=>{if(a.some(x=>x[1]=="challenge")&&a.some(x=>x[1]=="cup"))a.forEach(x=>DH.add(x[0]))})}
+function dhGroup(a){const seen=new Set(),res=[];a.forEach(r=>{if(!DH.has(r)){res.push(r);return}const k=dhKey(r);if(seen.has(k))return;seen.add(k);a.filter(x=>DH.has(x)&&dhKey(x)==k).forEach(x=>res.push(x))});return res}
 function fOK(r){return filters.every(f=>{const v=String(f.v||"").trim().toLowerCase();if(!v)return true;const x=String(r[f.k]??"").trim().toLowerCase();return f.op=="not"?x!=v:f.op=="has"?x.includes(v):f.op=="nhas"?!x.includes(v):x==v})}
-function rowCol(r){if(mode!="s")return null;for(const u of rules){const v=String(u.value||"").trim().toLowerCase();if(!v)continue;const x=String(r[u.field]||"").trim().toLowerCase();if(u.op=="contains"?x.includes(v):x==v){const c=hexRgb(u.color);return{bg:`rgba(${c.join(",")},.9)`,tx:lum(u.color)>.45?"#111111":"#ffffff"}}}return null}
+function rowCol(r){if(mode!="s")return null;for(const u of rules){const v=String(u.value||"").trim().toLowerCase();if(!v)continue;const x=u.field=="tag"?(DH.has(r)?"double header":""):String(r[u.field]||"").trim().toLowerCase();if(u.op=="contains"?x.includes(v):x==v){const c=hexRgb(u.color);return{bg:`rgba(${c.join(",")},.9)`,tx:lum(u.color)>.45?"#111111":"#ffffff"}}}return null}
 const BTZ=Intl.DateTimeFormat().resolvedOptions().timeZone||"UTC";
 const TZS=["UTC","Europe/London","Europe/Berlin","Europe/Athens","America/New_York","America/Chicago","America/Denver","America/Los_Angeles","America/Sao_Paulo","Asia/Tokyo","Australia/Sydney"];
 if(!TZS.includes(BTZ))TZS.unshift(BTZ);
@@ -521,7 +526,7 @@ function mkDiscordT(){const u=normUrl(T.url),t=TT();let s="## "+(u&&t?"["+t+"](<
  [["type","Type"],["game","Game"],["fee","Entry fee"],["store",lbl("store")],["pw",lbl("pw")]].forEach(([k,l])=>{if(show[k]&&T[k])L.push("**"+l+":** "+T[k])});
  return s+L.join("\n")}
 function data(){if(mode=="t")return [T];if(isP())return stRows.filter(r=>r.place||r.name||r.record).slice().sort((a,b)=>(dropN(a)>0)-(dropN(b)>0)||dropN(a)-dropN(b)||(+a.place||999)-(+b.place||999));const f=$("from").value,t=$("to").value;
- return rows.filter(r=>!(r.date&&((f&&r.date<f)||(t&&r.date>t)))&&fOK(r)).slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time))}
+ dhCompute();return dhGroup(rows.filter(r=>!(r.date&&((f&&r.date<f)||(t&&r.date>t)))&&fOK(r)).slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)))}
 function fmtDate(s){if(!s)return"";const d=new Date(s+"T12:00:00");return isNaN(d)?s:d.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}
 const cell=(r,k)=>k=="place"&&isDrop(r)?"":k=="date"?fmtDate(r.date):k=="time"?(r.time||""):k=="tz"?tzCol(r):(r[k]||"");
 const active=()=>(mode=="u"?COLS_U:mode=="m"?COLS_M:isP()?COLS_S:COLS).filter(([k])=>show[k]&&!(mode=="t"&&k=="name"));
@@ -556,7 +561,7 @@ function mkHTML(){const S=sch(),a=active(),d=data(),so=socials();
   const TC=S.ty;const ttlH=mode=="t"&&normUrl(T.url)?`<a href="${esc(normUrl(T.url))}" style="color:#fff;text-decoration:underline">${esc(TT())}</a>`:esc(TT());const tblF=()=>mode=="t"?`<tbody>\n`+kv().map(([l,v],j)=>`<tr><th style="background:${S.head};color:${S.hx};font-weight:800;text-align:left;padding:14px;width:32%">${esc(l)}</th><td style="background:${j%2?S.r2:S.r1};color:${l=="Type"?(TC[T.type]||S.tx):S.tx};padding:14px;font-weight:700">${esc(v)}</td></tr>`).join("\n")+`\n</tbody>`:`<thead><tr>${a.map(([,l])=>`<th style="background:${S.head};color:${S.hx};font-weight:800;text-align:left;padding:14px">${l}</th>`).join("")}${hasMons(d)?`<th style="background:${S.head};padding:14px"></th>`:""}</tr></thead>\n<tbody>\n${rowsH}\n</tbody>`;
   const cellH=(k,r)=>k=="name"&&normUrl(r.url)&&cell(r,k)?`<a href="${esc(normUrl(r.url))}" style="color:inherit;text-decoration:underline">${esc(cell(r,k))}</a>`:esc(cell(r,k));
   const legH=legend(d).length?`\n<p style="text-align:center;margin:14px 0 0;font-size:14px">`+legend(d).map(k=>`<span style="display:inline-block;margin:0 12px;white-space:nowrap"><span style="display:inline-block;width:12px;height:12px;background:${PH[k]};vertical-align:middle;margin-right:6px"></span>${esc(phLabel(k))}</span>`).join("")+`</p>`:"";
-  const monTd=(r,j)=>hasMons(d)?`<td style="background:${j%2?S.r2:S.r1};padding:6px 14px;text-align:right;white-space:nowrap">${monUrls(r).map((u,n)=>u?`<img src="${esc(u)}" alt="${esc(r[monKeys()[n]])}" width="${monKeys().length>2?40:52}" height="${monKeys().length>2?40:52}" style="vertical-align:middle${isDrop(r)?";opacity:.5":""}">`:"").join("")}</td>`:"";
+  const monTd=(r,j)=>hasMons(d)?`<td style="background:${j%2?S.r2:S.r1};padding:6px 14px;text-align:right;white-space:nowrap">${monUrls(r).map((u,n)=>{if(!u)return"";const z=monKeys().length>2?(hasItems(d)?48:40):52,st=goStat(r[monKeys()[n]+"s"]),iu=itemUrl(r[monKeys()[n]+"i"]),bd=iu?`<img src="${esc(iu)}" alt="${esc(r[monKeys()[n]+"i"])}" title="${esc(r[monKeys()[n]+"i"])}" width="${Math.round(z*.5)}" height="${Math.round(z*.5)}" style="position:absolute;right:-3px;bottom:-3px;background:rgba(0,0,0,.5);border-radius:50%" onerror="this.style.display='none'">`:"";return`<span style="position:relative;display:inline-block;vertical-align:middle;margin-left:2px${isDrop(r)?";opacity:.5":""}"><img src="${esc(u)}" alt="${esc(r[monKeys()[n]])}" width="${z}" height="${z}" style="display:block${st?";filter:drop-shadow(0 0 5px "+(st=="shadow"?"#a855f7":"#7dd3fc")+")":""}">${bd}${st?`<span title="${st=="shadow"?"Shadow":"Purified"}" style="position:absolute;right:-3px;top:-3px;width:${Math.round(z*.44)}px;height:${Math.round(z*.44)}px;border-radius:50%;background:${st=="shadow"?"#581c87":"#e0f2fe"};display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="${Math.round(z*.3)}" height="${Math.round(z*.3)}"><path d="${st=="shadow"?FLAME:STAR}" fill="${st=="shadow"?"#e9d5ff":"#0369a1"}"/></svg></span>`:""}</span>`}).join("")}</td>`:"";
   const rowsH=d.map((r,j)=>`<tr>${a.map(([k],ci)=>`<td style="background:${rowCol(r)?rowCol(r).bg:(j%2?S.r2:S.r1)};color:${rowCol(r)?rowCol(r).tx:S.tx};padding:14px;${ci==0&&phaseOf(r)?"border-left:6px solid "+PH[phaseOf(r)]+";":""}${k=="date"||k=="type"||k=="place"?"font-weight:700;":""}${k=="type"&&!rowCol(r)?"color:"+(TC[r.type]||S.tx)+";":""}${k=="record"&&mode=="m"?"color:"+resCol(r.record,S)+";font-weight:700;":""}">${isDrop(r)?`<span style="font-style:italic;opacity:.5">${cellH(k,r)}</span>`:cellH(k,r)}</td>`).join("")}${monTd(r,j)}</tr>`).join("\n");
   const soH=so.length?`\n<p style="text-align:center;margin:22px 0 0">`+so.map(x=>`<a href="${esc(x.url)}" title="${esc(x.name)}" aria-label="${esc(x.name)}" style="display:inline-block;margin:4px 8px;padding:8px 14px;border-radius:8px;background:${S.box};color:${S.boxAcc};font-weight:700;font-size:16px;text-decoration:none"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="#fff" role="img" style="vertical-align:middle;margin-right:8px"><title>${esc(x.name)}</title><path d="${x.path}"/></svg><span style="vertical-align:middle">${esc(x.label)}</span></a>`).join("")+`</p>`:"";
   return `<div style="${F};color:#fff;max-width:1200px;padding-bottom:28px">\n`+
@@ -564,9 +569,9 @@ function mkHTML(){const S=sch(),a=active(),d=data(),so=socials();
    `<div style="background:${S.box};border-bottom:5px solid ${S.boxAcc};border-radius:10px;padding:22px 28px;margin:30px 30px 0;display:flex;align-items:center;justify-content:space-between;gap:20px"><div><div style="font-size:38px;font-weight:800;line-height:1.2">${ttlH}</div>`+(period()?`<div style="font-size:20px;font-weight:600;color:${S.boxAcc};margin-top:8px">${esc(period())}</div>`:"")+`</div>`+((logoUrl||logoData)?`<img src="${esc(logoUrl||logoData)}" alt="" style="max-height:80px;max-width:220px;flex:none">`:"")+`</div>\n`+
    (mode=="b"?bkHTML(S):mode=="u"?usageHTML(S):`<div style="padding:20px 30px 0;overflow-x:auto">\n<table style="width:100%;border-collapse:separate;border-spacing:0 4px;font-size:15px;color:${S.tx}">\n${tblF()}\n</table>\n</div>`)+legH+soH+`\n</div>`}
  function drawOne(pg){
- const S=sch(),cv=(pg&&pg.cv)||$("cv"),BK=mode=="b"?bkMetrics():null,W=BK?BK.w:1200,a=active(),HM=hasMons(data()),d=((x)=>pg&&pg.s!=null&&!pg.plan&&mode!="t"&&mode!="u"?x.slice(pg.s,pg.e):x)(data()),RH=((mode=="p"||mode=="m")&&HM)?72:64,RH2=92,top=(pg&&pg.i>0)?140:230,foot=110;
+ const S=sch(),cv=(pg&&pg.cv)||$("cv"),BK=mode=="b"?bkMetrics():null,W=BK?BK.w:1200,a=active(),HM=hasMons(data()),HIT=hasItems(data()),d=((x)=>pg&&pg.s!=null&&!pg.plan&&mode!="t"&&mode!="u"?x.slice(pg.s,pg.e):x)(data()),RH=((mode=="p"||mode=="m")&&HM)?(HIT?76:72):64,RH2=92,top=(pg&&pg.i>0)?140:230,foot=110;
  const wts={date:1.1,time:1.3,name:1.8,game:1.3,type:1,fee:.9,store:1.7,pw:1.2,tz:1.4,place:.8,record:1.2,points:1,...Object.fromEntries(colCfg.custom.map(c=>[c.k,1.4]))},tot=a.reduce((s,[k])=>s+wts[k],0),X=50,TW=W-100;
- const NM=monKeys().length,SPR=NM>2?54:64,sp=HM?NM*SPR+(NM-1)*4+28:0,CW=TW-sp;
+ const NM=monKeys().length,SPR=NM>2?(HIT?62:54):64,sp=HM?NM*SPR+(NM-1)*4+28:0,CW=TW-sp;
  const FONT='24px "Trebuchet MS",sans-serif',m=document.createElement("canvas").getContext("2d");m.font="500 "+FONT;
  const ell=(t,w)=>{while(t.length>1&&m.measureText(t+"…").width>w)t=t.slice(0,-1);return t+"…"};
  const wrap=(t,w)=>{t=String(t||"").trim();if(m.measureText(t).width<=w)return[t];
@@ -613,7 +618,11 @@ if(k=="name"){c.fillStyle=RC?RC.tx:S.tx;c.font=IT+"500 "+FONT;const cy=y+(H2-4)/
     c.font=IT+(k=="date"||k=="type"||k=="place"?"700":"500")+' 24px "Trebuchet MS",sans-serif';
     while(c.measureText(t).width>cw&&t.length>1)t=t.slice(0,-2);
     if(t!=cell(r,k))t+="…";c.fillText(t,xs[i]+16,y+(H2-4)/2)});
-   if(sp){c.globalAlpha=dr?.5:1;monUrls(r).forEach((u,n)=>{const im=u&&sprImg(u);if(im)c.drawImage(im,X+TW-12-(NM-n)*SPR-(NM-1-n)*4,y+(H2-4)/2-SPR/2,SPR,SPR)})}
+   if(sp){c.globalAlpha=dr?.5:1;monUrls(r).forEach((u,n)=>{const im=u&&sprImg(u),bx=X+TW-12-(NM-n)*SPR-(NM-1-n)*4,by=y+(H2-4)/2-SPR/2;const st=goStat(r[monKeys()[n]+"s"]);
+    if(st&&im){c.save();const g=c.createRadialGradient(bx+SPR/2,by+SPR/2,SPR*.15,bx+SPR/2,by+SPR/2,SPR*.62);g.addColorStop(0,st=="shadow"?"rgba(168,85,247,.75)":"rgba(125,211,252,.8)");g.addColorStop(1,"rgba(0,0,0,0)");c.fillStyle=g;c.fillRect(bx-SPR*.2,by-SPR*.2,SPR*1.4,SPR*1.4);c.restore()}
+    if(im)c.drawImage(im,bx,by,SPR,SPR);
+    if(st&&im){const b=Math.round(SPR*.44);c.save();c.fillStyle=st=="shadow"?"#581c87":"#e0f2fe";c.beginPath();c.arc(bx+SPR-b/2,by+b/2,b/2,0,7);c.fill();c.translate(bx+SPR-b+b*.17,by+b*.17);c.scale(b*.66/24,b*.66/24);c.fillStyle=st=="shadow"?"#e9d5ff":"#0369a1";c.fill(new Path2D(st=="shadow"?FLAME:STAR));c.restore()}
+    const iu=itemUrl(r[monKeys()[n]+"i"]),ii=iu&&sprImg(iu);if(ii){const b=Math.round(SPR*.5);c.save();c.fillStyle="rgba(0,0,0,.5)";c.beginPath();c.arc(bx+SPR-b/2,by+SPR-b/2,b/2+1,0,7);c.fill();c.drawImage(ii,bx+SPR-b,by+SPR-b,b,b);c.restore()}})}
    c.globalAlpha=1});
  }
  if(LG.length){c.textAlign="left";c.font='600 22px "Trebuchet MS",sans-serif';
@@ -793,6 +802,11 @@ const gameKeys=()=>pgame=="TCG"?["mon1","mon2"]:pgame=="VGC"?["vgc1","vgc2","vgc
 const monKeys=()=>isP()?gameKeys():[];
 const isMonKey=k=>/^(mon|vgc|go)\d$/.test(k);
 const monUrls=r=>monKeys().map(k=>monUrl(r[k],r[k+"i"]));
+const itemUrl=n=>{if(pgame!="VGC")return"";n=String(n||"").trim();if(!n)return"";const sl=n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/['’.]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");return sl?"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/"+sl+".png":""};
+const FLAME="M12 2c1 4-3 6-3 10a5 5 0 0 0 10 0c0-2-1-3-2-4 0 2-1 3-2 3 1-4-1-7-3-9z",STAR="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z";
+const goStat=v=>{if(pgame!="GO")return"";v=String(v||"").trim().toLowerCase();return v.startsWith("shadow")?"shadow":v.startsWith("puri")?"purified":""};
+const itemUrls=r=>monKeys().map(k=>itemUrl(r[k+"i"]));
+const hasItems=d=>pgame=="VGC"&&monKeys().length>0&&d.some(r=>itemUrls(r).some(Boolean));
 const hasMons=d=>monKeys().length>0&&d.some(r=>monUrls(r).some(Boolean));
 const sprC={};
 function sprImg(u){const e=sprC[u];if(e)return e.ok?e.im:null;
@@ -805,14 +819,14 @@ function drawPRows(){setTimeout(()=>{if(mode=="b")drawBkRes()},0);const cols=PCO
  const TK=mode=="b"?[]:["place","name","record","points"];
  $("phr").innerHTML=cols.map(([k,l])=>TK.includes(k)?`<th><label class="th-t">${tog(k)}${l}</label></th>`:`<th${k=="drop"?' title="Round in which the player dropped. Leave empty if the player did not drop. Not shown in the outputs."':""}>${l}</th>`).join("")+"<th></th>";
  $("ppanel").innerHTML=TK.length?"<label>Columns shown in the output</label>"+cols.filter(c=>TK.includes(c[0])).map(([k,l])=>`<div class="crow"><label class="th-t">${tog(k)}${l}</label></div>`).join(""):"";
- $("prows").innerHTML=stRows.map((r,i)=>`<tr>${cols.map(([k])=>`<td><input type="text"${k=="drop"?' inputmode="numeric" placeholder="–" aria-label="Round dropped"':""}${isMonKey(k)?' list="pkmn" autocomplete="off" placeholder="Pokémon"'+(r[k]&&r[k].trim()&&!monId(r[k])?' class="bad"':""):""} data-i="${i}" data-k="${k}" value="${esc(r[k])}">${pgame=="VGC"&&isMonKey(k)?`<input type="text" class="item" placeholder="Item (optional)" aria-label="Held item" autocomplete="off" data-i="${i}" data-k="${k}i" value="${esc(r[k+"i"])}">`:""}</td>`).join("")}<td><button class="x" data-del="${i}" aria-label="Remove line">×</button></td></tr>`).join("");syncChecks()}
+ $("prows").innerHTML=stRows.map((r,i)=>`<tr>${cols.map(([k])=>`<td><input type="text"${k=="drop"?' inputmode="numeric" placeholder="–" aria-label="Round dropped"':""}${isMonKey(k)?' list="pkmn" autocomplete="off" placeholder="Pokémon"'+(r[k]&&r[k].trim()&&!monId(r[k])?' class="bad"':""):""} data-i="${i}" data-k="${k}" value="${esc(r[k])}">${pgame=="VGC"&&isMonKey(k)?`<input type="text" class="item" placeholder="Item (optional)" aria-label="Held item" autocomplete="off" data-i="${i}" data-k="${k}i" value="${esc(r[k+"i"])}">`:""}${pgame=="GO"&&isMonKey(k)?`<select class="item" aria-label="Shadow or Purified" data-i="${i}" data-k="${k}s"><option value="">Regular</option><option${r[k+"s"]=="Shadow"?" selected":""}>Shadow</option><option${r[k+"s"]=="Purified"?" selected":""}>Purified</option></select>`:""}</td>`).join("")}<td><button class="x" data-del="${i}" aria-label="Remove line">×</button></td></tr>`).join("");syncChecks()}
 $("prows").addEventListener("input",e=>{const t=e.target;if(mode=="b")setTimeout(drawBkRes,0);if(t.dataset.i!=null){stRows[t.dataset.i][t.dataset.k]=t.value;if(isMonKey(t.dataset.k))t.classList.toggle("bad",!!t.value.trim()&&!monId(t.value));autoShow(t.dataset.k,t.value);render()}});
 $("prows").addEventListener("click",e=>{const d=e.target.dataset.del;if(d!=null){stRows.splice(d,1);drawPRows();render()}});
 $("padd").onclick=()=>{stRows.push({place:String(stRows.length+1),name:"",record:"",points:"",drop:"",mon1:"",mon2:""});drawPRows();render()};
 $("pclear").onclick=()=>{stRows=[];drawPRows();render()};
 ["stitle","ssub","ptotal","pp2","pcut"].forEach(i=>$(i).addEventListener("input",render));
 const PGAMES={TCG:"Pokémon TCG",VGC:"Pokémon VGC",GO:"Pokémon GO"};
-function pNote(){$("pnote").textContent=pgame=="GO"?"Pokémon GO: enter up to six Pokémon per player (their team). Their sprites appear at the end of that player's line in the JPG and HTML outputs.":pgame=="VGC"?"Pokémon VGC: enter up to six Pokémon per player (their team), each with an optional held item. Their sprites appear at the end of that player's line in the JPG and HTML outputs. If a Pokémon holds its mega stone, its mega sprite is shown.":pgame=="TCG"?"Pokémon TCG: enter up to two Pokémon per player (the deck archetype). Their sprites appear at the end of that player's line in the JPG and HTML outputs.":PGAMES[pgame]+" options are a placeholder and will be added later."}
+function pNote(){$("pnote").textContent=pgame=="GO"?"Pokémon GO: enter up to six Pokémon per player (their team), and mark any of them as Shadow or Purified. Their sprites appear at the end of that player's line in the JPG and HTML outputs; Shadow Pokémon get a purple glow and flame icon, Purified Pokémon a blue glow and sparkle icon.":pgame=="VGC"?"Pokémon VGC: enter up to six Pokémon per player (their team), each with an optional held item. Their sprites appear at the end of that player's line in the JPG and HTML outputs, with the held item as a small icon on each sprite. If a Pokémon holds its mega stone, its mega sprite is shown.":pgame=="TCG"?"Pokémon TCG: enter up to two Pokémon per player (the deck archetype). Their sprites appear at the end of that player's line in the JPG and HTML outputs.":PGAMES[pgame]+" options are a placeholder and will be added later."}
 const gameOf=v=>{v=String(v||"").trim().toUpperCase();return v=="PTCG"||v=="TCG"?"TCG":v=="VGC"?"VGC":v=="GO"?"GO":""};
 function setGame(g){if(!PGAMES[g])return;pgame=g;document.querySelectorAll("#pgame [data-g]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.g==g));pNote();drawPRows();render()}
 document.querySelectorAll("#pgame [data-g]").forEach(b=>b.onclick=()=>setGame(b.dataset.g));
@@ -1096,12 +1110,12 @@ function psAuto(){if(pTouched||!(mode=="p"||mode=="b"||mode=="u"))return;const n
  const c=rows.map((r,i)=>[r,i]).filter(([r])=>r.date&&r.date<=today).sort((a,b)=>(b[0].date+(b[0].time||"")).localeCompare(a[0].date+(a[0].time||"")))[0];
  if(!c)return;pAuto=true;const s=$("psel");s.value=String(c[1]);s.dispatchEvent(new Event("change"));pAuto=false}
 /* row colour rules */
-const RF=[["game","Game"],["store",lbl("store")],["type","Type"],["name","Name"],["fee","Entry fee"]],RCOL=["#c62828","#6a1b9a","#1565c0","#2e7d32","#ef6c00"];
+const RF=[["game","Game"],["store",lbl("store")],["type","Type"],["name","Name"],["fee","Entry fee"],["tag","Tag"]],RCOL=["#c62828","#6a1b9a","#1565c0","#2e7d32","#ef6c00"];
 const saveRules=()=>{try{localStorage.setItem("tgs:rules",JSON.stringify(rules))}catch(e){}};
 function dlUpd(){["game","store","name","fee"].forEach(k=>{const el=$("dl-"+k);if(!el)return;el.innerHTML=[...new Set(rows.map(r=>String(r[k]||"").trim()).filter(Boolean))].map(v=>`<option value="${esc(v)}">`).join("")})}
 function drawRules(){$("rules").innerHTML=rules.map((u,i)=>`<div class="rule"><select data-i="${i}" data-r="field" aria-label="Field">${RF.map(([k,l])=>`<option value="${k}"${u.field==k?" selected":""}>${l}</option>`).join("")}</select><select data-i="${i}" data-r="op" aria-label="Condition"><option value="is"${u.op=="is"?" selected":""}>is</option><option value="contains"${u.op=="contains"?" selected":""}>contains</option></select>${false?`<select data-i="${i}" data-r="value" aria-label="Value">${TYPES.map(t=>`<option${t==u.value?" selected":""}>${t}</option>`).join("")}</select>`:`<input type="text" list="dl-${u.field}" data-i="${i}" data-r="value" value="${esc(u.value)}" placeholder="Value" aria-label="Value">`}<input type="color" data-i="${i}" data-r="color" value="${esc(u.color)}" aria-label="Colour"><button class="x" data-del="${i}" aria-label="Remove rule">×</button></div>`).join("")}
 $("rules").addEventListener("input",e=>{const t=e.target,i=t.dataset.i;if(i==null||t.dataset.r=="field")return;rules[i][t.dataset.r]=t.value;saveRules();render()});
-$("rules").addEventListener("change",e=>{const t=e.target,i=t.dataset.i;if(i==null||t.dataset.r!="field")return;const u=rules[i];u.field=t.value;if(u.field=="type"&&!TYPES.includes(u.value))u.value="Friendly";if(u.field!="type"&&TYPES.includes(u.value))u.value="";drawRules();saveRules();render()});
+$("rules").addEventListener("change",e=>{const t=e.target,i=t.dataset.i;if(i==null||t.dataset.r!="field")return;const u=rules[i];u.field=t.value;if(u.field=="type"&&!TYPES.includes(u.value))u.value="Friendly";if(u.field=="tag"&&!u.value)u.value="Double Header";if(u.field!="type"&&TYPES.includes(u.value))u.value="";drawRules();saveRules();render()});
 $("rules").addEventListener("click",e=>{const d=e.target.dataset.del;if(d!=null){rules.splice(d,1);drawRules();saveRules();render()}});
 $("addrule").onclick=()=>{rules.push({field:"game",op:"is",value:"",color:RCOL[rules.length%RCOL.length]});drawRules();saveRules();render()};
 try{const sv=JSON.parse(localStorage.getItem("tgs:rules")||"[]");if(Array.isArray(sv)){rules=sv.filter(u=>u&&typeof u=="object").map(u=>({field:RF.some(f=>f[0]==u.field)?u.field:"game",op:u.op=="contains"?"contains":"is",value:String(u.value||""),color:/^#[0-9a-f]{6}$/i.test(u.color)?u.color:"#c62828"}));drawRules();render()}}catch(e){}
