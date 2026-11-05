@@ -198,6 +198,7 @@ label>.colchk{margin-right:6px}
  <section class="card" id="lookcard"><h2>Look</h2>
   <div class="g">
    <div style="grid-column:1/-1"><label for="scheme">Colour scheme (JPG and HTML)</label><div class="row"><select id="scheme" style="max-width:240px"></select><span id="swatch" class="row" style="gap:4px" aria-hidden="true"></span></div></div>
+   <div id="datefmtbox" style="grid-column:1/-1"><label for="datefmt">Date format</label><select id="datefmt" style="max-width:240px"><option value="text">Fri 20 Nov</option><option value="dm">DD/MM (20/11)</option><option value="md">MM/DD (11/20)</option></select></div>
    <div id="custombox" hidden style="grid-column:1/-1"><div class="cgrid">
     <label>Background start<input type="color" data-c="bg1"></label><label>Background end<input type="color" data-c="bg2"></label>
     <label>Header row<input type="color" data-c="head"></label><label>Header text<input type="color" data-c="hx"></label>
@@ -544,7 +545,10 @@ function mkDiscordT(){const u=normUrl(T.url),t=TT();let s="## "+(u&&t?"["+t+"](<
  return s+L.join("\n")}
 function data(){if(mode=="t")return [T];if(isP())return stRows.filter(r=>r.place||r.name||r.record).slice().sort((a,b)=>(dropN(a)>0)-(dropN(b)>0)||dropN(a)-dropN(b)||(+a.place||999)-(+b.place||999));const f=$("from").value,t=$("to").value;
  dhCompute();return dhGroup(rows.filter(r=>!(r.date&&((f&&r.date<f)||(t&&r.date>t)))&&r.on!==false).slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)))}
-function fmtDate(s){if(!s)return"";const d=new Date(s+"T12:00:00");return isNaN(d)?s:d.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}
+let dateFmt="text";try{const v=localStorage.getItem("tgs:datefmt");if(v=="dm"||v=="md")dateFmt=v}catch(e){}
+function fmtDate(s){if(!s)return"";const d=new Date(s+"T12:00:00");if(isNaN(d))return s;
+ if(dateFmt=="dm"||dateFmt=="md"){const dd=String(d.getDate()).padStart(2,"0"),mm=String(d.getMonth()+1).padStart(2,"0");return dateFmt=="dm"?dd+"/"+mm:mm+"/"+dd}
+ return d.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}
 const cell=(r,k)=>k=="place"&&isDrop(r)?"":k=="date"?fmtDate(r.date):k=="time"?(r.time||""):k=="tz"?tzCol(r):(r[k]||"");
 const active=()=>(mode=="u"?COLS_U:mode=="m"?COLS_M:isP()?COLS_S:COLS).filter(([k])=>show[k]&&!(mode=="t"&&k=="name"));
 function period(){if(mode=="t")return"";if(mode=="m")return mPeriod();if(isP())return [divLabel(),(mode=="b"?$("bsub"):mode=="u"?$("usub"):$("ssub")).value.trim(),+$("ptotal").value>0?(+$("ptotal").value)+" players":""].filter(Boolean).join(" · ");const f=$("from").value,t=$("to").value;return f&&t?fmtDate(f)+" – "+fmtDate(t):f?"From "+fmtDate(f):t?"Until "+fmtDate(t):""}
@@ -565,7 +569,9 @@ function socials(){const out=[];
 const normUrl=u=>{u=(u||"").trim();return !u?"":/^[a-z][a-z0-9+.-]*:/i.test(u)?(/^https?:/i.test(u)?u:""):"https://"+u};
 function tzOff(ts,tz){const p={};new Intl.DateTimeFormat("en-US",{timeZone:tz,hourCycle:"h23",year:"numeric",month:"numeric",day:"numeric",hour:"numeric",minute:"numeric",second:"numeric"}).formatToParts(new Date(ts)).forEach(x=>p[x.type]=x.value);return Date.UTC(p.year,p.month-1,p.day,p.hour,p.minute,p.second)-Math.floor(ts/1000)*1000}
  function toEpoch(date,time,tz){const [y,mo,d]=String(date).split("-").map(Number),[h,mi]=(time||"12:00").split(":").map(Number);if(!y||!mo||!d||isNaN(h)||isNaN(mi))return null;const g=Date.UTC(y,mo-1,d,h,mi);try{let e=g-tzOff(g,tz);e=g-tzOff(e,tz);return Math.floor(e/1000)}catch(x){return null}}
- function dcTime(r){const sd=show.date,st=show.time;const ts=r.date?toEpoch(r.date,r.time,r.tz||BTZ):null;if(!ts)return [sd?cell(r,"date"):"",st?cell(r,"time"):""].filter(Boolean).join(" ");if(sd&&st)return r.time?`<t:${ts}:f>`:`<t:${ts}:D>`;if(sd)return `<t:${ts}:D>`;return r.time?`<t:${ts}:t>`:""}
+ function dcTime(r){const sd=show.date,st=show.time;const ts=r.date?toEpoch(r.date,r.time,r.tz||BTZ):null;
+ if(ts&&dateFmt!="text"&&sd)return [cell(r,"date"),st&&r.time?`<t:${ts}:t>`:""].filter(Boolean).join(" ");
+ if(!ts)return [sd?cell(r,"date"):"",st?cell(r,"time"):""].filter(Boolean).join(" ");if(sd&&st)return r.time?`<t:${ts}:f>`:`<t:${ts}:D>`;if(sd)return `<t:${ts}:D>`;return r.time?`<t:${ts}:t>`:""}
  function mkDiscord(){if(mode=="b")return mkDiscordB();if(mode=="u")return mkDiscordU();if(mode=="m")return mkDiscordM();if(mode=="t")return mkDiscordT();if(mode=="p")return mkDiscordP();const d=data();
  let s="## "+TT()+(period()?"\n-# "+period():"")+"\n\n";
  s+=d.map(r=>{const nm=cell(r,"name"),u=normUrl(r.url);
@@ -975,7 +981,7 @@ const mq=matchMedia("(min-width:981px)");
 function placeCards(){const pre=mode=="t"?"t":isP()?"p":"",L=$(pre+"colL"),R=$(pre+"colR");(mq.matches?L:R).append($("socialcard"));R.append($("lookcard"),$("resultcard"));render()}
 function buildCols(){}
 function setMode(m){if(mode==m)return;const wasM=mode=="m";mode=m;if(wasM&&m!="m"){mRows=stRows;stRows=stSaved}else if(!wasM&&m=="m"){stSaved=stRows;stRows=mRows}if(m=="t"||m=="p"||m=="b"||m=="u"||m=="m")fillSel();show=m=="t"?showT:m=="u"?showU:m=="m"?showM:(m=="p"||m=="b")?showP:showS;buildCols();if(m=="p"||m=="b")syncP();if(m=="u")[["p2",p2N()],["cut",cutN()]].forEach(([k,n])=>{if(n>0&&!uOff.has(k))autoShow(k,"1")});syncChecks();
- {const B=m=="b";$("bkcard").hidden=!B;$("stitlebox").hidden=B;$("btitlebox").hidden=!B;$("ssubbox").hidden=B||m=="u"||m=="m";$("usubbox").hidden=m!="u";$("ucard").hidden=m!="u";$("filterbox").hidden=m!="s";$("mcard").hidden=m!="m";$("plimcard").hidden=m=="m";$("ptotal").parentElement.hidden=m=="m";$("phd").textContent=m=="m"?"Matchups":"Players";$("pcsvnote").hidden=m=="m";$("pdropnote").hidden=m=="m";$("bsubbox").hidden=!B;$("pp2box").hidden=B||m=="m";$("pcutbox").hidden=B||m=="m";$("phnote").hidden=B||m=="u"||m=="m";
+ {$("datefmtbox").hidden=!(m=="s"||m=="t");const B=m=="b";$("bkcard").hidden=!B;$("stitlebox").hidden=B;$("btitlebox").hidden=!B;$("ssubbox").hidden=B||m=="u"||m=="m";$("usubbox").hidden=m!="u";$("ucard").hidden=m!="u";$("filterbox").hidden=m!="s";$("mcard").hidden=m!="m";$("plimcard").hidden=m=="m";$("ptotal").parentElement.hidden=m=="m";$("phd").textContent=m=="m"?"Matchups":"Players";$("pcsvnote").hidden=m=="m";$("pdropnote").hidden=m=="m";$("bsubbox").hidden=!B;$("pp2box").hidden=B||m=="m";$("pcutbox").hidden=B||m=="m";$("phnote").hidden=B||m=="u"||m=="m";
   $("sdh").textContent=B?"Bracket details":m=="u"?"Usage details":m=="m"?"Matchup details":"Standings details";$("htmlLbl").textContent=B?"HTML bracket":"HTML table";if(B)drawBkRes()}
  if(m=="p"||m=="b"||m=="m"||wasM)drawPRows();placeCards()}
 mq.addEventListener("change",placeCards);
@@ -1108,6 +1114,7 @@ function customScheme(){const c=CUS,rg=hexRgb(c.row).join(","),dark=lum(c.tx)>.5
  return{n:"Custom",bg:[c.bg1,c.bg2],bars:[c.head,c.acc],ov:`rgba(${hexRgb(c.bg2).join(",")},.55)`,sh:dark?"rgba(0,0,0,.6)":"rgba(255,255,255,.7)",head:c.head,hx:c.hx,r1:`rgba(${rg},.85)`,r2:`rgba(${rg},.65)`,tx:c.tx.toLowerCase()=="#ffffff"?"#fff":c.tx,acc:c.acc,box:c.box,boxAcc:c.acc,ty:dark?TYD:SCHEMES.light.ty}}
 const cusSave=()=>{try{localStorage.setItem("tgs:custom",JSON.stringify(CUS))}catch(e){}};
 document.querySelectorAll("#custombox [data-c]").forEach(i=>{i.value=CUS[i.dataset.c];i.addEventListener("input",()=>{CUS[i.dataset.c]=i.value;cusSave();swatch();render()})});
+$("datefmt").value=dateFmt;$("datefmt").onchange=()=>{dateFmt=$("datefmt").value;try{localStorage.setItem("tgs:datefmt",dateFmt)}catch(e){}fillSel();render()};
 $("cusreset").onclick=()=>{Object.assign(CUS,CUS_DEF);document.querySelectorAll("#custombox [data-c]").forEach(i=>i.value=CUS[i.dataset.c]);cusSave();swatch();render()};
 try{const sv=localStorage.getItem("tgs:scheme");if(sv&&[...$("scheme").options].some(o=>o.value==sv)){$("scheme").value=sv;cusUI();swatch();render()}}catch(e){}
 ["stitle","btitle","ssub","bsub","usub","ptotal","pp2","pcut"].forEach(id=>{const e=$(id);if(e)e.addEventListener("input",()=>{pTouched=true})});
