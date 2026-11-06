@@ -597,8 +597,9 @@ let dateFmt="text";try{const v=localStorage.getItem("tgs:datefmt");if(v=="dm"||v
 function fmtDate(s){if(!s)return"";const d=new Date(s+"T12:00:00");if(isNaN(d))return s;
  if(dateFmt=="dm"||dateFmt=="md"){const dd=String(d.getDate()).padStart(2,"0"),mm=String(d.getMonth()+1).padStart(2,"0");return dateFmt=="dm"?dd+"/"+mm:mm+"/"+dd}
  return d.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}
-const cell=(r,k)=>k=="place"&&isDrop(r)?"":k=="date"?fmtDate(r.date):k=="time"?(r.time||""):k=="tz"?tzCol(r):(r[k]||"");
-const active=()=>(mode=="u"?COLS_U:mode=="m"?COLS_M:isP()?COLS_S:COLS).filter(([k])=>show[k]&&!(mode=="t"&&k=="name"));
+const tzMerged=()=>mode=="s"&&!!show.time&&!!show.tz;
+const cell=(r,k)=>k=="place"&&isDrop(r)?"":k=="date"?fmtDate(r.date):k=="time"?[r.time||"",tzMerged()?tzCol(r):""].filter(Boolean).join(" "):k=="tz"?tzCol(r):(r[k]||"");
+const active=()=>(mode=="u"?COLS_U:mode=="m"?COLS_M:isP()?COLS_S:COLS).filter(([k])=>show[k]&&!(mode=="t"&&k=="name")&&!(k=="tz"&&tzMerged()));
 function period(){if(mode=="t")return"";if(mode=="m")return mPeriod();if(isP())return [divLabel(),(mode=="b"?$("bsub"):mode=="u"?$("usub"):$("ssub")).value.trim(),+$("ptotal").value>0?(+$("ptotal").value)+" players":""].filter(Boolean).join(" · ");const f=$("from").value,t=$("to").value;return f&&t?fmtDate(f)+" – "+fmtDate(t):f?"From "+fmtDate(f):t?"Until "+fmtDate(t):""}
 
 /* outputs */
@@ -641,7 +642,7 @@ function mkHTML(){const S=sch(),a=active(),d=data(),so=socials();
    (mode=="b"?bkHTML(S):mode=="u"?usageHTML(S):`<div style="padding:20px 30px 0;overflow-x:auto">\n<table style="width:100%;border-collapse:separate;border-spacing:0 4px;font-size:15px;color:${S.tx}">\n${tblF()}\n</table>\n</div>`)+legH+soH+`\n</div>`}
  function drawOne(pg){
  const S=sch(),cv=(pg&&pg.cv)||$("cv"),BK=mode=="b"?bkMetrics():null,W=BK?BK.w:1200,a=active(),HM=hasMons(data()),HIT=hasItems(data()),d=((x)=>pg&&pg.s!=null&&!pg.plan&&mode!="t"&&mode!="u"?x.slice(pg.s,pg.e):x)(data()),RH=((mode=="p"||mode=="m")&&HM)?(HIT?76:72):64,RH2=92,top=(pg&&pg.i>0)?140:230,foot=110;
- const wts={date:1.1,time:1.3,name:1.8,game:1.3,type:1,fee:.9,store:1.7,pw:1.2,tz:1.4,place:.8,record:1.2,points:1,...Object.fromEntries(colCfg.custom.map(c=>[c.k,1.4]))},tot=a.reduce((s,[k])=>s+wts[k],0),X=50,TW=W-100;
+ const wts={date:1.1,time:tzMerged()?2.4:1.3,name:1.8,game:1.3,type:1,fee:.9,store:1.7,pw:1.2,tz:1.4,place:.8,record:1.2,points:1,...Object.fromEntries(colCfg.custom.map(c=>[c.k,1.4]))},tot=a.reduce((s,[k])=>s+wts[k],0),X=50,TW=W-100;
  const NM=monKeys().length,SPR=NM>2?(HIT?62:54):64,sp=HM?NM*SPR+(NM-1)*4+28:0,CW=TW-sp;
  const FONT='24px "Trebuchet MS",sans-serif',m=document.createElement("canvas").getContext("2d");m.font="500 "+FONT;
  const ell=(t,w)=>{while(t.length>1&&m.measureText(t+"…").width>w)t=t.slice(0,-1);return t+"…"};
