@@ -133,6 +133,10 @@ th .hdrw{display:flex;align-items:center;gap:2px}
 table.ed th input.hdr{background:transparent;border:0;border-bottom:1px dashed var(--mute);border-radius:0;padding:2px 0;font-size:12px;font-weight:700;color:var(--ink);width:100%;min-width:0}
 table.ed th input.hdr:focus{outline:none;border-bottom:1px solid var(--acc)}
 .hx{background:none;border:0;color:var(--acc);cursor:pointer;font-weight:700;padding:0 4px;font-size:15px}
+.pst{display:flex;gap:8px;align-items:flex-start;margin-bottom:6px}
+.pst textarea{flex:1;min-width:0;min-height:36px;resize:none;overflow:auto;font-family:inherit}
+.pstmsg{margin:0 0 6px}.pstmsg:empty{display:none}
+@media (max-width:720px){.pst{flex-direction:column}.pst .btn{width:100%}}
 .pkgrid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px}
 .pk{display:flex;flex-direction:column;gap:4px;min-width:0}
 .pkl{font-size:12px;color:var(--mute);font-weight:700}
@@ -151,6 +155,27 @@ label>.colchk{margin-right:6px}
 .colpanel .crow{display:flex;gap:8px;margin-bottom:8px;align-items:center}
 .colpanel .crow>div{flex:1}
 @media (max-width:720px){.colpanel{display:block}}
+/* ---- phone fixes: date/time boxes stay inside their column, tidier field pairs ---- */
+.g>*,main>*,section.card{min-width:0}
+input[type=date],input[type=time]{min-width:0;max-width:100%}
+input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and-time-value{text-align:left;min-height:1.3em}
+@media (max-width:720px),(pointer:coarse){
+ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;display:block;width:100%;box-sizing:border-box;text-align:left}
+}
+@media (max-width:720px){
+ header{padding-top:calc(12px + env(safe-area-inset-top,0px))}
+ /* Tournaments cards: Date|Time, Type|Game, Entry fee|Store side by side, everything else full width */
+ table.ed td:has([data-k="game"]),table.ed td:has([data-k="store"]){grid-column:auto}
+ table.ed td:has([data-k="tz"]),table.ed td:has([data-k="pw"]),table.ed td:has([data-k^="x"]){grid-column:1/-1}
+ /* Players cards: name first, then the other fields in pairs */
+ #prows td:has([data-k="name"]){order:-1}
+ #prows tr.pk1 td:has([data-k="drop"]){grid-column:auto}
+}
+.colwrap{display:none;margin:0 0 12px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:0 12px}
+.colwrap>summary{font-size:14px;font-weight:700;padding:12px 0;min-height:24px}
+.colwrap[open]>summary{margin-bottom:4px}
+.colwrap .colpanel{display:block;margin:0 0 4px}
+@media (max-width:720px){.colwrap{display:block}}
 </style>
 </head>
 <body>
@@ -170,8 +195,8 @@ label>.colchk{margin-right:6px}
  </section>
 
 <section class="card"><h2>Tournaments</h2>
+  <details class="coll colwrap" id="colwrap"><summary>Columns shown in the output, and column names</summary><div class="colpanel" id="colpanel"></div></details>
   <div class="tw"><table class="ed" id="rtab"><colgroup id="rcg"></colgroup><thead><tr id="rhr"></tr></thead><tbody id="rows"></tbody></table></div>
-  <div class="colpanel" id="colpanel"></div>
   <div class="row" style="margin-top:10px">
    <button class="btn" id="add">Add line</button>
    <button class="btn ghost" id="addcol">Add column</button>
@@ -382,7 +407,7 @@ label>.colchk{margin-right:6px}
 </main>
 
 <div id="privacy" role="region" aria-label="Data storage notice" hidden>
- <p><strong>Your data stays on your device.</strong> To save you retyping, this tool remembers some of your inputs (the tournaments and row colours on the Schedule tab, the Limitless links and pasted data, your custom colours, your edited header names, and your social media links) in your browser’s local storage. <strong>Nothing is sent to a server, nothing is shared, and no cookies are used.</strong> The only outside requests are for pictures, such as Pokémon sprites, which are looked up by Pokémon name. To delete the saved data, clear this site’s data in your browser settings.</p>
+ <p><strong>Your data stays on your device.</strong> To save you retyping, this tool remembers some of your inputs (the tournaments and row colours on the Schedule tab, the Limitless links and pasted data, your custom colours, your edited header names, and your social media links) in your browser’s local storage. <strong>Nothing is sent to a server, nothing is shared, and no cookies are used.</strong> The only outside requests are for pictures, such as Pokémon sprites, which are looked up by Pokémon name, and, only when you press “Import team”, a request to pokepast.es for the team link you entered. To delete the saved data, clear this site’s data in your browser settings.</p>
  <button class="btn acc" id="privok">Got it</button>
 </div>
 <script>
@@ -450,7 +475,7 @@ function drawHead(){
  $("rcg").innerHTML=cols.map(c=>`<col style="width:${c.w}px">`).join("")+'<col style="width:44px">';
  $("rtab").style.minWidth=(cols.reduce((x,c)=>x+c.w,0)+44)+"px";
  $("rhr").innerHTML=cols.map(c=>c.k=="on"?`<th class="selc"><label class="th-t" title="Show or hide all tournaments"><input type="checkbox" id="rall" aria-label="Show all tournaments"><span class="vh">Show on graphic</span></label></th>`:c.ed?`<th><div class="hdrw">${c.tg?tog(c.k):""}<input type="text" class="hdr" data-hk="${c.k}" value="${esc(c.l)}" maxlength="40" aria-label="Column name" title="Click to rename this column">${c.del?`<button class="hx" type="button" data-hdel="${c.k}" aria-label="Remove column" title="Remove column">×</button>`:""}</div></th>`:c.tg?`<th><label class="th-t">${tog(c.k)}${esc(c.l)}</label></th>`:`<th>${esc(c.l)}</th>`).join("")+"<th></th>";
- $("colpanel").innerHTML="<label>Columns shown in the output, and column names</label>"+cols.filter(c=>c.tg).map(c=>c.ed?`<div class="crow">${tog(c.k)}<div><input type="text" id="cp-${c.k}" data-hk="${c.k}" value="${esc(c.l)}" maxlength="40" aria-label="${c.del?"Extra column name":esc(COLDEF[c.k])+" column name"}"></div>${c.del?`<button class="btn ghost" type="button" data-hdel="${c.k}" aria-label="Remove column">Remove</button>`:""}</div>`:`<div class="crow"><label class="th-t">${tog(c.k)}${esc(c.l)}</label></div>`).join("");syncChecks()}
+ $("colpanel").innerHTML=cols.filter(c=>c.tg).map(c=>c.ed?`<div class="crow">${tog(c.k)}<div><input type="text" id="cp-${c.k}" data-hk="${c.k}" value="${esc(c.l)}" maxlength="40" aria-label="${c.del?"Extra column name":esc(COLDEF[c.k])+" column name"}"></div>${c.del?`<button class="btn ghost" type="button" data-hdel="${c.k}" aria-label="Remove column">Remove</button>`:""}</div>`:`<div class="crow"><label class="th-t">${tog(c.k)}${esc(c.l)}</label></div>`).join("");syncChecks()}
 function afterCols(){applyCols();saveCols();if(window.rcReady){drawRC(true);drawQS(true)}buildCols();syncChecks();if(window.relabelTables)relabelTables();render()}
 function onHdr(e){const t=e.target,k=t.dataset&&t.dataset.hk;if(k==null)return;const v=t.value.trim().slice(0,40);
  if(COLDEF[k]){if(v)colCfg.labels[k]=v;else delete colCfg.labels[k]}else{const c=colCfg.custom.find(u=>u.k==k);if(c)c.l=v}
@@ -458,7 +483,7 @@ function onHdr(e){const t=e.target,k=t.dataset&&t.dataset.hk;if(k==null)return;c
 [$("rtab"),$("colpanel")].forEach(el=>{el.addEventListener("input",onHdr);el.addEventListener("change",e=>{const t=e.target;if(t.dataset&&t.dataset.hk!=null&&!t.value.trim()){t.value=hdrDefault(t.dataset.hk);onHdr(e)}})});
 $("addcol").onclick=()=>{if(colCfg.custom.length>=12){alert("You can add up to 12 extra columns.");return}
  const k="x"+(++colCfg.n);colCfg.custom.push({k,l:"New column"});show[k]=0;applyCols();saveCols();drawHead();drawRows();buildCols();syncChecks();render();
- const inp=document.querySelector((matchMedia("(max-width:720px)").matches?"#colpanel":"#rhr")+' [data-hk="'+k+'"]');if(inp){inp.focus();inp.select()}};
+ const ph=matchMedia("(max-width:720px)").matches;if(ph)$("colwrap").open=true;const inp=document.querySelector((ph?"#colpanel":"#rhr")+' [data-hk="'+k+'"]');if(inp){inp.focus();inp.select()}};
 document.addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-hdel]");if(!b)return;const k=b.dataset.hdel,c=colCfg.custom.find(u=>u.k==k);if(!c)return;
  if(rows.some(r=>String(r[k]||"").trim())&&!confirm("Remove the column \u201c"+(c.l||"Column")+"\u201d and all its entries?"))return;
  colCfg.custom=colCfg.custom.filter(u=>u.k!=k);rows.forEach(r=>{delete r[k]});delete show[k];drawHead();drawRows();afterCols()});
@@ -879,14 +904,43 @@ function drawPRows(){setTimeout(()=>{if(mode=="b")drawBkRes()},0);const two=pgam
  const plIn=(r,i,k)=>`<input type="text"${k=="drop"?' inputmode="numeric" placeholder="–" aria-label="Round dropped"':""} data-i="${i}" data-k="${k}" value="${esc(r[k])}">`;
  $("prows").innerHTML=stRows.map((r,i)=>{const del=`<td><button class="x" data-del="${i}" aria-label="Remove line">×</button></td>`;
   if(!two)return`<tr>${cols.map(([k])=>`<td>${isMonKey(k)?monIn(r,i,k):plIn(r,i,k)}</td>`).join("")}${del}</tr>`;
-  return`<tr class="pk1">${cols.map(([k])=>`<td>${plIn(r,i,k)}</td>`).join("")}${del}</tr><tr class="pk2"><td class="pk2c" colspan="${cols.length+1}"><div class="pkgrid">${gameKeys().map((k,n)=>`<div class="pk"><span class="pkl">${esc(hl("p.mon"))} ${n+1}</span>${monIn(r,i,k)}</div>`).join("")}</div></td></tr>`}).join("");syncChecks()}
+  return`<tr class="pk1">${cols.map(([k])=>`<td>${plIn(r,i,k)}</td>`).join("")}${del}</tr><tr class="pk2"><td class="pk2c" colspan="${cols.length+1}">${pstRow(r,i)}<div class="pkgrid">${gameKeys().map((k,n)=>`<div class="pk"><span class="pkl">${esc(hl("p.mon"))} ${n+1}</span>${monIn(r,i,k)}</div>`).join("")}</div></td></tr>`}).join("");syncChecks()}
 $("prows").addEventListener("input",e=>{const t=e.target;if(mode=="b")setTimeout(drawBkRes,0);if(t.dataset.i!=null){stRows[t.dataset.i][t.dataset.k]=t.value;if(isMonKey(t.dataset.k))t.classList.toggle("bad",!!t.value.trim()&&!monId(t.value));autoShow(t.dataset.k,t.value);render()}});
+/* Pokepaste import (VGC): fills the six Pokémon and their items from a Pokepaste link or pasted team text */
+const pstRow=(r,i)=>`<div class="pst"><textarea rows="1" class="pstin" placeholder="${pgame=="GO"?"Paste a team exported from goteamlist.web.app (optional)":"Pokepaste link, or paste the team text (optional)"}" aria-label="${pgame=="GO"?"goteamlist team export":"Pokepaste link or team text"}" autocomplete="off" data-i="${i}" data-k="paste">${esc(r.paste)}</textarea><button class="btn ghost" type="button" data-pimp="${i}">Import team</button></div><p class="note pstmsg" data-pm="${i}">${esc(r.pmsg||"")}</p>`;
+const monDisp=n=>{const id=monId(n);return id?dispName(id):String(n)};
+function parseTeam(t){return String(t||"").replace(/\r/g,"").split(/\n\s*\n/).map(b=>b.split("\n").filter(x=>x.trim()&&!/^===/.test(x.trim()))).filter(a=>a.length).map(a=>{let l=a[0].trim(),item="";const at=l.lastIndexOf(" @ ");if(at>=0){item=l.slice(at+3).trim();l=l.slice(0,at).trim()}
+ l=l.replace(/\s*\((M|F)\)\s*$/i,"").trim();const m=l.match(/^(.*?)\s*\(([^()]+)\)\s*$/),nm=m?(monId(m[2])||!monId(m[1])?m[2]:m[1]):l;return{name:nm.trim(),item}}).filter(x=>x.name).slice(0,6)}
+/* Pokémon GO: teams exported from goteamlist.web.app (one line per Pokémon, e.g. sableye_shadow,SHADOW_CLAW,FOUL_PLAY,DRAIN_PUNCH) */
+function parseGoTeam(t){return String(t||"").replace(/\r/g,"").split("\n").map(l=>l.trim().replace(/^["']+|["']+$/g,"")).filter(Boolean).map(l=>l.split(",")[0].trim()).filter(Boolean).slice(0,6).map(slug=>{let st="";const toks=slug.toLowerCase().split(/[\s_-]+/).filter(Boolean).filter(w=>{if(w=="shadow"){st="Shadow";return false}if(w=="purified"){st="Purified";return false}return true});return{name:toks.join(" "),st}}).filter(x=>x.name)}
+function looseId(name){const t=String(name||"").split(/[\s_-]+/).filter(Boolean);for(let n=t.length;n>=1;n--){const id=monId(t.slice(0,n).join(" "));if(id)return id}return 0}
+function importGoTeam(i,v,say){const r=stRows[i];
+ if(/^https?:\/\//i.test(v)&&!/[\n,]/.test(v)){say("Paste the exported team text from goteamlist.web.app, not a link.");return}
+ const team=parseGoTeam(v);if(!team.length){say("No Pokémon found in that export.");return}
+ const bad=[];for(let n=0;n<6;n++){const t=team[n];let nm="";if(t){const id=looseId(t.name);if(id)nm=dispName(id);else{nm=t.name;bad.push(t.name)}}r["go"+(n+1)]=nm;r["go"+(n+1)+"s"]=t?t.st:""}
+ r.pmsg="Imported "+team.length+" Pokémon."+(bad.length?" No sprite found for: "+bad.join(", ")+".":"");drawPRows();render()}
+async function importPaste(i){const r=stRows[i];if(!r)return;const v=String(r.paste||"").trim(),say=t=>{r.pmsg=t;const e=document.querySelector('[data-pm="'+i+'"]');if(e)e.textContent=t};
+ if(!v){say(pgame=="GO"?"Paste the team exported from goteamlist.web.app first.":"Paste a Pokepaste link or the team text first.");return}
+ if(pgame=="GO"){importGoTeam(i,v,say);return}
+ let text=v;
+ if(!/\n|@|Ability:|EVs:/i.test(v)){
+  const m=v.match(/pokepast\.es\/([A-Za-z0-9]+)/i)||v.match(/^([A-Za-z0-9]{6,})$/);
+  if(!m){say("That doesn't look like a Pokepaste link.");return}
+  const btn=document.querySelector('[data-pimp="'+i+'"]');say("Loading…");if(btn)btn.disabled=true;
+  try{const ac=new AbortController(),to=setTimeout(()=>ac.abort(),10000);const res=await fetch("https://pokepast.es/"+m[1]+"/json",{signal:ac.signal});clearTimeout(to);if(!res.ok)throw 0;const j=await res.json();if(!j||typeof j.paste!="string")throw 0;text=j.paste}
+  catch(e){if(btn)btn.disabled=false;say("Couldn't load that link. The site may not allow requests from this page. Open the paste, copy its text and paste the text into this box instead.");return}
+  if(btn)btn.disabled=false}
+ const team=parseTeam(text);if(!team.length){say("No Pokémon found in that team.");return}
+ const bad=[];for(let n=0;n<6;n++){const t=team[n];r["vgc"+(n+1)]=t?monDisp(t.name):"";r["vgc"+(n+1)+"i"]=t?t.item:"";if(t&&!monId(t.name))bad.push(t.name)}
+ r.pmsg="Imported "+team.length+" Pokémon."+(bad.length?" No sprite found for: "+bad.join(", ")+".":"");drawPRows();render()}
+$("prows").addEventListener("input",e=>{const t=e.target;if(t.classList&&t.classList.contains("pstin")){t.style.height="auto";t.style.height=Math.min(t.scrollHeight,150)+"px"}});
+$("prows").addEventListener("click",e=>{const b=e.target.closest&&e.target.closest("[data-pimp]");if(b)importPaste(+b.dataset.pimp)});
 $("prows").addEventListener("click",e=>{const d=e.target.dataset.del;if(d!=null){stRows.splice(d,1);drawPRows();render()}});
 $("padd").onclick=()=>{stRows.push({place:String(stRows.length+1),name:"",record:"",points:"",drop:"",mon1:"",mon2:""});drawPRows();render()};
 $("pclear").onclick=()=>{stRows=[];drawPRows();render()};
 ["stitle","ssub","ptotal","pp2","pcut"].forEach(i=>$(i).addEventListener("input",render));
 const PGAMES={TCG:"Pokémon TCG",VGC:"Pokémon VGC",GO:"Pokémon GO"};
-function pNote(){$("pnote").textContent=pgame=="GO"?"Pokémon GO: enter up to six Pokémon per player (their team), and mark any of them as Shadow or Purified. Their sprites appear at the end of that player's line in the JPG and HTML outputs; Mega Pokémon (typed as, for example, Mega Charizard X) get a rainbow glow; Shadow Pokémon get a purple glow and flame icon, Purified Pokémon a blue glow and sparkle icon.":pgame=="VGC"?"Pokémon VGC: enter up to six Pokémon per player (their team), each with an optional held item. Their sprites appear at the end of that player's line in the JPG and HTML outputs, with the held item as a small icon on each sprite. If a Pokémon holds its mega stone, its mega sprite is shown.":pgame=="TCG"?"Pokémon TCG: enter up to two Pokémon per player (the deck archetype). Their sprites appear at the end of that player's line in the JPG and HTML outputs.":PGAMES[pgame]+" options are a placeholder and will be added later."}
+function pNote(){$("pnote").textContent=pgame=="GO"?"Pokémon GO: enter up to six Pokémon per player (their team), and mark any of them as Shadow or Purified (or import a team exported from goteamlist.web.app with the box above the team). Their sprites appear at the end of that player's line in the JPG and HTML outputs; Mega Pokémon (typed as, for example, Mega Charizard X) get a rainbow glow; Shadow Pokémon get a purple glow and flame icon, Purified Pokémon a blue glow and sparkle icon.":pgame=="VGC"?"Pokémon VGC: enter up to six Pokémon per player (their team), each with an optional held item. Their sprites appear at the end of that player's line in the JPG and HTML outputs, with the held item as a small icon on each sprite. If a Pokémon holds its mega stone, its mega sprite is shown.":pgame=="TCG"?"Pokémon TCG: enter up to two Pokémon per player (the deck archetype). Their sprites appear at the end of that player's line in the JPG and HTML outputs.":PGAMES[pgame]+" options are a placeholder and will be added later."}
 const gameOf=v=>{v=String(v||"").trim().toUpperCase();return v=="PTCG"||v=="TCG"?"TCG":v=="VGC"?"VGC":v=="GO"?"GO":""};
 function setGame(g){if(!PGAMES[g])return;pgame=g;document.querySelectorAll("#pgame [data-g]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.g==g));pNote();drawPRows();render()}
 document.querySelectorAll("#pgame [data-g]").forEach(b=>b.onclick=()=>setGame(b.dataset.g));
