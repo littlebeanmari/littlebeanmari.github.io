@@ -65,6 +65,13 @@ textarea.out{height:260px;font-family:ui-monospace,Consolas,monospace;font-size:
 .hsec{font-size:13px;margin:12px 0 6px;color:var(--ink)}
 .hrow{display:grid;grid-template-columns:1fr 1.4fr;gap:8px;align-items:center;margin-bottom:6px}
 .hrow span{font-size:13px;color:var(--mute)}
+details.coll>summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:8px;user-select:none}
+details.coll>summary::-webkit-details-marker{display:none}
+details.coll>summary h2{margin:0;display:inline}
+details.coll>summary::before{content:"\25B8";font-size:16px;color:var(--mute);transition:transform .15s}
+details.coll[open]>summary::before{transform:rotate(90deg)}
+details.coll[open]>summary{margin-bottom:12px}
+details.coll>summary:focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:4px}
 /* ---- privacy notice ---- */
 #privacy{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));max-width:760px;margin:0 auto;z-index:50;background:var(--panel);color:var(--ink);border:2px solid var(--acc);border-radius:12px;padding:14px 16px;box-shadow:0 8px 30px rgba(0,0,0,.35);display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 #privacy p{margin:0;flex:1 1 320px;font-size:14px;line-height:1.5}
@@ -186,14 +193,14 @@ label>.colchk{margin-right:6px}
 
  
 
- <section class="card"><h2>Import from Limitless</h2>
+ <section class="card"><details class="coll"><summary><h2>Import from Limitless</h2></summary>
   <label for="orglink">1. Paste your Limitless organizer link (or ID)</label>
   <input type="text" id="orglink" placeholder="https://play.limitlesstcg.com/organizer/123">
   <div class="row" style="margin:8px 0"><a class="btn acc" id="limopen" target="_blank" rel="noopener" href="#" aria-disabled="true" style="text-decoration:none;opacity:.5;pointer-events:none">2. Open data in new tab</a><span class="note" id="orgmsg" style="margin:0"></span></div>
   <label for="lim">3. Copy everything on that page and paste it here</label>
   <textarea id="lim" rows="4" placeholder='[{"name":"Friday Cup","game":"PTCG","date":"2026-11-06T18:00:00.000Z"}]'></textarea>
   <div class="row" style="margin-top:8px"><button class="btn" id="limgo">Import tournaments</button><button class="btn ghost" data-clear="orglink,lim,limmsg">Clear</button><span class="note" id="limmsg"></span></div>
- </section>
+ </details></section>
 </div>
 
 <div id="colR">
@@ -276,14 +283,14 @@ label>.colchk{margin-right:6px}
    <div class="row" style="margin-top:10px"><label class="btn ghost" style="margin:0;color:var(--ink)">Import CSV<input type="file" id="tcsv" accept=".csv,text/csv" hidden></label><button class="btn ghost" id="ttpl">Download CSV template</button></div>
    <p class="note">Uses the same columns as the schedule CSV. Only the first row is used.</p>
   </section>
-  <section class="card"><h2>Import from Limitless</h2>
+  <section class="card"><details class="coll"><summary><h2>Import from Limitless</h2></summary>
    <label for="tlink">1. Paste the Limitless tournament link (or ID)</label>
    <input type="text" id="tlink" placeholder="https://play.limitlesstcg.com/tournament/abc123">
    <div class="row" style="margin:8px 0"><a class="btn acc" id="topen" target="_blank" rel="noopener" href="#" aria-disabled="true" style="text-decoration:none;opacity:.5;pointer-events:none">2. Open data in new tab</a><span class="note" id="tmsg" style="margin:0"></span></div>
    <label for="tlim">3. Copy everything on that page and paste it here</label>
    <textarea id="tlim" rows="4"></textarea>
    <div class="row" style="margin-top:8px"><button class="btn" id="tlimgo">Import tournament</button><button class="btn ghost" data-clear="tlink,tlim,tlimmsg">Clear</button><span class="note" id="tlimmsg"></span></div>
-  </section>
+  </details></section>
  </div>
  <div id="tcolR"></div>
 </main>
@@ -321,7 +328,7 @@ label>.colchk{margin-right:6px}
    <div class="g"><div style="grid-column:1/-1"><label for="mplayer">Player name</label><input type="text" id="mplayer" placeholder="Your name, as it appears on Limitless"></div></div>
    <p class="note" id="mrec"></p>
    <p class="note">Add one line per round in the Matchups table below: the round, your opponent, the result (for example Win, Loss or Tie, or just W, L or T) and the table. The opponent's Pokémon are optional. The result column is colored green, red or amber, and your record is calculated for the subtitle.</p>
-   <h2 style="margin-top:16px">Import from Limitless</h2>
+   <details class="coll"><summary><h2 style="margin-top:16px">Import from Limitless</h2></summary>
    <label for="mlink">1. Paste the Limitless tournament link (or ID)</label>
    <input type="text" id="mlink" placeholder="https://play.limitlesstcg.com/tournament/abc123">
    <div class="row" style="margin:8px 0"><a class="btn acc" id="mopen" target="_blank" rel="noopener" href="#" aria-disabled="true" style="text-decoration:none;opacity:.5;pointer-events:none">2. Open pairings in new tab</a><span class="note" id="mmsg" style="margin:0"></span></div>
@@ -329,7 +336,7 @@ label>.colchk{margin-right:6px}
    <textarea id="mlim" rows="4"></textarea>
    <div class="row" style="margin-top:8px"><button class="btn" id="mlimgo">Import my matchups</button><button class="btn ghost" data-clear="mlink,mlim,mlimmsg">Clear</button><span class="note" id="mlimmsg"></span></div>
    <p class="note">The import uses the player name above. For the best result, import twice: first paste the standings data (the link from the Standings tab works the same way) and click the button, then open the pairings in step 2, paste them and click the button again. The standings tell the tool your opponents' names and Pokémon.</p>
-  </section>
+  </details></section>
   <section class="card" id="ucard" hidden><h2>Usage</h2>
    <div class="g"><div><label for="utop">Entries to show</label><input type="number" id="utop" min="1" max="40" step="1" inputmode="numeric" value="10"></div></div>
    <p class="note" id="ucount"></p>
@@ -350,14 +357,14 @@ label>.colchk{margin-right:6px}
   </section>
  </div>
  <div id="pcolL">
-  <section class="card" id="plimcard"><h2>Import from Limitless</h2>
+  <section class="card" id="plimcard"><details class="coll"><summary><h2>Import from Limitless</h2></summary>
    <label for="plink">1. Paste the Limitless tournament link (or ID)</label>
    <input type="text" id="plink" placeholder="https://play.limitlesstcg.com/tournament/abc123">
    <div class="row" style="margin:8px 0"><a class="btn acc" id="popen" target="_blank" rel="noopener" href="#" aria-disabled="true" style="text-decoration:none;opacity:.5;pointer-events:none">2. Open standings in new tab</a><span class="note" id="pmsg" style="margin:0"></span></div>
    <label for="plim">3. Copy everything on that page and paste it here</label>
    <textarea id="plim" rows="4"></textarea>
    <div class="row" style="margin-top:8px"><button class="btn" id="plimgo">Import standings</button><button class="btn ghost" data-clear="plink,plim,plimmsg">Clear</button><span class="note" id="plimmsg"></span></div>
-  </section>
+  </details></section>
  </div>
  <div id="pcolR"></div>
 </main>
