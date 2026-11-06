@@ -62,6 +62,9 @@ textarea.out{height:260px;font-family:ui-monospace,Consolas,monospace;font-size:
 .rcv{flex:1;min-width:0;overflow-wrap:anywhere}
 .rcrow input[type=color]{width:52px;height:38px;padding:2px;border:1px solid var(--line);border-radius:6px;background:var(--bg);cursor:pointer;flex:none}
 .rcrow input.unset{opacity:.4}
+.hsec{font-size:13px;margin:12px 0 6px;color:var(--ink)}
+.hrow{display:grid;grid-template-columns:1fr 1.4fr;gap:8px;align-items:center;margin-bottom:6px}
+.hrow span{font-size:13px;color:var(--mute)}
 /* ---- privacy notice ---- */
 #privacy{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));max-width:760px;margin:0 auto;z-index:50;background:var(--panel);color:var(--ink);border:2px solid var(--acc);border-radius:12px;padding:14px 16px;box-shadow:0 8px 30px rgba(0,0,0,.35);display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 #privacy p{margin:0;flex:1 1 320px;font-size:14px;line-height:1.5}
@@ -240,6 +243,10 @@ label>.colchk{margin-right:6px}
    <label><input type="radio" name="f" value="html"><span id="htmlLbl">HTML table</span></label>
    <label><input type="radio" name="f" value="dc">Discord message</label>
   </div>
+   <details id="hdrbox" style="margin-top:14px"><summary style="cursor:pointer;font-weight:700">Customise headers (translate)</summary>
+   <p class="note">Rename any column header, for example to translate it. The names are used in the tables and in the graphics. They are saved in your browser.</p>
+   <div id="hdrlist"></div>
+   <button class="btn ghost" id="hdrreset" type="button" style="margin-top:10px">Restore default headers</button></details>
  </section>
  <section class="card" id="resultcard"><h2>Result</h2>
   <div id="o-jpg"><div style="margin-bottom:10px"><label for="ar">Aspect ratio</label><select id="ar" style="max-width:280px"><option value="">Original (one image)</option><option value="1:1">1:1 (square)</option><option value="4:3">4:3</option><option value="4:5">4:5 (portrait)</option><option value="16:9">16:9 (widescreen)</option></select><p class="note">With a fixed ratio, long lists are split into several numbered pages.</p></div><canvas id="cv"></canvas><div id="pagebox" hidden></div><div class="row" style="margin-top:10px"><button class="btn acc" id="dl">Download JPG</button></div></div>
@@ -329,8 +336,8 @@ label>.colchk{margin-right:6px}
    <p class="note">Percentages are calculated from the Players table below: the share of players in each group who played the card or Pokémon. Groups are formed from the placements, using the Phase 2 and Top Cut numbers above. Dropped players are not counted in Phase 2 or Top Cut. For TCG, usage is counted per deck archetype, taken from each player’s Pokémon 1 and 2 (the Limitless import fills these in automatically).</p>
    <h2 style="margin-top:16px">Manual entries and overrides</h2>
    <p class="note" style="margin:0 0 6px">Add an entry or a percentage to replace what was calculated. Percentages that you type win over the calculated ones. In the last column you can replace the picture that was found: type other Pokémon names (for a TCG deck, up to two, separated by commas) or paste a direct link to an image.</p>
-   <div class="tw"><table class="ed" style="min-width:780px"><colgroup><col style="width:22%"><col style="width:13%"><col style="width:14%"><col style="width:13%"><col style="width:32%"><col style="width:40px"></colgroup><thead><tr><th>Name</th><th><label class="th-t"><input type="checkbox" class="colchk" data-k="all" aria-label="Show in output" title="Show this column in the output">All %</label></th><th><label class="th-t"><input type="checkbox" class="colchk" data-k="p2" aria-label="Show in output" title="Show this column in the output">Phase 2 %</label></th><th><label class="th-t"><input type="checkbox" class="colchk" data-k="cut" aria-label="Show in output" title="Show this column in the output">Top Cut %</label></th><th>Image override (name or URL)</th><th></th></tr></thead><tbody id="urows"></tbody></table></div>
-   <div class="colpanel" id="upanel"><label>Columns shown in the output</label><div class="crow"><label class="th-t"><input type="checkbox" class="colchk" data-k="all" aria-label="Show in output" title="Show this column in the output">All players</label></div><div class="crow"><label class="th-t"><input type="checkbox" class="colchk" data-k="p2" aria-label="Show in output" title="Show this column in the output">Phase 2</label></div><div class="crow"><label class="th-t"><input type="checkbox" class="colchk" data-k="cut" aria-label="Show in output" title="Show this column in the output">Top Cut</label></div></div>
+   <div class="tw"><table class="ed" style="min-width:780px"><colgroup><col style="width:22%"><col style="width:13%"><col style="width:14%"><col style="width:13%"><col style="width:32%"><col style="width:40px"></colgroup><thead><tr><th data-hd="u.tname">Name</th><th><label class="th-t"><input type="checkbox" class="colchk" data-k="all" aria-label="Show in output" title="Show this column in the output"><span data-hd="u.tall">All %</span></label></th><th><label class="th-t"><input type="checkbox" class="colchk" data-k="p2" aria-label="Show in output" title="Show this column in the output"><span data-hd="u.tp2">Phase 2 %</span></label></th><th><label class="th-t"><input type="checkbox" class="colchk" data-k="cut" aria-label="Show in output" title="Show this column in the output"><span data-hd="u.tcut">Top Cut %</span></label></th><th data-hd="u.tov">Image override (name or URL)</th><th></th></tr></thead><tbody id="urows"></tbody></table></div>
+   <div class="colpanel" id="upanel"><label>Columns shown in the output</label><div class="crow"><label class="th-t"><input type="checkbox" class="colchk" data-k="all" aria-label="Show in output" title="Show this column in the output"><span data-hd="u.all">All players</span></label></div><div class="crow"><label class="th-t"><input type="checkbox" class="colchk" data-k="p2" aria-label="Show in output" title="Show this column in the output"><span data-hd="u.p2">Phase 2</span></label></div><div class="crow"><label class="th-t"><input type="checkbox" class="colchk" data-k="cut" aria-label="Show in output" title="Show this column in the output"><span data-hd="u.cut">Top Cut</span></label></div></div>
    <div class="row" style="margin-top:10px"><button class="btn" id="uadd">Add line</button><button class="btn ghost" id="ufill">Add detected entries</button><button class="btn ghost" id="uclear">Remove all</button></div>
   </section>
   <section class="card"><h2 id="phd">Players</h2>
@@ -368,7 +375,7 @@ label>.colchk{margin-right:6px}
 </main>
 
 <div id="privacy" role="region" aria-label="Data storage notice" hidden>
- <p><strong>Your data stays on your device.</strong> To save you retyping, this tool remembers some of your inputs (the tournaments and row colours on the Schedule tab, the Limitless links and pasted data, your custom colours, and your social media links) in your browser’s local storage. <strong>Nothing is sent to a server, nothing is shared, and no cookies are used.</strong> The only outside requests are for pictures, such as Pokémon sprites, which are looked up by Pokémon name. To delete the saved data, clear this site’s data in your browser settings.</p>
+ <p><strong>Your data stays on your device.</strong> To save you retyping, this tool remembers some of your inputs (the tournaments and row colours on the Schedule tab, the Limitless links and pasted data, your custom colours, your edited header names, and your social media links) in your browser’s local storage. <strong>Nothing is sent to a server, nothing is shared, and no cookies are used.</strong> The only outside requests are for pictures, such as Pokémon sprites, which are looked up by Pokémon name. To delete the saved data, clear this site’s data in your browser settings.</p>
  <button class="btn acc" id="privok">Got it</button>
 </div>
 <script>
@@ -435,7 +442,7 @@ function drawHead(){
  const cols=FIXEDC.map(([k,l,w])=>({k,l:COLDEF[k]?lbl(k):l,w,ed:!!COLDEF[k],tg:k!="url"&&k!="on"})).concat(colCfg.custom.map(c=>({k:c.k,l:c.l,w:150,ed:true,del:true,tg:true})));
  $("rcg").innerHTML=cols.map(c=>`<col style="width:${c.w}px">`).join("")+'<col style="width:44px">';
  $("rtab").style.minWidth=(cols.reduce((x,c)=>x+c.w,0)+44)+"px";
- $("rhr").innerHTML=cols.map(c=>c.k=="on"?`<th class="selc"><label class="th-t" title="Show or hide all tournaments"><input type="checkbox" id="rall" aria-label="Show all tournaments"><span class="vh">Show on graphic</span></label></th>`:c.ed?`<th><div class="hdrw">${tog(c.k)}<input type="text" class="hdr" data-hk="${c.k}" value="${esc(c.l)}" maxlength="40" aria-label="Column name" title="Click to rename this column">${c.del?`<button class="hx" type="button" data-hdel="${c.k}" aria-label="Remove column" title="Remove column">×</button>`:""}</div></th>`:c.tg?`<th><label class="th-t">${tog(c.k)}${esc(c.l)}</label></th>`:`<th>${esc(c.l)}</th>`).join("")+"<th></th>";
+ $("rhr").innerHTML=cols.map(c=>c.k=="on"?`<th class="selc"><label class="th-t" title="Show or hide all tournaments"><input type="checkbox" id="rall" aria-label="Show all tournaments"><span class="vh">Show on graphic</span></label></th>`:c.ed?`<th><div class="hdrw">${c.tg?tog(c.k):""}<input type="text" class="hdr" data-hk="${c.k}" value="${esc(c.l)}" maxlength="40" aria-label="Column name" title="Click to rename this column">${c.del?`<button class="hx" type="button" data-hdel="${c.k}" aria-label="Remove column" title="Remove column">×</button>`:""}</div></th>`:c.tg?`<th><label class="th-t">${tog(c.k)}${esc(c.l)}</label></th>`:`<th>${esc(c.l)}</th>`).join("")+"<th></th>";
  $("colpanel").innerHTML="<label>Columns shown in the output, and column names</label>"+cols.filter(c=>c.tg).map(c=>c.ed?`<div class="crow">${tog(c.k)}<div><input type="text" id="cp-${c.k}" data-hk="${c.k}" value="${esc(c.l)}" maxlength="40" aria-label="${c.del?"Extra column name":esc(COLDEF[c.k])+" column name"}"></div>${c.del?`<button class="btn ghost" type="button" data-hdel="${c.k}" aria-label="Remove column">Remove</button>`:""}</div>`:`<div class="crow"><label class="th-t">${tog(c.k)}${esc(c.l)}</label></div>`).join("");syncChecks()}
 function afterCols(){applyCols();saveCols();if(window.rcReady){drawRC(true);drawQS(true)}buildCols();syncChecks();if(window.relabelTables)relabelTables();render()}
 function onHdr(e){const t=e.target,k=t.dataset&&t.dataset.hk;if(k==null)return;const v=t.value.trim().slice(0,40);
@@ -512,14 +519,14 @@ let mode="s";const isP=()=>mode=="p"||mode=="b"||mode=="u"||mode=="m";
 const T={date:"",time:"18:00",tz:BTZ,type:"Friendly",game:"",fee:"",store:"",pw:"",url:"",name:""};
 const showT={name:0,date:0,time:0,tz:0,game:0,type:0,fee:0,store:0,pw:0};const showS=show;
 /* editable / extra columns (saved in this browser) */
-const COLDEF={store:"Store",pw:"Password"};
+const COLDEF={date:"Date",time:"Time",tz:"Time zone",name:"Name",type:"Type",game:"Game",fee:"Entry fee",store:"Store",pw:"Password",url:"Link"};
 let colCfg={labels:{},custom:[],n:0};
 try{const sv=JSON.parse(localStorage.getItem("tgs:cols")||"null");if(sv&&typeof sv=="object"){
- if(sv.labels&&typeof sv.labels=="object")["store","pw"].forEach(k=>{const v=String(sv.labels[k]||"").trim().slice(0,40);if(v)colCfg.labels[k]=v});
+ if(sv.labels&&typeof sv.labels=="object")Object.keys(COLDEF).forEach(k=>{const v=String(sv.labels[k]||"").trim().slice(0,40);if(v)colCfg.labels[k]=v});
  if(Array.isArray(sv.custom))sv.custom.slice(0,12).forEach(c=>{if(c&&/^x\d+$/.test(String(c.k))&&!colCfg.custom.some(u=>u.k==c.k))colCfg.custom.push({k:c.k,l:String(c.l==null?"Column":c.l).trim().slice(0,40)})});
  colCfg.n=Math.max(+sv.n||0,0,...colCfg.custom.map(c=>+c.k.slice(1)))}}catch(e){}
 const lbl=k=>{const c=colCfg.custom.find(u=>u.k==k);return c?(c.l||"Column"):colCfg.labels[k]||COLDEF[k]||(COLS.find(u=>u[0]==k)||[0,k])[1]};
-function applyCols(){COLS.forEach(c=>{if(c[0]=="store"||c[0]=="pw")c[1]=lbl(c[0])});
+function applyCols(){COLS.forEach(c=>{if(COLDEF[c[0]])c[1]=colCfg.labels[c[0]]||(c[0]=="name"?"Tournament name":COLDEF[c[0]])});
  for(let i=COLS.length-1;i>=0;i--)if(/^x\d+$/.test(COLS[i][0]))COLS.splice(i,1);
  colCfg.custom.forEach(c=>{COLS.push([c.k,c.l||"Column"]);if(!(c.k in show))show[c.k]=0});
  const a=document.querySelector('label[for="t-store"] span'),b=document.querySelector('label[for="t-pw"] span');if(a)a.textContent=lbl("store");if(b)b.textContent=lbl("pw")}
@@ -593,7 +600,7 @@ function mkHTML(){const S=sch(),a=active(),d=data(),so=socials();
   const TC=S.ty;const ttlH=mode=="t"&&normUrl(T.url)?`<a href="${esc(normUrl(T.url))}" style="color:#fff;text-decoration:underline">${esc(TT())}</a>`:esc(TT());const tblF=()=>mode=="t"?`<tbody>\n`+kv().map(([l,v],j)=>`<tr><th style="background:${S.head};color:${S.hx};font-weight:800;text-align:left;padding:14px;width:32%">${esc(l)}</th><td style="background:${j%2?S.r2:S.r1};color:${l=="Type"?(TC[T.type]||S.tx):S.tx};padding:14px;font-weight:700">${esc(v)}</td></tr>`).join("\n")+`\n</tbody>`:`<thead><tr>${a.map(([,l])=>`<th style="background:${S.head};color:${S.hx};font-weight:800;text-align:left;padding:14px">${l}</th>`).join("")}${hasMons(d)?`<th style="background:${S.head};padding:14px"></th>`:""}</tr></thead>\n<tbody>\n${rowsH}\n</tbody>`;
   const cellH=(k,r)=>k=="name"&&normUrl(r.url)&&cell(r,k)?`<a href="${esc(normUrl(r.url))}" style="color:inherit;text-decoration:underline">${esc(cell(r,k))}</a>`:esc(cell(r,k));
   const legH=legend(d).length?`\n<p style="text-align:center;margin:14px 0 0;font-size:14px">`+legend(d).map(k=>`<span style="display:inline-block;margin:0 12px;white-space:nowrap"><span style="display:inline-block;width:12px;height:12px;background:${PH[k]};vertical-align:middle;margin-right:6px"></span>${esc(phLabel(k))}</span>`).join("")+`</p>`:"";
-  const monTd=(r,j)=>hasMons(d)?`<td style="background:${j%2?S.r2:S.r1};padding:6px 14px;text-align:right;white-space:nowrap">${monUrls(r).map((u,n)=>{if(!u)return"";const z=monKeys().length>2?(hasItems(d)?48:40):52,st=goStat(r[monKeys()[n]+"s"]),mg=isMegaGO(r[monKeys()[n]]),iu=itemUrl(r[monKeys()[n]+"i"]),bd=iu?`<img src="${esc(iu)}" alt="${esc(r[monKeys()[n]+"i"])}" title="${esc(r[monKeys()[n]+"i"])}" width="${Math.round(z*.5)}" height="${Math.round(z*.5)}" style="position:absolute;right:-3px;bottom:-3px;background:rgba(0,0,0,.5);border-radius:50%" onerror="this.style.display='none'">`:"";return`<span style="position:relative;display:inline-block;vertical-align:middle;margin-left:2px${mg?";padding:3px;border-radius:50%;background:radial-gradient(circle,rgba(0,0,0,0) 40%,#ff6b6b 50%,#ffd166 60%,#7bd88f 70%,#4cc9f0 82%,#a78bfa 94%,rgba(167,139,250,0) 100%)":""}${isDrop(r)?";opacity:.5":""}"><img src="${esc(u)}" alt="${esc(r[monKeys()[n]])}" width="${z}" height="${z}" style="display:block${st?";filter:drop-shadow(0 0 5px "+(st=="shadow"?"#a855f7":"#7dd3fc")+")":""}">${bd}${st?`<span title="${st=="shadow"?"Shadow":"Purified"}" style="position:absolute;${mg?"left":"right"}:-3px;top:-3px;width:${Math.round(z*.44)}px;height:${Math.round(z*.44)}px;border-radius:50%;background:${st=="shadow"?"#581c87":"#e0f2fe"};display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="${Math.round(z*.3)}" height="${Math.round(z*.3)}"><path d="${st=="shadow"?FLAME:STAR}" fill="${st=="shadow"?"#e9d5ff":"#0369a1"}"/></svg></span>`:""}${mg?`<span title="Mega Evolution" style="position:absolute;right:-4px;top:-4px;line-height:0">${keyHtml(z)}</span>`:""}</span>`}).join("")}</td>`:"";
+  const monTd=(r,j)=>hasMons(d)?`<td style="background:${j%2?S.r2:S.r1};padding:6px 14px;text-align:right;white-space:nowrap">${monUrls(r).map((u,n)=>{if(!u)return"";const z=monKeys().length>2?(hasItems(d)?48:40):52,st=goStat(r[monKeys()[n]+"s"]),mg=isMegaGO(r[monKeys()[n]]),iu=itemUrl(r[monKeys()[n]+"i"]),bd=iu?`<img src="${esc(iu)}" alt="${esc(r[monKeys()[n]+"i"])}" title="${esc(r[monKeys()[n]+"i"])}" width="${Math.round(z*.5)}" height="${Math.round(z*.5)}" style="position:absolute;right:-3px;bottom:-3px;background:rgba(0,0,0,.5);border-radius:50%" onerror="this.style.display='none'">`:"";return`<span style="position:relative;display:inline-block;vertical-align:middle;margin-left:2px${isDrop(r)?";opacity:.5":""}">${mg?`<span style="position:absolute;inset:-${Math.round(z*.22)}px;border-radius:50%;background:conic-gradient(#ff5a5a,#ffb347,#ffe66d,#6fe07d,#4cc9f0,#7b8cff,#d783ff,#ff5a5a);-webkit-mask-image:radial-gradient(circle,rgba(0,0,0,.8) 28%,rgba(0,0,0,0) 70%);mask-image:radial-gradient(circle,rgba(0,0,0,.8) 28%,rgba(0,0,0,0) 70%)"></span>`:""}<img src="${esc(u)}" alt="${esc(r[monKeys()[n]])}" width="${z}" height="${z}" style="display:block;position:relative${st?";filter:drop-shadow(0 0 5px "+(st=="shadow"?"#a855f7":"#7dd3fc")+")":""}">${bd}${st?`<span title="${st=="shadow"?"Shadow":"Purified"}" style="position:absolute;right:-3px;top:-3px;width:${Math.round(z*.44)}px;height:${Math.round(z*.44)}px;border-radius:50%;background:${st=="shadow"?"#581c87":"#e0f2fe"};display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 24 24" width="${Math.round(z*.3)}" height="${Math.round(z*.3)}"><path d="${st=="shadow"?FLAME:STAR}" fill="${st=="shadow"?"#e9d5ff":"#0369a1"}"/></svg></span>`:""}</span>`}).join("")}</td>`:"";
   const rowsH=d.map((r,j)=>`<tr>${a.map(([k],ci)=>`<td style="background:${rowCol(r)?rowCol(r).bg:(j%2?S.r2:S.r1)};color:${rowCol(r)?rowCol(r).tx:S.tx};padding:14px;${ci==0&&phaseOf(r)?"border-left:6px solid "+PH[phaseOf(r)]+";":""}${k=="date"||k=="type"||k=="place"?"font-weight:700;":""}${k=="type"&&!rowCol(r)?"color:"+(TC[r.type]||S.tx)+";":""}${k=="record"&&mode=="m"?"color:"+resCol(r.record,S)+";font-weight:700;":""}">${isDrop(r)?`<span style="font-style:italic;opacity:.5">${cellH(k,r)}</span>`:cellH(k,r)}</td>`).join("")}${monTd(r,j)}</tr>`).join("\n");
   const soH=so.length?`\n<p style="text-align:center;margin:22px 0 0">`+so.map(x=>`<a href="${esc(x.url)}" title="${esc(x.name)}" aria-label="${esc(x.name)}" style="display:inline-block;margin:4px 8px;padding:8px 14px;border-radius:8px;background:${S.box};color:${S.boxAcc};font-weight:700;font-size:16px;text-decoration:none"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="#fff" role="img" style="vertical-align:middle;margin-right:8px"><title>${esc(x.name)}</title><path d="${x.path}"/></svg><span style="vertical-align:middle">${esc(x.label)}</span></a>`).join("")+`</p>`:"";
   return `<div style="${F};color:#fff;max-width:1200px;padding-bottom:28px">\n`+
@@ -653,8 +660,7 @@ if(k=="name"){c.fillStyle=RC?RC.tx:S.tx;c.font=IT+"500 "+FONT;const cy=y+(H2-4)/
    if(sp){c.globalAlpha=dr?.5:1;monKeys().forEach((k,n)=>{if(isMegaGO(r[k]))megaGlow(c,X+TW-12-(NM-n)*SPR-(NM-1-n)*4,y+(H2-4)/2-SPR/2,SPR)});monUrls(r).forEach((u,n)=>{const im=u&&sprImg(u),bx=X+TW-12-(NM-n)*SPR-(NM-1-n)*4,by=y+(H2-4)/2-SPR/2;const st=goStat(r[monKeys()[n]+"s"]),mg=isMegaGO(r[monKeys()[n]]);
     if(st&&im){c.save();const g=c.createRadialGradient(bx+SPR/2,by+SPR/2,SPR*.15,bx+SPR/2,by+SPR/2,SPR*.62);g.addColorStop(0,st=="shadow"?"rgba(168,85,247,.75)":"rgba(125,211,252,.8)");g.addColorStop(1,"rgba(0,0,0,0)");c.fillStyle=g;c.fillRect(bx-SPR*.2,by-SPR*.2,SPR*1.4,SPR*1.4);c.restore()}
     if(im)c.drawImage(im,bx,by,SPR,SPR);
-    if(mg&&im)drawKey(c,bx+SPR-Math.round(SPR*.46),by,Math.round(SPR*.46));
-    if(st&&im){const b=Math.round(SPR*.44);c.save();c.fillStyle=st=="shadow"?"#581c87":"#e0f2fe";c.beginPath();c.arc((mg?bx+b/2:bx+SPR-b/2),by+b/2,b/2,0,7);c.fill();c.translate((mg?bx:bx+SPR-b)+b*.17,by+b*.17);c.scale(b*.66/24,b*.66/24);c.fillStyle=st=="shadow"?"#e9d5ff":"#0369a1";c.fill(new Path2D(st=="shadow"?FLAME:STAR));c.restore()}
+    if(st&&im){const b=Math.round(SPR*.44);c.save();c.fillStyle=st=="shadow"?"#581c87":"#e0f2fe";c.beginPath();c.arc(bx+SPR-b/2,by+b/2,b/2,0,7);c.fill();c.translate(bx+SPR-b+b*.17,by+b*.17);c.scale(b*.66/24,b*.66/24);c.fillStyle=st=="shadow"?"#e9d5ff":"#0369a1";c.fill(new Path2D(st=="shadow"?FLAME:STAR));c.restore()}
     const iu=itemUrl(r[monKeys()[n]+"i"]),ii=iu&&sprImg(iu);if(ii){const b=Math.round(SPR*.5);c.save();c.fillStyle="rgba(0,0,0,.5)";c.beginPath();c.arc(bx+SPR-b/2,by+SPR-b/2,b/2+1,0,7);c.fill();c.drawImage(ii,bx+SPR-b,by+SPR-b,b,b);c.restore()}})}
    c.globalAlpha=1});
  }
@@ -838,19 +844,13 @@ const monUrls=r=>monKeys().map(k=>monUrl(r[k],r[k+"i"]));
 const itemUrl=n=>{if(pgame!="VGC")return"";n=String(n||"").trim();if(!n)return"";const sl=n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/['’.]/g,"").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");return sl?"https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/"+sl+".png":""};
 const FLAME="M12 2c1 4-3 6-3 10a5 5 0 0 0 10 0c0-2-1-3-2-4 0 2-1 3-2 3 1-4-1-7-3-9z",STAR="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z";
 const goStat=v=>{if(pgame!="GO")return"";v=String(v||"").trim().toLowerCase();return v.startsWith("shadow")?"shadow":v.startsWith("puri")?"purified":""};
-const MEGA_ICON="";
 const isMegaGO=v=>{if(pgame!="GO")return false;const id=monId(v);return !!id&&/(^|-)mega(-|$)/.test(IDN[id])};
-function megaGlow(c,bx,by,S){const cx=bx+S/2,cy=by+S/2;c.save();const g=c.createRadialGradient(cx,cy,S*.18,cx,cy,S*.66);
- [[0,"rgba(255,107,107,0)"],[.2,"rgba(255,107,107,.85)"],[.38,"rgba(255,209,102,.85)"],[.55,"rgba(123,216,143,.85)"],[.72,"rgba(76,201,240,.8)"],[.88,"rgba(167,139,250,.65)"],[1,"rgba(167,139,250,0)"]].forEach(([o,col])=>g.addColorStop(o,col));
- c.fillStyle=g;c.fillRect(cx-S*.7,cy-S*.7,S*1.4,S*1.4);c.restore()}
-function drawKey(c,x,y,b){const cx=x+b/2,cy=y+b/2,im=MEGA_ICON?sprImg(MEGA_ICON):null;c.save();
- if(im){c.drawImage(im,x,y,b,b);c.restore();return}
- c.fillStyle="#1e1b4b";c.beginPath();c.arc(cx,cy,b/2,0,7);c.fill();
- const g=c.createRadialGradient(cx,cy,b*.05,cx,cy,b*.36);["#ff6b6b","#ffd166","#7bd88f","#4cc9f0","#a78bfa"].forEach((col,i,a)=>g.addColorStop(i/(a.length-1),col));
- c.fillStyle=g;c.beginPath();c.arc(cx,cy,b*.36,0,7);c.fill();
- c.strokeStyle="#fff";c.lineWidth=Math.max(1.5,b*.07);c.beginPath();c.arc(cx,cy,b/2-c.lineWidth/2,0,7);c.stroke();
- c.fillStyle="#fff";c.translate(cx-b*.09,cy-b*.09);c.scale(b*.18/24,b*.18/24);c.fill(new Path2D(STAR));c.restore()}
-const keyHtml=z=>{const w=Math.round(z*.46);return MEGA_ICON?`<img src="${esc(MEGA_ICON)}" alt="Mega Evolution" width="${w}" height="${w}">`:`<svg viewBox="0 0 24 24" width="${w}" height="${w}"><defs><radialGradient id="mkg"><stop offset="0" stop-color="#ff6b6b"/><stop offset=".25" stop-color="#ffd166"/><stop offset=".5" stop-color="#7bd88f"/><stop offset=".75" stop-color="#4cc9f0"/><stop offset="1" stop-color="#a78bfa"/></radialGradient></defs><circle cx="12" cy="12" r="11" fill="#1e1b4b" stroke="#fff" stroke-width="1.5"/><circle cx="12" cy="12" r="7.6" fill="url(#mkg)"/><path d="${STAR}" transform="translate(9.9 9.9) scale(.175)" fill="#fff"/></svg>`};
+function megaGlow(c,bx,by,S){const cx=bx+S/2,cy=by+S/2,sz=Math.ceil(S*1.4),m=sz/2,oc=document.createElement("canvas");oc.width=oc.height=sz;const o=oc.getContext("2d");
+ const cols=["#ff5a5a","#ffb347","#ffe66d","#6fe07d","#4cc9f0","#7b8cff","#d783ff","#ff5a5a"];
+ const g=o.createConicGradient?o.createConicGradient(0,m,m):o.createLinearGradient(0,0,sz,sz);cols.forEach((col,i)=>g.addColorStop(i/(cols.length-1),col));
+ o.fillStyle=g;o.fillRect(0,0,sz,sz);o.globalCompositeOperation="destination-in";
+ const rg=o.createRadialGradient(m,m,S*.15,m,m,S*.62);rg.addColorStop(0,"rgba(0,0,0,.8)");rg.addColorStop(1,"rgba(0,0,0,0)");o.fillStyle=rg;o.fillRect(0,0,sz,sz);
+ c.drawImage(oc,cx-m,cy-m)}
 const itemUrls=r=>monKeys().map(k=>itemUrl(r[k+"i"]));
 const hasItems=d=>pgame=="VGC"&&monKeys().length>0&&d.some(r=>itemUrls(r).some(Boolean));
 const hasMons=d=>monKeys().length>0&&d.some(r=>monUrls(r).some(Boolean));
@@ -858,7 +858,10 @@ const sprC={};
 function sprImg(u){const e=sprC[u];if(e)return e.ok?e.im:null;
  const im=new Image();im.crossOrigin="anonymous";sprC[u]={im,ok:false};
  im.onload=()=>{sprC[u].ok=true;render()};im.onerror=()=>{};im.src=u;return null}
-const PCOLS=()=>(mode=="m"?[["place","Round",10],["name","Opponent",28],["record","Result",16],["points","Table",12]]:[["place","Place",10],["name","Player",24],["record","Record",13],["points","Points",10]]).concat(gameKeys().map((k,i)=>[k,"Pokémon "+(i+1),pgame=="TCG"?15:9]),mode=="m"?[]:[["drop","Dropped (rd.)",13]]);
+const HD={"p.place":"Place","p.name":"Player","p.record":"Record","p.points":"Points","p.mon":"Pokémon","p.drop":"Dropped (rd.)","m.place":"Round","m.name":"Opponent","m.record":"Result","m.points":"Table","u.all":"All players","u.p2":"Phase 2","u.cut":"Top Cut","u.deck":"Deck","u.tname":"Name","u.tall":"All %","u.tp2":"Phase 2 %","u.tcut":"Top Cut %","u.tov":"Image override (name or URL)"},HL={};
+try{const sv=JSON.parse(localStorage.getItem("tgs:hl")||"{}");Object.keys(HD).forEach(k=>{const v=String(sv[k]||"").trim().slice(0,40);if(v)HL[k]=v})}catch(e){}
+const hl=id=>HL[id]||HD[id],saveHL=()=>{try{localStorage.setItem("tgs:hl",JSON.stringify(HL))}catch(e){}};
+const PCOLS=()=>(mode=="m"?[["place",hl("m.place"),10],["name",hl("m.name"),28],["record",hl("m.record"),16],["points",hl("m.points"),12]]:[["place",hl("p.place"),10],["name",hl("p.name"),24],["record",hl("p.record"),13],["points",hl("p.points"),10]]).concat(gameKeys().map((k,i)=>[k,hl("p.mon")+" "+(i+1),pgame=="TCG"?15:9]),mode=="m"?[]:[["drop",hl("p.drop"),13]]);
 function drawPRows(){setTimeout(()=>{if(mode=="b")drawBkRes()},0);const two=pgame=="VGC"||pgame=="GO",cols=PCOLS().filter(c=>!(two&&isMonKey(c[0]))),sum=cols.reduce((x,c)=>x+c[2],0);
  $("ptable").style.minWidth="780px";
  $("pcg").innerHTML=cols.map(c=>`<col style="width:${(c[2]/sum*100).toFixed(1)}%">`).join("")+'<col style="width:40px">';
@@ -869,14 +872,14 @@ function drawPRows(){setTimeout(()=>{if(mode=="b")drawBkRes()},0);const two=pgam
  const plIn=(r,i,k)=>`<input type="text"${k=="drop"?' inputmode="numeric" placeholder="–" aria-label="Round dropped"':""} data-i="${i}" data-k="${k}" value="${esc(r[k])}">`;
  $("prows").innerHTML=stRows.map((r,i)=>{const del=`<td><button class="x" data-del="${i}" aria-label="Remove line">×</button></td>`;
   if(!two)return`<tr>${cols.map(([k])=>`<td>${isMonKey(k)?monIn(r,i,k):plIn(r,i,k)}</td>`).join("")}${del}</tr>`;
-  return`<tr class="pk1">${cols.map(([k])=>`<td>${plIn(r,i,k)}</td>`).join("")}${del}</tr><tr class="pk2"><td class="pk2c" colspan="${cols.length+1}"><div class="pkgrid">${gameKeys().map((k,n)=>`<div class="pk"><span class="pkl">Pokémon ${n+1}</span>${monIn(r,i,k)}</div>`).join("")}</div></td></tr>`}).join("");syncChecks()}
+  return`<tr class="pk1">${cols.map(([k])=>`<td>${plIn(r,i,k)}</td>`).join("")}${del}</tr><tr class="pk2"><td class="pk2c" colspan="${cols.length+1}"><div class="pkgrid">${gameKeys().map((k,n)=>`<div class="pk"><span class="pkl">${esc(hl("p.mon"))} ${n+1}</span>${monIn(r,i,k)}</div>`).join("")}</div></td></tr>`}).join("");syncChecks()}
 $("prows").addEventListener("input",e=>{const t=e.target;if(mode=="b")setTimeout(drawBkRes,0);if(t.dataset.i!=null){stRows[t.dataset.i][t.dataset.k]=t.value;if(isMonKey(t.dataset.k))t.classList.toggle("bad",!!t.value.trim()&&!monId(t.value));autoShow(t.dataset.k,t.value);render()}});
 $("prows").addEventListener("click",e=>{const d=e.target.dataset.del;if(d!=null){stRows.splice(d,1);drawPRows();render()}});
 $("padd").onclick=()=>{stRows.push({place:String(stRows.length+1),name:"",record:"",points:"",drop:"",mon1:"",mon2:""});drawPRows();render()};
 $("pclear").onclick=()=>{stRows=[];drawPRows();render()};
 ["stitle","ssub","ptotal","pp2","pcut"].forEach(i=>$(i).addEventListener("input",render));
 const PGAMES={TCG:"Pokémon TCG",VGC:"Pokémon VGC",GO:"Pokémon GO"};
-function pNote(){$("pnote").textContent=pgame=="GO"?"Pokémon GO: enter up to six Pokémon per player (their team), and mark any of them as Shadow or Purified. Their sprites appear at the end of that player's line in the JPG and HTML outputs; Mega Pokémon (typed as, for example, Mega Charizard X) get a rainbow glow and a Mega Evolution key stone icon; Shadow Pokémon get a purple glow and flame icon, Purified Pokémon a blue glow and sparkle icon.":pgame=="VGC"?"Pokémon VGC: enter up to six Pokémon per player (their team), each with an optional held item. Their sprites appear at the end of that player's line in the JPG and HTML outputs, with the held item as a small icon on each sprite. If a Pokémon holds its mega stone, its mega sprite is shown.":pgame=="TCG"?"Pokémon TCG: enter up to two Pokémon per player (the deck archetype). Their sprites appear at the end of that player's line in the JPG and HTML outputs.":PGAMES[pgame]+" options are a placeholder and will be added later."}
+function pNote(){$("pnote").textContent=pgame=="GO"?"Pokémon GO: enter up to six Pokémon per player (their team), and mark any of them as Shadow or Purified. Their sprites appear at the end of that player's line in the JPG and HTML outputs; Mega Pokémon (typed as, for example, Mega Charizard X) get a rainbow glow; Shadow Pokémon get a purple glow and flame icon, Purified Pokémon a blue glow and sparkle icon.":pgame=="VGC"?"Pokémon VGC: enter up to six Pokémon per player (their team), each with an optional held item. Their sprites appear at the end of that player's line in the JPG and HTML outputs, with the held item as a small icon on each sprite. If a Pokémon holds its mega stone, its mega sprite is shown.":pgame=="TCG"?"Pokémon TCG: enter up to two Pokémon per player (the deck archetype). Their sprites appear at the end of that player's line in the JPG and HTML outputs.":PGAMES[pgame]+" options are a placeholder and will be added later."}
 const gameOf=v=>{v=String(v||"").trim().toUpperCase();return v=="PTCG"||v=="TCG"?"TCG":v=="VGC"?"VGC":v=="GO"?"GO":""};
 function setGame(g){if(!PGAMES[g])return;pgame=g;document.querySelectorAll("#pgame [data-g]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.g==g));pNote();drawPRows();render()}
 document.querySelectorAll("#pgame [data-g]").forEach(b=>b.onclick=()=>setGame(b.dataset.g));
@@ -1019,7 +1022,7 @@ drawHead();drawRows();placeCards();
 /* ---- Usage ---- */
 const COLS_U=[["all","All players"],["p2","Phase 2"],["cut","Top Cut"]];
 const showU={all:1,p2:0,cut:0};let uRows=[];
-const cardC={},uKey=n=>String(n).trim().toLowerCase(),pf=v=>v==null?"–":(Math.round(v*10)/10)+"%",uHead=()=>pgame=="TCG"?"Deck":"Pokémon";
+const cardC={},uKey=n=>String(n).trim().toLowerCase(),pf=v=>v==null?"–":(Math.round(v*10)/10)+"%",uHead=()=>pgame=="TCG"?hl("u.deck"):hl("p.mon");
 function cardsOf(x){const dl=x&&x.decklist,out=[];if(!dl||Array.isArray(dl)||typeof dl!="object")return out;
  Object.values(dl).forEach(a=>Array.isArray(a)&&a.forEach(c=>{const n=c&&c.name;if(n&&!/^Basic .* Energy$/i.test(n)&&!out.includes(n))out.push(n)}));return out}
 const uImgs=r=>{const o=String(r.ov||"").trim();if(/^https?:\/\//i.test(o))return[o];
@@ -1078,7 +1081,7 @@ function mRec(){const c={w:0,l:0,t:0};(mode=="m"?stRows:mRows).forEach(r=>{const
 function divLabel(){const v=$("pdiv").value.trim();return v?(/division/i.test(v)?v:v+" Division"):""}
 $("pdiv").addEventListener("input",render);
 function mPeriod(){const p=$("mplayer").value.trim(),r=mRec();return [divLabel(),p?p+"’s Matchups":"Matchups",r?"Record "+r:""].filter(Boolean).join(" · ")}
-function mkDiscordM(){const a=active();return "## "+TT()+(period()?"\n-# "+period():"")+"\n\n"+data().map(r=>a.map(([k])=>k=="place"?"**R"+r.place+"**":k=="name"&&r.name?"vs "+r.name:k=="points"&&r.points?"Table "+r.points:cell(r,k)).filter(Boolean).join(" | ")).join("\n")}
+function mkDiscordM(){const a=active();return "## "+TT()+(period()?"\n-# "+period():"")+"\n\n"+data().map(r=>a.map(([k])=>k=="place"?"**R"+r.place+"**":k=="name"&&r.name?"vs "+r.name:k=="points"&&r.points?hl("m.points")+" "+r.points:cell(r,k)).filter(Boolean).join(" | ")).join("\n")}
 $("mplayer").addEventListener("input",render);
 $("mlink").addEventListener("input",()=>{const a=$("mopen"),v=$("mlink").value,id=tId(v),ok=!!id;
  a.href=ok?"https://play.limitlesstcg.com/api/tournaments/"+id+"/pairings":"#";a.style.opacity=ok?1:.5;a.style.pointerEvents=ok?"auto":"none";a.setAttribute("aria-disabled",!ok);
@@ -1191,6 +1194,18 @@ $("rows").addEventListener("change",e=>{const t=e.target;if(!t.dataset||t.datase
 $("t-date").addEventListener("input",()=>{const sel=$("t-tz");sel.innerHTML=tzOpts(sel.value,$("t-date").value)});
 $("rows").addEventListener("input",e=>{const t=e.target;if(t.dataset&&t.dataset.k=="date"){const tr=t.closest("tr"),sel=tr&&tr.querySelector("select[data-k=tz]");if(sel)sel.innerHTML=tzOpts(sel.value,t.value)}});
 $("rows").addEventListener("focusin",e=>{const k=e.target.dataset&&e.target.dataset.k;if(k=="type"||k=="tz")e.target.select();if(k=="tz"){const dt=e.target.closest("tr").querySelector("[data-k=date]");fillDlTz(dt?dt.value:"")}});
+/* custom headers */
+const HSEC=[["Schedule and Tournament",["date","time","tz","name","type","game","fee","store","pw","url"],"hk"],["Standings",["p.place","p.name","p.record","p.points","p.mon","p.drop"],"hl"],["Matchups",["m.place","m.name","m.record","m.points"],"hl"],["Usage",["u.all","u.p2","u.cut","u.deck","u.tname","u.tall","u.tp2","u.tcut","u.tov"],"hl"]];
+function applyHL(){COLS_S.forEach(c=>{c[1]=hl("p."+c[0])});COLS_M.forEach(c=>{c[1]=hl("m."+c[0])});COLS_U.forEach(c=>{c[1]=hl("u."+c[0])});
+ document.querySelectorAll("[data-hd]").forEach(e=>{e.textContent=hl(e.dataset.hd)})}
+function drawHdrList(){$("hdrlist").innerHTML=HSEC.map(([t,ids,kind])=>`<h3 class="hsec">${t}</h3>`+ids.map(id=>{const def=kind=="hk"?COLDEF[id]:HD[id],val=kind=="hk"?lbl(id):hl(id);return`<label class="hrow"><span>${esc(def)}</span><input type="text" maxlength="40" ${kind=="hk"?`data-hk="${id}"`:`data-hl="${id}"`} value="${esc(val)}" placeholder="${esc(def)}" aria-label="${esc(def)}"></label>`}).join("")).join("")}
+function onHL(e){const t=e.target,id=t.dataset.hl,v=t.value.trim().slice(0,40);if(v)HL[id]=v;else delete HL[id];saveHL();applyHL();
+ document.querySelectorAll('[data-hl="'+id+'"]').forEach(x=>{if(x!==t)x.value=t.value});
+ if(/^[pm]\./.test(id))drawPRows();buildCols();syncChecks();if(window.relabelTables)relabelTables();render()}
+$("hdrlist").addEventListener("input",e=>{const d=e.target.dataset;if(d&&d.hl)onHL(e);else onHdr(e)});
+$("hdrlist").addEventListener("change",e=>{const t=e.target,d=t.dataset;if(!d||t.value.trim())return;if(d.hl){t.value=HD[d.hl];onHL(e)}else if(d.hk){t.value=hdrDefault(d.hk);onHdr(e)}});
+$("hdrreset").onclick=()=>{colCfg.labels={};Object.keys(HL).forEach(k=>delete HL[k]);saveHL();saveCols();applyHL();drawHead();drawRows();drawPRows();drawHdrList();afterCols()};
+applyHL();drawHdrList();drawPRows();
 (function(){const lab=t=>{const h=[...t.querySelectorAll("thead th")].map(x=>{const i=x.querySelector("input.hdr");return(i?i.value:x.textContent).trim()});
  t.querySelectorAll("tbody tr").forEach(tr=>[...tr.children].forEach((td,i)=>{if(h[i]&&!td.classList.contains("pk2c"))td.dataset.l=h[i];else td.removeAttribute("data-l")}))};
  document.querySelectorAll("table.ed").forEach(t=>{lab(t);new MutationObserver(()=>lab(t)).observe(t,{childList:true,subtree:true})});window.relabelTables=()=>document.querySelectorAll("table.ed").forEach(lab)})();
