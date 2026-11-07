@@ -206,7 +206,7 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
   <p class="note">Only tournaments inside this time frame appear in the output. Leave empty to include everything.</p>
  </section>
 
-<section class="card"><h2>Tournaments</h2>
+<section class="card"><details class="coll" open><summary><h2>Tournaments</h2></summary>
   <details class="coll colwrap" id="colwrap"><summary>Columns shown in the output, and column names</summary><div class="colpanel" id="colpanel"></div></details>
   <div class="tw"><table class="ed" id="rtab"><colgroup id="rcg"></colgroup><thead><tr id="rhr"></tr></thead><tbody id="rows"></tbody></table></div>
   <div class="row" style="margin-top:10px">
@@ -223,7 +223,7 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
    <div class="row" id="qstabs" role="tablist" aria-label="Unselect by column"></div>
    <div class="row" id="qslist" style="margin-top:10px"></div>
    <p class="note">Click an entry to unselect every tournament that has it, and click it again to select them again. Entries with only some tournaments selected show a dashed outline.</p></div>
- </section>
+ </details></section>
 </div>
 <div id="colL">
  
@@ -254,6 +254,7 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
  <section class="card" id="lookcard"><h2>Look</h2>
   <div class="g">
    <div style="grid-column:1/-1"><label for="scheme">Colour scheme (JPG and HTML)</label><div class="row"><select id="scheme" style="max-width:240px"></select><span id="swatch" class="row" style="gap:4px" aria-hidden="true"></span></div></div>
+   <div id="plimitbox" style="grid-column:1/-1" hidden><label for="plimit">Players shown</label><div class="row"><select id="plimit" style="max-width:240px"><option value="all">All players</option><option value="p2">Phase 2 only</option><option value="cut">Top Cut only</option><option value="custom">Custom</option></select><input type="number" id="plimitn" min="1" step="1" inputmode="numeric" placeholder="Number of players" aria-label="Number of players" style="max-width:190px" hidden></div><p class="note" id="plimitnote" style="margin:6px 0 0"></p></div>
    <div id="cmodebox" style="grid-column:1/-1" hidden><label for="cmode">Countries</label><select id="cmode" style="max-width:300px"><option value="value">Inputted value</option><option value="flag">Country flag</option><option value="both">Inputted value + country flag</option></select></div>
    <div id="datefmtbox" style="grid-column:1/-1"><label for="datefmt">Date format</label><select id="datefmt" style="max-width:240px"><option value="text">Fri 20 Nov (as before)</option><option value="dm">DD/MM (20/11)</option><option value="md">MM/DD (11/20)</option></select></div>
    <div id="custombox" hidden style="grid-column:1/-1"><div class="cgrid">
@@ -262,6 +263,8 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
     <label>Rows<input type="color" data-c="row"></label><label>Text<input type="color" data-c="tx"></label>
     <label>Accent<input type="color" data-c="acc"></label><label>Title box (HTML)<input type="color" data-c="box"></label></div>
     <p class="note">The background colours only apply to the JPG. The HTML output keeps a transparent background. Rows are drawn slightly see-through, so pick a dark row colour with light text, or a light row colour with dark text.</p>
+    <div class="row" style="margin:12px 0 4px"><input type="text" id="cusname" maxlength="40" placeholder="Name this colour scheme" aria-label="Colour scheme name" style="max-width:260px"><button class="btn" id="cussave" type="button">Save scheme</button><button class="btn ghost" id="cussavenew" type="button" hidden>Save as new</button><button class="btn ghost" id="cusdel" type="button" hidden>Delete</button></div>
+    <p class="note" id="cusmsg" style="margin-top:4px"></p>
     <button class="btn ghost" id="cusreset">Reset custom colours</button></div>
    <div style="grid-column:1/-1"><label>Custom background</label>
     <div class="row" id="bgmode" style="margin-bottom:8px"><button class="btn seg" data-mode="file" aria-pressed="true">File upload</button><button class="btn seg" data-mode="url" aria-pressed="false">URL import</button></div>
@@ -289,7 +292,7 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
    <label><input type="radio" name="f" value="dc">Discord message</label>
   </div>
    <details id="hdrbox" style="margin-top:14px"><summary style="cursor:pointer;font-weight:700">Customise headers (translate)</summary>
-   <p class="note">Rename any column header, for example to translate it. The names are used in the tables and in the graphics. They are saved in your browser.</p>
+   <p class="note">Rename any column header, for example to translate it. The names are used in the tables and in the graphics. A header can also be left empty. They are saved in your browser.</p>
    <div id="hdrlist"></div>
    <button class="btn ghost" id="hdrreset" type="button" style="margin-top:10px">Restore default headers</button></details>
  </section>
@@ -304,7 +307,7 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
 
 <main id="tournament" hidden>
  <div id="tcolL">
-  <section class="card"><h2>Tournament details</h2>
+  <section class="card"><details class="coll" open><summary><h2>Tournament details</h2></summary>
    <div style="margin-bottom:12px"><label for="tsel">Load from Schedule tab</label><select id="tsel"></select></div>
    <div class="g">
     <div style="grid-column:1/-1"><label for="ttitle">Title (tournament name)</label><input type="text" id="ttitle" value="Friday Night Cup"></div>
@@ -320,7 +323,7 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
    </div>
    <div class="row" style="margin-top:10px"><label class="btn ghost" style="margin:0;color:var(--ink)">Import CSV<input type="file" id="tcsv" accept=".csv,text/csv" hidden></label><button class="btn ghost" id="ttpl">Download CSV template</button></div>
    <p class="note">Uses the same columns as the schedule CSV. Only the first row is used.</p>
-  </section>
+  </details></section>
   <section class="card"><details class="coll"><summary><h2>Import from Limitless</h2></summary>
    <label for="tlink">1. Paste the Limitless tournament link (or ID)</label>
    <input type="text" id="tlink" placeholder="https://play.limitlesstcg.com/tournament/abc123">
@@ -387,14 +390,14 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
    <div class="colpanel" id="upanel"><label>Columns shown in the output</label><div class="crow"><label class="th-t"><input type="checkbox" class="colchk" data-k="all" aria-label="Show in output" title="Show this column in the output"><span data-hd="u.all">Swiss Rounds</span></label></div><div class="crow"><label class="th-t"><input type="checkbox" class="colchk" data-k="p2" aria-label="Show in output" title="Show this column in the output"><span data-hd="u.p2">Phase 2</span></label></div><div class="crow"><label class="th-t"><input type="checkbox" class="colchk" data-k="cut" aria-label="Show in output" title="Show this column in the output"><span data-hd="u.cut">Top Cut</span></label></div></div>
    <div class="row" style="margin-top:10px"><button class="btn" id="uadd">Add line</button><button class="btn ghost" id="ufill">Add detected entries</button><button class="btn ghost" id="uclear">Remove all</button></div>
   </section>
-  <section class="card"><h2 id="phd">Players</h2>
+  <section class="card"><details class="coll" open><summary><h2 id="phd">Players</h2></summary>
    <div class="tw"><table class="ed" id="ptable"><colgroup id="pcg"></colgroup><thead><tr id="phr"></tr></thead><tbody id="prows"></tbody></table></div>
    <div class="colpanel" id="ppanel"></div>
    <datalist id="pkmn"></datalist>
    <div class="row" style="margin-top:10px"><button class="btn" id="padd">Add line</button><button class="btn ghost" id="pclear">Remove all</button><label class="btn ghost" style="margin:0;color:var(--ink)">Import CSV<input type="file" id="pcsv" accept=".csv,text/csv" hidden></label><button class="btn ghost" id="ptpl">Download CSV template</button></div>
    <p class="note" id="pcsvnote">CSV columns: place, player, record (for example 5-1-0), points and, optionally, the round the player dropped and up to six Pokémon names (TCG uses the first two, VGC and GO up to six). A header row is optional.</p>
    <p class="note" id="pdropnote">Players with a round in the "Dropped" column are listed at the bottom, ordered by that round, grayed out and in italics. The round itself is only used for sorting and is never shown in the outputs.</p>
-  </section>
+  </details></section>
  </div>
  <div id="pcolL">
   <section class="card" id="plimcard"><details class="coll"><summary><h2>Import from Limitless</h2></summary>
@@ -422,7 +425,7 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
 </main>
 
 <div id="privacy" role="region" aria-label="Data storage notice" hidden>
- <p><strong>Your data stays on your device.</strong> To save you retyping, this tool remembers some of your inputs (the tournaments and row colours on the Schedule tab, the Limitless links and pasted data, your custom colours, your edited header names, and your social media links) in your browser’s local storage. <strong>Nothing is sent to a server, nothing is shared, and no cookies are used.</strong> The only outside requests are for pictures, such as Pokémon sprites, which are looked up by Pokémon name, country flags when you choose to show them (the flag pictures are loaded from GitHub by country code), and, only when you press “Import team”, a request to pokepast.es for the team link you entered. To delete the saved data, clear this site’s data in your browser settings.</p>
+ <p><strong>Your data stays on your device.</strong> To save you retyping, this tool remembers some of your inputs (the tournaments and row colours on the Schedule tab, the Limitless links and pasted data, your custom colour schemes, your edited header names, and your social media links) in your browser’s local storage. <strong>Nothing is sent to a server, nothing is shared, and no cookies are used.</strong> The only outside requests are for pictures, such as Pokémon sprites, which are looked up by Pokémon name, country flags when you choose to show them (the flag pictures are loaded from GitHub by country code), and, only when you press “Import team”, a request to pokepast.es for the team link you entered. To delete the saved data, clear this site’s data in your browser settings.</p>
  <button class="btn acc" id="privok">Got it</button>
 </div>
 <script>
@@ -462,10 +465,16 @@ const SCHEMES={
  forest:mk("Forest (green)",["#14382a","#0a1d15"],["#2e9d5f","#c9f27b"],"#2e9d5f","#c9f27b","#14382a","#c9f27b","6,22,15"),
  sunset:mk("Sunset (orange)",["#4a1d3d","#1f0d1c"],["#e8590c","#ffd166"],"#e8590c","#ffd166","#4a1d3d","#ffd166","30,10,26"),
  light:{n:"Light",bg:["#f4f6fb","#dfe5f2"],bars:["#1b2750","#e0323f"],ov:"rgba(244,246,251,.65)",sh:"rgba(255,255,255,.7)",head:"#1b2750",hx:"#fff",r1:"rgba(255,255,255,.92)",r2:"rgba(232,237,248,.92)",tx:"#1b2340",acc:"#c4252f",box:"#1b2750",boxAcc:"#ffcb05",ty:{Cup:"#a67200",Challenge:"#0b6aa8",Friendly:"#23803a",Online:"#7a35b8"}}};
-const sch=()=>$("scheme").value=="custom"?customScheme():(SCHEMES[$("scheme").value]||SCHEMES.classic);
-$("scheme").innerHTML=Object.entries(SCHEMES).map(([k,v])=>`<option value="${k}">${v.n}</option>`).join("")+'<option value="custom">Custom colours…</option>';
+const sch=()=>{const v=$("scheme").value;return v=="custom"||v.startsWith("s:")?customScheme():(SCHEMES[v]||SCHEMES.classic)};
+let SAVED=[];
+function buildSchemeOptions(keep){const cur=keep||$("scheme").value,h=t=>String(t).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+ $("scheme").innerHTML=Object.entries(SCHEMES).map(([k,v])=>`<option value="${k}">${h(v.n)}</option>`).join("")+(SAVED.length?`<optgroup label="My colour schemes">${SAVED.map(x=>`<option value="s:${h(x.id)}">${h(x.name)}</option>`).join("")}</optgroup>`:"")+'<option value="custom">Custom colours…</option>';
+ if([...$("scheme").options].some(o=>o.value==cur))$("scheme").value=cur}
+buildSchemeOptions();
 function swatch(){const S=sch();$("swatch").innerHTML=[S.bg[0],S.head,S.acc,S.tx].map(c=>`<span style="width:22px;height:22px;border-radius:4px;border:1px solid var(--line);background:${c}"></span>`).join("")}
-const cusUI=()=>{$("custombox").hidden=$("scheme").value!="custom"};$("scheme").onchange=()=>{cusUI();try{localStorage.setItem("tgs:scheme",$("scheme").value)}catch(e){}swatch();render()};swatch();
+const curSaved=()=>{const v=$("scheme").value;return v.startsWith("s:")?SAVED.find(x=>"s:"+x.id==v)||null:null};
+const cusUI=()=>{const sv=curSaved();$("custombox").hidden=!($("scheme").value=="custom"||sv);$("cussavenew").hidden=!sv;$("cusdel").hidden=!sv;if(sv)$("cusname").value=sv.name};
+$("scheme").onchange=()=>{const sv=curSaved();if(sv)loadSaved(sv);$("cusmsg").textContent="";cusUI();try{localStorage.setItem("tgs:scheme",$("scheme").value)}catch(e){}swatch();render()};swatch();
 let bgImg=null,bgUrl="";let logoImg=null,logoUrl="",logoData="";
 
 /* tabs */
@@ -493,9 +502,9 @@ function drawHead(){
  $("colpanel").innerHTML=cols.filter(c=>c.tg).map(c=>c.ed?`<div class="crow">${tog(c.k)}<div><input type="text" id="cp-${c.k}" data-hk="${c.k}" value="${esc(c.l)}" maxlength="40" aria-label="${c.del?"Extra column name":esc(COLDEF[c.k])+" column name"}"></div>${c.del?`<button class="btn ghost" type="button" data-hdel="${c.k}" aria-label="Remove column">Remove</button>`:""}</div>`:`<div class="crow"><label class="th-t">${tog(c.k)}${esc(c.l)}</label></div>`).join("");syncChecks()}
 function afterCols(){applyCols();saveCols();if(window.rcReady){drawRC(true);drawQS(true)}buildCols();syncChecks();if(window.relabelTables)relabelTables();render()}
 function onHdr(e){const t=e.target,k=t.dataset&&t.dataset.hk;if(k==null)return;const v=t.value.trim().slice(0,40);
- if(COLDEF[k]){if(v)colCfg.labels[k]=v;else delete colCfg.labels[k]}else{const c=colCfg.custom.find(u=>u.k==k);if(c)c.l=v}
+ if(COLDEF[k]){colCfg.labels[k]=v}else{const c=colCfg.custom.find(u=>u.k==k);if(c)c.l=v}
  document.querySelectorAll('[data-hk="'+k+'"]').forEach(x=>{if(x!==t)x.value=t.value});afterCols()}
-[$("rtab"),$("colpanel")].forEach(el=>{el.addEventListener("input",onHdr);el.addEventListener("change",e=>{const t=e.target;if(t.dataset&&t.dataset.hk!=null&&!t.value.trim()){t.value=hdrDefault(t.dataset.hk);onHdr(e)}})});
+[$("rtab"),$("colpanel")].forEach(el=>{el.addEventListener("input",onHdr);});
 $("addcol").onclick=()=>{if(colCfg.custom.length>=12){alert("You can add up to 12 extra columns.");return}
  const k="x"+(++colCfg.n);colCfg.custom.push({k,l:"New column"});show[k]=0;applyCols();saveCols();drawHead();drawRows();buildCols();syncChecks();render();
  const ph=matchMedia("(max-width:720px)").matches;if(ph)$("colwrap").open=true;const inp=document.querySelector((ph?"#colpanel":"#rhr")+' [data-hk="'+k+'"]');if(inp){inp.focus();inp.select()}};
@@ -569,14 +578,15 @@ const showT={name:0,date:0,time:0,tz:0,game:0,type:0,fee:0,store:0,pw:0};const s
 const COLDEF={date:"Date",time:"Time",tz:"Time zone",name:"Name",type:"Type",game:"Game",fee:"Entry fee",store:"Store",pw:"Password",url:"Link"};
 let colCfg={labels:{},custom:[],n:0};
 try{const sv=JSON.parse(localStorage.getItem("tgs:cols")||"null");if(sv&&typeof sv=="object"){
- if(sv.labels&&typeof sv.labels=="object")Object.keys(COLDEF).forEach(k=>{const v=String(sv.labels[k]||"").trim().slice(0,40);if(v)colCfg.labels[k]=v});
+ if(sv.labels&&typeof sv.labels=="object")Object.keys(COLDEF).forEach(k=>{if(typeof sv.labels[k]=="string")colCfg.labels[k]=sv.labels[k].trim().slice(0,40)});
  if(Array.isArray(sv.custom))sv.custom.slice(0,12).forEach(c=>{if(c&&/^x\d+$/.test(String(c.k))&&!colCfg.custom.some(u=>u.k==c.k))colCfg.custom.push({k:c.k,l:String(c.l==null?"Column":c.l).trim().slice(0,40)})});
  colCfg.n=Math.max(+sv.n||0,0,...colCfg.custom.map(c=>+c.k.slice(1)))}}catch(e){}
-const lbl=k=>{const c=colCfg.custom.find(u=>u.k==k);return c?(c.l||"Column"):colCfg.labels[k]||COLDEF[k]||(COLS.find(u=>u[0]==k)||[0,k])[1]};
-function applyCols(){COLS.forEach(c=>{if(COLDEF[c[0]])c[1]=colCfg.labels[c[0]]||(c[0]=="name"?"Tournament name":COLDEF[c[0]])});
+const lbl=k=>{const c=colCfg.custom.find(u=>u.k==k);return c?(c.l==null?"Column":c.l):(k in colCfg.labels?colCfg.labels[k]:(COLDEF[k]||(COLS.find(u=>u[0]==k)||[0,k])[1]))};
+const lblN=k=>lbl(k)||COLDEF[k]||"Column";
+function applyCols(){COLS.forEach(c=>{if(COLDEF[c[0]])c[1]=(c[0] in colCfg.labels)?colCfg.labels[c[0]]:(c[0]=="name"?"Tournament name":COLDEF[c[0]])});
  for(let i=COLS.length-1;i>=0;i--)if(/^x\d+$/.test(COLS[i][0]))COLS.splice(i,1);
- colCfg.custom.forEach(c=>{COLS.push([c.k,c.l||"Column"]);if(!(c.k in show))show[c.k]=0});
- const a=document.querySelector('label[for="t-store"] span'),b=document.querySelector('label[for="t-pw"] span');if(a)a.textContent=lbl("store");if(b)b.textContent=lbl("pw")}
+ colCfg.custom.forEach(c=>{COLS.push([c.k,c.l==null?"Column":c.l]);if(!(c.k in show))show[c.k]=0});
+ const a=document.querySelector('label[for="t-store"] span'),b=document.querySelector('label[for="t-pw"] span');if(a)a.textContent=lblN("store");if(b)b.textContent=lblN("pw")}
 applyCols();
 const saveCols=()=>{try{localStorage.setItem("tgs:cols",JSON.stringify({labels:colCfg.labels,custom:colCfg.custom,n:colCfg.n}))}catch(e){}};
 const hdrDefault=k=>COLDEF[k]||"Column";
@@ -604,9 +614,9 @@ function drawKV(c,S,X,TW,top,RH,s0=0,e0=1e9){const lw=TW*.32;
 function mkDiscordP(){const a=active();return "## "+TT()+(period()?"\n-# "+period():"")+"\n\n"+groupLines(data(),r=>{const dr=isDrop(r),L=a.map(([k])=>k=="place"?(dr?"":"**"+r.place+".**"):k=="points"&&r.points?r.points+" pts":k=="name"&&normUrl(r.url)&&cell(r,k)?"["+cell(r,k)+"](<"+normUrl(r.url)+">)":cell(r,k)).filter(Boolean).join(" | ");return dr?"-# *"+L+"*":L},l=>"**"+l+"**")}
 function mkDiscordT(){const u=normUrl(T.url),t=TT();let s="## "+(u&&t?"["+t+"](<"+u+">)":t)+"\n\n";const L=[];
  if(show.date||show.time){const v=dcTime(T);if(v)L.push("**Date & time:** "+v)}
- [["type","Type"],["game","Game"],["fee","Entry fee"],["store",lbl("store")],["pw",lbl("pw")]].forEach(([k,l])=>{if(show[k]&&T[k])L.push("**"+l+":** "+T[k])});
+ [["type","Type"],["game","Game"],["fee","Entry fee"],["store",lblN("store")],["pw",lblN("pw")]].forEach(([k,l])=>{if(show[k]&&T[k])L.push("**"+l+":** "+T[k])});
  return s+L.join("\n")}
-function data(){if(mode=="t")return [T];if(isP())return stRows.filter(r=>r.place||r.name||r.record).slice().sort((a,b)=>(dropN(a)>0)-(dropN(b)>0)||dropN(a)-dropN(b)||(+a.place||999)-(+b.place||999));const f=$("from").value,t=$("to").value;
+function data(){if(mode=="t")return [T];if(isP()){const a=stRows.filter(r=>r.place||r.name||r.record).slice().sort((a,b)=>(dropN(a)>0)-(dropN(b)>0)||dropN(a)-dropN(b)||(+a.place||999)-(+b.place||999));return mode=="p"?stLimit(a):a}const f=$("from").value,t=$("to").value;
  dhCompute();return dhGroup(rows.filter(r=>!(r.date&&((f&&r.date<f)||(t&&r.date>t)))&&r.on!==false).slice().sort((a,b)=>(a.date+a.time).localeCompare(b.date+b.time)))}
 let dateFmt="text";try{const v=localStorage.getItem("tgs:datefmt");if(v=="dm"||v=="md")dateFmt=v}catch(e){}
 /* countries: understands 2-letter codes (IT) and full names (Italy) */
@@ -760,6 +770,7 @@ function mkCanvas(){const AR=aspect(),pb=$("pagebox"),cv=$("cv");
  pb.hidden=false;cv.hidden=true;pageCvs=pages;$("dl").textContent=pages.length>1?"Download all "+pages.length+" pages":"Download JPG"}
 
 function render(){
+ if(mode=="p")plimitInfo();
  if(mode=="s"){drawFnote();dlUpd();if(window.rcReady){drawRC();drawQS()}}
  saveRows();
  if(mode=="m")$("mrec").textContent=mRec()?"Your record: "+mRec():"";
@@ -817,7 +828,7 @@ $("dl").onclick=async()=>{mkCanvas();const base=(TT()||"graphic").replace(/[^\w-
 $("ar").onchange=render;
 $("tpl").onclick=()=>{const cu=colCfg.custom,ex=(v)=>cu.map(()=>v);
  saveFile("tournament-template.csv","\ufeff"+[
- ["Date","Time","Game","Type","Entry fee",lbl("store"),"Time zone","Name","Link",lbl("pw")].concat(cu.map(c=>c.l||"Column")).map(csvLbl).join(";"),
+ ["Date","Time","Game","Type","Entry fee",lblN("store"),"Time zone","Name","Link",lblN("pw")].concat(cu.map(c=>c.l||"Column")).map(csvLbl).join(";"),
  ["2026-11-06","18:00","Pokémon TCG","Cup","€5","Example Store","Europe/Berlin","Friday Night Cup","https://example.com/event","secret"].concat(ex("Example")).join(";"),
  ["2026-11-07","14:00","Pokémon VGC","Online","Free","","UTC","Saturday Online Challenge","",""].concat(ex("")).join(";")].join("\r\n"),"text/csv")};
 document.querySelectorAll("[data-copy]").forEach(b=>b.onclick=async()=>{const t=$(b.dataset.copy);try{await navigator.clipboard.writeText(t.value);b.textContent="Copied"}catch(e){t.select();document.execCommand("copy");b.textContent="Copied"}setTimeout(()=>b.textContent=b.dataset.label,1500)});
@@ -923,8 +934,8 @@ function sprImg(u){const e=sprC[u];if(e)return e.ok?e.im:null;
  const im=new Image();im.crossOrigin="anonymous";sprC[u]={im,ok:false};
  im.onload=()=>{sprC[u].ok=true;render()};im.onerror=()=>{sprC[u].err=true;render()};im.src=u;return null}
 const HD={"p.place":"Place","p.name":"Player","p.country":"Country","p.record":"Record","p.points":"Points","p.mon":"Pokémon","p.drop":"Dropped (rd.)","m.place":"Round","m.name":"Opponent","m.record":"Result","m.points":"Table","u.all":"Swiss Rounds","u.p2":"Phase 2","u.cut":"Top Cut","u.deck":"Deck","u.tname":"Name","u.tall":"Swiss Rounds %","u.tp2":"Phase 2 %","u.tcut":"Top Cut %","u.tov":"Image override (name or URL)"},HL={};
-try{const sv=JSON.parse(localStorage.getItem("tgs:hl")||"{}");Object.keys(HD).forEach(k=>{const v=String(sv[k]||"").trim().slice(0,40);if(v)HL[k]=v})}catch(e){}
-const hl=id=>HL[id]||HD[id],saveHL=()=>{try{localStorage.setItem("tgs:hl",JSON.stringify(HL))}catch(e){}};
+try{const sv=JSON.parse(localStorage.getItem("tgs:hl")||"{}");Object.keys(HD).forEach(k=>{if(typeof sv[k]=="string")HL[k]=sv[k].trim().slice(0,40)})}catch(e){}
+const hl=id=>id in HL?HL[id]:HD[id],saveHL=()=>{try{localStorage.setItem("tgs:hl",JSON.stringify(HL))}catch(e){}};
 const PCOLS=()=>(mode=="m"?[["place",hl("m.place"),10],["name",hl("m.name"),28],["record",hl("m.record"),16],["points",hl("m.points"),12]]:[["place",hl("p.place"),10],["name",hl("p.name"),24],["country",hl("p.country"),11],["record",hl("p.record"),13],["points",hl("p.points"),10]]).concat(gameKeys().map((k,i)=>[k,hl("p.mon")+" "+(i+1),pgame=="TCG"?15:9]),mode=="m"?[]:[["drop",hl("p.drop"),13]]);
 function drawPRows(){setTimeout(()=>{if(mode=="b")drawBkRes()},0);const two=pgame=="VGC"||pgame=="GO",cols=PCOLS().filter(c=>!(two&&isMonKey(c[0]))),sum=cols.reduce((x,c)=>x+c[2],0);
  $("ptable").style.minWidth="780px";
@@ -1111,7 +1122,7 @@ const mq=matchMedia("(min-width:981px)");
 function placeCards(){const pre=mode=="t"?"t":isP()?"p":"",L=$(pre+"colL"),R=$(pre+"colR");(mq.matches?L:R).append($("socialcard"));R.append($("lookcard"),$("resultcard"));render()}
 function buildCols(){}
 function setMode(m){if(mode==m)return;const wasM=mode=="m";mode=m;if(wasM&&m!="m"){mRows=stRows;stRows=stSaved}else if(!wasM&&m=="m"){stSaved=stRows;stRows=mRows}if(m=="t"||m=="p"||m=="b"||m=="u"||m=="m")fillSel();show=m=="t"?showT:m=="u"?showU:m=="m"?showM:(m=="p"||m=="b")?showP:showS;buildCols();if(m=="p"||m=="b")syncP();if(m=="u")[["p2",p2N()],["cut",cutN()]].forEach(([k,n])=>{if(n>0&&!uOff.has(k))autoShow(k,"1")});syncChecks();
- {$("datefmtbox").hidden=!(m=="s"||m=="t");$("cmodebox").hidden=!(m=="p"||m=="b");const B=m=="b";$("bkcard").hidden=!B;$("stitlebox").hidden=B;$("btitlebox").hidden=!B;$("ssubbox").hidden=B||m=="u"||m=="m";$("usubbox").hidden=m!="u";$("ucard").hidden=m!="u";$("filterbox").hidden=m!="s";$("mcard").hidden=m!="m";$("plimcard").hidden=m=="m";$("ptotal").parentElement.hidden=m=="m";$("phd").textContent=m=="m"?"Matchups":"Players";$("pcsvnote").hidden=m=="m";$("pdropnote").hidden=m=="m";$("bsubbox").hidden=!B;$("pp2box").hidden=B||m=="m";$("pcutbox").hidden=B||m=="m";$("phnote").hidden=B||m=="u"||m=="m";
+ {$("datefmtbox").hidden=!(m=="s"||m=="t");$("cmodebox").hidden=!(m=="p"||m=="b");const B=m=="b";$("bkcard").hidden=!B;$("stitlebox").hidden=B;$("btitlebox").hidden=!B;$("ssubbox").hidden=B||m=="u"||m=="m";$("usubbox").hidden=m!="u";$("ucard").hidden=m!="u";$("filterbox").hidden=m!="s";$("plimitbox").hidden=m!="p";$("mcard").hidden=m!="m";$("plimcard").hidden=m=="m";$("ptotal").parentElement.hidden=m=="m";$("phd").textContent=m=="m"?"Matchups":"Players";$("pcsvnote").hidden=m=="m";$("pdropnote").hidden=m=="m";$("bsubbox").hidden=!B;$("pp2box").hidden=B||m=="m";$("pcutbox").hidden=B||m=="m";$("phnote").hidden=B||m=="u"||m=="m";
   $("sdh").textContent=B?"Bracket details":m=="u"?"Usage details":m=="m"?"Matchup details":"Standings details";$("htmlLbl").textContent=B?"HTML bracket":"HTML table";if(B)drawBkRes()}
  if(m=="p"||m=="b"||m=="m"||wasM)drawPRows();placeCards()}
 mq.addEventListener("change",placeCards);
@@ -1254,13 +1265,28 @@ try{Object.assign(CUS,JSON.parse(localStorage.getItem("tgs:custom")||"{}"))}catc
 const hexRgb=h=>{const n=parseInt(String(h).slice(1),16)||0;return[n>>16&255,n>>8&255,n&255]};
 const lum=h=>{const[r,g,b]=hexRgb(h).map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)});return .2126*r+.7152*g+.0722*b};
 function customScheme(){const c=CUS,rg=hexRgb(c.row).join(","),dark=lum(c.tx)>.5;
- return{n:"Custom",bg:[c.bg1,c.bg2],bars:[c.head,c.acc],ov:`rgba(${hexRgb(c.bg2).join(",")},.55)`,sh:dark?"rgba(0,0,0,.6)":"rgba(255,255,255,.7)",head:c.head,hx:c.hx,r1:`rgba(${rg},.85)`,r2:`rgba(${rg},.65)`,tx:c.tx.toLowerCase()=="#ffffff"?"#fff":c.tx,acc:c.acc,box:c.box,boxAcc:c.acc,ty:dark?TYD:SCHEMES.light.ty}}
+ return{n:(curSaved()||{name:"Custom"}).name,bg:[c.bg1,c.bg2],bars:[c.head,c.acc],ov:`rgba(${hexRgb(c.bg2).join(",")},.55)`,sh:dark?"rgba(0,0,0,.6)":"rgba(255,255,255,.7)",head:c.head,hx:c.hx,r1:`rgba(${rg},.85)`,r2:`rgba(${rg},.65)`,tx:c.tx.toLowerCase()=="#ffffff"?"#fff":c.tx,acc:c.acc,box:c.box,boxAcc:c.acc,ty:dark?TYD:SCHEMES.light.ty}}
 const cusSave=()=>{try{localStorage.setItem("tgs:custom",JSON.stringify(CUS))}catch(e){}};
 document.querySelectorAll("#custombox [data-c]").forEach(i=>{i.value=CUS[i.dataset.c];i.addEventListener("input",()=>{CUS[i.dataset.c]=i.value;cusSave();swatch();render()})});
 $("cmode").value=cMode;$("cmode").onchange=()=>{cMode=$("cmode").value;try{localStorage.setItem("tgs:cmode",cMode)}catch(e){}render()};
 $("datefmt").value=dateFmt;$("datefmt").onchange=()=>{dateFmt=$("datefmt").value;try{localStorage.setItem("tgs:datefmt",dateFmt)}catch(e){}fillSel();render()};
+/* named colour schemes, saved in this browser */
+try{const a=JSON.parse(localStorage.getItem("tgs:schemes")||"[]");if(Array.isArray(a))SAVED=a.filter(x=>x&&x.id&&typeof x.name=="string"&&x.c&&typeof x.c=="object").map(x=>({id:String(x.id),name:x.name.slice(0,40),c:Object.assign({},CUS_DEF,x.c)}))}catch(e){}
+const saveSaved=()=>{try{localStorage.setItem("tgs:schemes",JSON.stringify(SAVED))}catch(e){}};
+const cusInputs=()=>document.querySelectorAll("#custombox [data-c]").forEach(i=>i.value=CUS[i.dataset.c]);
+function loadSaved(sv){Object.assign(CUS,sv.c);cusInputs();cusSave()}
+const cusMsg=t=>{$("cusmsg").textContent=t},nameFree=(n,id)=>!SAVED.some(x=>x.id!=id&&x.name.toLowerCase()==n.toLowerCase());
+function pickScheme(v){buildSchemeOptions(v);$("scheme").value=v;cusUI();try{localStorage.setItem("tgs:scheme",v)}catch(e){}swatch();render()}
+$("cussave").onclick=()=>{const name=$("cusname").value.trim().slice(0,40),sv=curSaved();if(!name){cusMsg("Give the colour scheme a name first.");return}
+ if(!nameFree(name,sv&&sv.id)){cusMsg("There is already a colour scheme with that name.");return}
+ if(sv){sv.name=name;sv.c=Object.assign({},CUS);saveSaved();pickScheme("s:"+sv.id);cusMsg("Saved “"+name+"”.")}
+ else{const id=Date.now().toString(36);SAVED.push({id,name,c:Object.assign({},CUS)});saveSaved();pickScheme("s:"+id);cusMsg("Saved “"+name+"”. It now appears in the colour scheme list.")}};
+$("cussavenew").onclick=()=>{const name=$("cusname").value.trim().slice(0,40);if(!name){cusMsg("Give the new colour scheme a name first.");return}
+ if(!nameFree(name,null)){cusMsg("There is already a colour scheme with that name. Choose a different name.");return}
+ const id=Date.now().toString(36);SAVED.push({id,name,c:Object.assign({},CUS)});saveSaved();pickScheme("s:"+id);cusMsg("Saved “"+name+"” as a new colour scheme.")};
+$("cusdel").onclick=()=>{const sv=curSaved();if(!sv)return;if(!confirm("Delete the colour scheme “"+sv.name+"”?"))return;SAVED=SAVED.filter(x=>x.id!=sv.id);saveSaved();pickScheme("custom");cusMsg("Deleted “"+sv.name+"”. Its colours are still in the editor.")};
 $("cusreset").onclick=()=>{Object.assign(CUS,CUS_DEF);document.querySelectorAll("#custombox [data-c]").forEach(i=>i.value=CUS[i.dataset.c]);cusSave();swatch();render()};
-try{const sv=localStorage.getItem("tgs:scheme");if(sv&&[...$("scheme").options].some(o=>o.value==sv)){$("scheme").value=sv;cusUI();swatch();render()}}catch(e){}
+try{buildSchemeOptions();const sv=localStorage.getItem("tgs:scheme");if(sv&&[...$("scheme").options].some(o=>o.value==sv)){$("scheme").value=sv;const sc=curSaved();if(sc)loadSaved(sc);cusUI();swatch();render()}}catch(e){}
 ["stitle","btitle","ssub","bsub","usub","ptotal","pp2","pcut"].forEach(id=>{const e=$(id);if(e)e.addEventListener("input",()=>{pTouched=true})});
 $("psel").addEventListener("change",()=>{if(!pAuto)pTouched=true});
 $("plimgo").addEventListener("click",()=>{pTouched=true});
@@ -1274,7 +1300,7 @@ const saveRC=()=>{try{localStorage.setItem("tgs:rowcol",JSON.stringify(rowColors
 try{const sv=JSON.parse(localStorage.getItem("tgs:rowcol")||"null");
  if(sv&&typeof sv=="object"){for(const k of Object.keys(sv)){if(sv[k]&&typeof sv[k]=="object"){rowColors[k]={};for(const [v,c] of Object.entries(sv[k]))if(/^#[0-9a-f]{6}$/i.test(c))rowColors[k][v]=c}}}
  else{const old=JSON.parse(localStorage.getItem("tgs:rules")||"[]");if(Array.isArray(old)){old.forEach(u=>{if(u&&u.op=="is"&&["type","game","store","tag"].includes(u.field)&&u.value&&/^#[0-9a-f]{6}$/i.test(u.color))(rowColors[u.field]=rowColors[u.field]||{})[String(u.value).trim().toLowerCase()]=u.color});saveRC()}}}catch(e){}
-const rcKeys=()=>[["type","Type"],["game","Game"],["store",lbl("store")]].concat(colCfg.custom.map(c=>[c.k,c.l||"Column"]));
+const rcKeys=()=>[["type","Type"],["game","Game"],["store",lblN("store")]].concat(colCfg.custom.map(c=>[c.k,c.l||"Column"]));
 function rcUniq(k){const m=new Map();
  rows.forEach(r=>{const raw=String(r[k]||"").trim();if(!raw)return;const key=raw.toLowerCase(),e=m.get(key)||{label:raw,n:0};e.n++;m.set(key,e)});
  const out=[...m].sort((a,b)=>a[1].label.localeCompare(b[1].label));
@@ -1316,14 +1342,20 @@ $("rows").addEventListener("focusin",e=>{const k=e.target.dataset&&e.target.data
 const HSEC=[["Schedule and Tournament",["date","time","tz","name","type","game","fee","store","pw","url"],"hk"],["Standings",["p.place","p.name","p.country","p.record","p.points","p.mon","p.drop"],"hl"],["Matchups",["m.place","m.name","m.record","m.points"],"hl"],["Usage",["u.all","u.p2","u.cut","u.deck","u.tname","u.tall","u.tp2","u.tcut","u.tov"],"hl"]];
 function applyHL(){COLS_S.forEach(c=>{c[1]=hl("p."+c[0])});COLS_M.forEach(c=>{c[1]=hl("m."+c[0])});COLS_U.forEach(c=>{c[1]=hl("u."+c[0])});
  document.querySelectorAll("[data-hd]").forEach(e=>{e.textContent=hl(e.dataset.hd)})}
-function drawHdrList(){$("hdrlist").innerHTML=HSEC.map(([t,ids,kind])=>`<h3 class="hsec">${t}</h3>`+ids.map(id=>{const def=kind=="hk"?COLDEF[id]:HD[id],val=kind=="hk"?lbl(id):hl(id);return`<label class="hrow"><span>${esc(def)}</span><input type="text" maxlength="40" ${kind=="hk"?`data-hk="${id}"`:`data-hl="${id}"`} value="${esc(val)}" placeholder="${esc(def)}" aria-label="${esc(def)}"></label>`}).join("")).join("")}
-function onHL(e){const t=e.target,id=t.dataset.hl,v=t.value.trim().slice(0,40);if(v)HL[id]=v;else delete HL[id];saveHL();applyHL();
+function drawHdrList(){$("hdrlist").innerHTML=HSEC.map(([t,ids,kind])=>`<h3 class="hsec">${t}</h3>`+ids.map(id=>{const def=kind=="hk"?COLDEF[id]:HD[id],val=kind=="hk"?lbl(id):hl(id);return`<label class="hrow"><span>${esc(def)}</span><input type="text" maxlength="40" ${kind=="hk"?`data-hk="${id}"`:`data-hl="${id}"`} value="${esc(val)}" placeholder="(empty)" aria-label="${esc(def)}"></label>`}).join("")).join("")}
+function onHL(e){const t=e.target,id=t.dataset.hl,v=t.value.trim().slice(0,40);HL[id]=v;saveHL();applyHL();
  document.querySelectorAll('[data-hl="'+id+'"]').forEach(x=>{if(x!==t)x.value=t.value});
  if(/^[pm]\./.test(id))drawPRows();buildCols();syncChecks();if(window.relabelTables)relabelTables();render()}
 $("hdrlist").addEventListener("input",e=>{const d=e.target.dataset;if(d&&d.hl)onHL(e);else onHdr(e)});
-$("hdrlist").addEventListener("change",e=>{const t=e.target,d=t.dataset;if(!d||t.value.trim())return;if(d.hl){t.value=HD[d.hl];onHL(e)}else if(d.hk){t.value=hdrDefault(d.hk);onHdr(e)}});
 $("hdrreset").onclick=()=>{colCfg.labels={};Object.keys(HL).forEach(k=>delete HL[k]);saveHL();saveCols();applyHL();drawHead();drawRows();drawPRows();drawHdrList();afterCols()};
 applyHL();drawHdrList();drawPRows();
+/* players shown on the standings */
+function stLimit(a){const v=$("plimit").value;let n=0;if(v=="p2")n=p2N();else if(v=="cut")n=cutN();else if(v=="custom")n=Math.max(0,parseInt($("plimitn").value,10)||0);return n>0?a.slice(0,n):a}
+function plimitInfo(){const v=$("plimit").value,el=$("plimitnote");if(!el)return;const all=stRows.filter(r=>r.place||r.name||r.record).length,shown=data().length;
+ el.textContent=v=="all"?"":(v=="p2"&&!p2N())?"Set the Phase 2 number in the details above. Until then all players are shown.":(v=="cut"&&!cutN())?"Set the Top Cut number in the details above. Until then all players are shown.":(v=="custom"&&!(parseInt($("plimitn").value,10)>0))?"Enter how many players to show.":"Showing "+shown+" of "+all+" players."}
+$("plimit").onchange=()=>{$("plimitn").hidden=$("plimit").value!="custom";render()};
+$("plimitn").addEventListener("input",render);
+["pp2","pcut"].forEach(id=>$(id).addEventListener("input",()=>{if(mode=="p")render()}));
 (function(){const lab=t=>{const h=[...t.querySelectorAll("thead th")].map(x=>{const i=x.querySelector("input.hdr");return(i?i.value:x.textContent).trim()});
  t.querySelectorAll("tbody tr").forEach(tr=>[...tr.children].forEach((td,i)=>{if(h[i]&&!td.classList.contains("pk2c"))td.dataset.l=h[i];else td.removeAttribute("data-l")}))};
  document.querySelectorAll("table.ed").forEach(t=>{lab(t);new MutationObserver(()=>lab(t)).observe(t,{childList:true,subtree:true})});window.relabelTables=()=>document.querySelectorAll("table.ed").forEach(lab)})();
