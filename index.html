@@ -176,6 +176,18 @@ input[type=date]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and
 .colwrap[open]>summary{margin-bottom:4px}
 .colwrap .colpanel{display:block;margin:0 0 4px}
 @media (max-width:720px){.colwrap{display:block}}
+/* ---- iPhone / narrow screen fixes ---- */
+@media (max-width:720px){
+ header{flex-wrap:wrap;row-gap:8px}
+ h1{flex:1 1 160px;min-width:0}
+ #privopen{flex:none;white-space:nowrap;margin-left:auto}
+ .g{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .g>*{min-width:0}
+ input,select,textarea{min-width:0;max-width:100%}
+ input[type=date],input[type=time]{-webkit-appearance:none;appearance:none;display:block;width:100%;min-height:44px;text-align:left}
+ table.ed tr{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-flow:dense}
+ table.ed td{min-width:0}
+}
 </style>
 </head>
 <body>
@@ -567,8 +579,8 @@ const saveCols=()=>{try{localStorage.setItem("tgs:cols",JSON.stringify({labels:c
 const hdrDefault=k=>COLDEF[k]||"Column";
 const csvLbl=t=>String(t||"").replace(/[;,"\r\n]+/g," ").trim();
 const TT=()=>mode=="t"?$("ttitle").value:mode=="b"?$("btitle").value:(mode=="p"||mode=="u"||mode=="m")?$("stitle").value:$("title").value;
-const COLS_S=[["place","Place"],["name","Player"],["record","Record"],["points","Points"]];
-const showP={place:1,name:0,record:0,points:0};let pgame="TCG";let stRows=[{place:"1",name:"",record:"",points:"",drop:"",mon1:"",mon2:""}];
+const COLS_S=[["place","Place"],["name","Player"],["country","Country"],["record","Record"],["points","Points"]];
+const showP={place:1,name:0,country:0,record:0,points:0};let pgame="TCG";let stRows=[{place:"1",name:"",record:"",points:"",drop:"",mon1:"",mon2:""}];
 const dropN=r=>{const n=parseInt(String(r&&r.drop||"").replace(/\D/g,""),10);return n>0?n:0};
 const isDrop=r=>isP()&&dropN(r)>0;
 const cutN=()=>Math.max(0,+$("pcut").value||0),p2N=()=>Math.max(0,+$("pp2").value||0);
@@ -597,7 +609,7 @@ let dateFmt="text";try{const v=localStorage.getItem("tgs:datefmt");if(v=="dm"||v
 function fmtDate(s){if(!s)return"";const d=new Date(s+"T12:00:00");if(isNaN(d))return s;
  if(dateFmt=="dm"||dateFmt=="md"){const dd=String(d.getDate()).padStart(2,"0"),mm=String(d.getMonth()+1).padStart(2,"0");return dateFmt=="dm"?dd+"/"+mm:mm+"/"+dd}
  return d.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})}
-const tzMerged=()=>mode=="s"&&!!show.time&&!!show.tz;
+const tzMerged=()=>(mode=="s"||mode=="t")&&!!show.time&&!!show.tz;
 const cell=(r,k)=>k=="place"&&isDrop(r)?"":k=="date"?fmtDate(r.date):k=="time"?[r.time||"",tzMerged()?tzCol(r):""].filter(Boolean).join(" "):k=="tz"?tzCol(r):(r[k]||"");
 const active=()=>(mode=="u"?COLS_U:mode=="m"?COLS_M:isP()?COLS_S:COLS).filter(([k])=>show[k]&&!(mode=="t"&&k=="name")&&!(k=="tz"&&tzMerged()));
 function period(){if(mode=="t")return"";if(mode=="m")return mPeriod();if(isP())return [divLabel(),(mode=="b"?$("bsub"):mode=="u"?$("usub"):$("ssub")).value.trim(),+$("ptotal").value>0?(+$("ptotal").value)+" players":""].filter(Boolean).join(" · ");const f=$("from").value,t=$("to").value;return f&&t?fmtDate(f)+" – "+fmtDate(t):f?"From "+fmtDate(f):t?"Until "+fmtDate(t):""}
@@ -642,7 +654,7 @@ function mkHTML(){const S=sch(),a=active(),d=data(),so=socials();
    (mode=="b"?bkHTML(S):mode=="u"?usageHTML(S):`<div style="padding:20px 30px 0;overflow-x:auto">\n<table style="width:100%;border-collapse:separate;border-spacing:0 4px;font-size:15px;color:${S.tx}">\n${tblF()}\n</table>\n</div>`)+legH+soH+`\n</div>`}
  function drawOne(pg){
  const S=sch(),cv=(pg&&pg.cv)||$("cv"),BK=mode=="b"?bkMetrics():null,W=BK?BK.w:1200,a=active(),HM=hasMons(data()),HIT=hasItems(data()),d=((x)=>pg&&pg.s!=null&&!pg.plan&&mode!="t"&&mode!="u"?x.slice(pg.s,pg.e):x)(data()),RH=((mode=="p"||mode=="m")&&HM)?(HIT?76:72):64,RH2=92,top=(pg&&pg.i>0)?140:230,foot=110;
- const wts={date:1.1,time:tzMerged()?2.4:1.3,name:1.8,game:1.3,type:1,fee:.9,store:1.7,pw:1.2,tz:1.4,place:.8,record:1.2,points:1,...Object.fromEntries(colCfg.custom.map(c=>[c.k,1.4]))},tot=a.reduce((s,[k])=>s+wts[k],0),X=50,TW=W-100;
+ const wts={date:1.1,time:tzMerged()?2.4:1.3,name:1.8,game:1.3,type:1,fee:.9,store:1.7,pw:1.2,tz:1.4,place:.8,record:1.2,points:1,country:1.1,...Object.fromEntries(colCfg.custom.map(c=>[c.k,1.4]))},tot=a.reduce((s,[k])=>s+wts[k],0),X=50,TW=W-100;
  const NM=monKeys().length,SPR=NM>2?(HIT?62:54):64,sp=HM?NM*SPR+(NM-1)*4+28:0,CW=TW-sp;
  const FONT='24px "Trebuchet MS",sans-serif',m=document.createElement("canvas").getContext("2d");m.font="500 "+FONT;
  const ell=(t,w)=>{while(t.length>1&&m.measureText(t+"…").width>w)t=t.slice(0,-1);return t+"…"};
@@ -891,14 +903,14 @@ const sprC={};
 function sprImg(u){const e=sprC[u];if(e)return e.ok?e.im:null;
  const im=new Image();im.crossOrigin="anonymous";sprC[u]={im,ok:false};
  im.onload=()=>{sprC[u].ok=true;render()};im.onerror=()=>{};im.src=u;return null}
-const HD={"p.place":"Place","p.name":"Player","p.record":"Record","p.points":"Points","p.mon":"Pokémon","p.drop":"Dropped (rd.)","m.place":"Round","m.name":"Opponent","m.record":"Result","m.points":"Table","u.all":"All players","u.p2":"Phase 2","u.cut":"Top Cut","u.deck":"Deck","u.tname":"Name","u.tall":"All %","u.tp2":"Phase 2 %","u.tcut":"Top Cut %","u.tov":"Image override (name or URL)"},HL={};
+const HD={"p.place":"Place","p.name":"Player","p.country":"Country","p.record":"Record","p.points":"Points","p.mon":"Pokémon","p.drop":"Dropped (rd.)","m.place":"Round","m.name":"Opponent","m.record":"Result","m.points":"Table","u.all":"All players","u.p2":"Phase 2","u.cut":"Top Cut","u.deck":"Deck","u.tname":"Name","u.tall":"All %","u.tp2":"Phase 2 %","u.tcut":"Top Cut %","u.tov":"Image override (name or URL)"},HL={};
 try{const sv=JSON.parse(localStorage.getItem("tgs:hl")||"{}");Object.keys(HD).forEach(k=>{const v=String(sv[k]||"").trim().slice(0,40);if(v)HL[k]=v})}catch(e){}
 const hl=id=>HL[id]||HD[id],saveHL=()=>{try{localStorage.setItem("tgs:hl",JSON.stringify(HL))}catch(e){}};
-const PCOLS=()=>(mode=="m"?[["place",hl("m.place"),10],["name",hl("m.name"),28],["record",hl("m.record"),16],["points",hl("m.points"),12]]:[["place",hl("p.place"),10],["name",hl("p.name"),24],["record",hl("p.record"),13],["points",hl("p.points"),10]]).concat(gameKeys().map((k,i)=>[k,hl("p.mon")+" "+(i+1),pgame=="TCG"?15:9]),mode=="m"?[]:[["drop",hl("p.drop"),13]]);
+const PCOLS=()=>(mode=="m"?[["place",hl("m.place"),10],["name",hl("m.name"),28],["record",hl("m.record"),16],["points",hl("m.points"),12]]:[["place",hl("p.place"),10],["name",hl("p.name"),24],["country",hl("p.country"),11],["record",hl("p.record"),13],["points",hl("p.points"),10]]).concat(gameKeys().map((k,i)=>[k,hl("p.mon")+" "+(i+1),pgame=="TCG"?15:9]),mode=="m"?[]:[["drop",hl("p.drop"),13]]);
 function drawPRows(){setTimeout(()=>{if(mode=="b")drawBkRes()},0);const two=pgame=="VGC"||pgame=="GO",cols=PCOLS().filter(c=>!(two&&isMonKey(c[0]))),sum=cols.reduce((x,c)=>x+c[2],0);
  $("ptable").style.minWidth="780px";
  $("pcg").innerHTML=cols.map(c=>`<col style="width:${(c[2]/sum*100).toFixed(1)}%">`).join("")+'<col style="width:40px">';
- const TK=mode=="b"?[]:["place","name","record","points"];
+ const TK=mode=="b"?[]:["place","name","country","record","points"];
  $("phr").innerHTML=cols.map(([k,l])=>TK.includes(k)?`<th><label class="th-t">${tog(k)}${l}</label></th>`:`<th${k=="drop"?' title="Round in which the player dropped. Leave empty if the player did not drop. Not shown in the outputs."':""}>${l}</th>`).join("")+"<th></th>";
  $("ppanel").innerHTML=TK.length?"<label>Columns shown in the output</label>"+cols.filter(c=>TK.includes(c[0])).map(([k,l])=>`<div class="crow"><label class="th-t">${tog(k)}${l}</label></div>`).join(""):"";
  const monIn=(r,i,k)=>`<input type="text" list="pkmn" autocomplete="off" placeholder="Pokémon" aria-label="Pokémon"${r[k]&&r[k].trim()&&!monId(r[k])?' class="bad"':""} data-i="${i}" data-k="${k}" value="${esc(r[k])}">${pgame=="VGC"?`<input type="text" class="item" placeholder="Item (optional)" aria-label="Held item" autocomplete="off" data-i="${i}" data-k="${k}i" value="${esc(r[k+"i"])}">`:""}${pgame=="GO"?`<select class="item" aria-label="Shadow or Purified" data-i="${i}" data-k="${k}s"><option value="">Regular</option><option${r[k+"s"]=="Shadow"?" selected":""}>Shadow</option><option${r[k+"s"]=="Purified"?" selected":""}>Purified</option></select>`:""}`;
@@ -946,11 +958,17 @@ const gameOf=v=>{v=String(v||"").trim().toUpperCase();return v=="PTCG"||v=="TCG"
 function setGame(g){if(!PGAMES[g])return;pgame=g;document.querySelectorAll("#pgame [data-g]").forEach(x=>x.setAttribute("aria-pressed",x.dataset.g==g));pNote();drawPRows();render()}
 document.querySelectorAll("#pgame [data-g]").forEach(b=>b.onclick=()=>setGame(b.dataset.g));
 pNote();
-function setP(list){if(stRows.length==1&&!stRows[0].name&&!stRows[0].record)stRows=[];stRows=stRows.concat(list);drawPRows();autoAll(list);render()}
+/* Pokémon GO: names such as "Sableye Shadow" or "Purified Azumarill" set the status and keep the plain name */
+function splitGoName(v){let st="";const n=String(v||"").replace(/(^|[\s_\-(])(shadow|purified)(?=$|[\s_\-)])/gi,(m,a,w)=>{st=w.toLowerCase()=="shadow"?"Shadow":"Purified";return a}).replace(/[()]/g," ").replace(/[\s_\-]+/g," ").trim();return{name:n,st}}
+function goNorm(r){for(let n=1;n<=6;n++){const k="go"+n;if(r[k]){const sp=splitGoName(r[k]);if(sp.st){r[k]=sp.name;r[k+"s"]=sp.st}}}}
+$("prows").addEventListener("change",e=>{const t=e.target,k=t.dataset&&t.dataset.k;if(pgame!="GO"||!k||!isMonKey(k))return;const sp=splitGoName(t.value);if(!sp.st)return;
+ const i=t.dataset.i;stRows[i][k]=sp.name;stRows[i][k+"s"]=sp.st;t.value=sp.name;t.classList.toggle("bad",!!sp.name&&!monId(sp.name));
+ const sel=t.closest("table").querySelector('select[data-i="'+i+'"][data-k="'+k+'s"]');if(sel)sel.value=sp.st;render()});
+function setP(list){list.forEach(goNorm);if(stRows.length==1&&!stRows[0].name&&!stRows[0].record)stRows=[];stRows=stRows.concat(list);drawPRows();autoAll(list);render()}
 $("pcsv").onchange=async e=>{const f=e.target.files[0];if(!f)return;let d=parseCSV(await f.text());
  if(d.length&&/place|player|record/i.test(d[0].join(" ")))d.shift();e.target.value="";
- setP(d.map(c=>({place:(c[0]||"").trim(),name:(c[1]||"").trim(),record:(c[2]||"").trim(),points:(c[3]||"").trim(),drop:(c[4]||"").trim(),mon1:(c[5]||"").trim(),mon2:(c[6]||"").trim(),vgc1:(c[5]||"").trim(),vgc2:(c[6]||"").trim(),vgc3:(c[7]||"").trim(),vgc4:(c[8]||"").trim(),vgc5:(c[9]||"").trim(),vgc6:(c[10]||"").trim(),go1:(c[5]||"").trim(),go2:(c[6]||"").trim(),go3:(c[7]||"").trim(),go4:(c[8]||"").trim(),go5:(c[9]||"").trim(),go6:(c[10]||"").trim()})))};
-$("ptpl").onclick=()=>saveFile("standings-template.csv","\ufeff"+["place;player;record;points;drop round;pokemon 1;pokemon 2;pokemon 3;pokemon 4;pokemon 5;pokemon 6","1;Ash;5-0-0;15;;Charizard;Pidgeot;;;;","2;Misty;4-1-0;12;;Gardevoir;;;;;","3;Brock;2-2-0;6;4;Dragapult;;;;;"].join("\r\n"),"text/csv");
+ setP(d.map(c=>({place:(c[0]||"").trim(),name:(c[1]||"").trim(),record:(c[2]||"").trim(),points:(c[3]||"").trim(),drop:(c[4]||"").trim(),country:(c[11]||"").trim(),mon1:(c[5]||"").trim(),mon2:(c[6]||"").trim(),vgc1:(c[5]||"").trim(),vgc2:(c[6]||"").trim(),vgc3:(c[7]||"").trim(),vgc4:(c[8]||"").trim(),vgc5:(c[9]||"").trim(),vgc6:(c[10]||"").trim(),go1:(c[5]||"").trim(),go2:(c[6]||"").trim(),go3:(c[7]||"").trim(),go4:(c[8]||"").trim(),go5:(c[9]||"").trim(),go6:(c[10]||"").trim()})))};
+$("ptpl").onclick=()=>saveFile("standings-template.csv","\ufeff"+["place;player;record;points;drop round;pokemon 1;pokemon 2;pokemon 3;pokemon 4;pokemon 5;pokemon 6;country","1;Ash;5-0-0;15;;Charizard;Pidgeot;;;;;US","2;Misty;4-1-0;12;;Gardevoir;;;;;;DE","3;Brock;2-2-0;6;4;Dragapult;;;;;;FR"].join("\r\n"),"text/csv");
 $("plink").addEventListener("input",()=>{const a=$("popen"),v=$("plink").value,id=tId(v),ok=!!id;
  a.href=ok?"https://play.limitlesstcg.com/api/tournaments/"+id+"/standings":"#";a.style.opacity=ok?1:.5;a.style.pointerEvents=ok?"auto":"none";a.setAttribute("aria-disabled",!ok);
  $("pmsg").textContent=!v.trim()?"":ok?"Tournament "+id+" found.":"Could not find a tournament ID in that link."});
@@ -966,7 +984,7 @@ $("plimgo").onclick=()=>{const m=$("plimmsg");
    const tm=Array.isArray(x.decklist)?x.decklist.map(m=>typeof m=="string"?{name:m,item:""}:{name:(m&&(m.name||m.id))||"",item:(m&&typeof m.item=="string"&&m.item)||""}).filter(m=>m.name):[],team=tm.map(m=>m.name);
    let names=game=="TCG"?ic:(team.length?team:ic);
    if(game=="TCG"&&!names.length&&dk.name)names=String(dk.name).split(/\s+/).filter(wd=>monId(wd)).slice(0,2);
-   const o={place:String(x.placing||i+1),name:x.name||x.player||"",record:r.wins==null?"":w+"-"+lo+"-"+tt,points:r.wins==null?"":String(w*3+tt),drop:+x.drop>0?String(+x.drop):"",
+   const o={place:String(x.placing||i+1),name:x.name||x.player||"",country:String(x.country||"").trim(),record:r.wins==null?"":w+"-"+lo+"-"+tt,points:r.wins==null?"":String(w*3+tt),drop:+x.drop>0?String(+x.drop):"",
     url:tid&&typeof x.player=="string"&&x.player?"https://play.limitlesstcg.com/tournament/"+encodeURIComponent(tid)+"/player/"+encodeURIComponent(x.player):""};
    o.arch=(x.deck&&x.deck.name)||"";keys.forEach((k,n)=>{o[k]=names[n]?pretty(names[n]):"";if(game=="VGC")o[k+"i"]=team.length&&tm[n]?tm[n].item:""});return o});
   stRows=[];setP(l);$("ptotal").value=l.length;render();m.textContent=l.length+" players imported."}
@@ -1257,7 +1275,7 @@ $("t-date").addEventListener("input",()=>{const sel=$("t-tz");sel.innerHTML=tzOp
 $("rows").addEventListener("input",e=>{const t=e.target;if(t.dataset&&t.dataset.k=="date"){const tr=t.closest("tr"),sel=tr&&tr.querySelector("select[data-k=tz]");if(sel)sel.innerHTML=tzOpts(sel.value,t.value)}});
 $("rows").addEventListener("focusin",e=>{const k=e.target.dataset&&e.target.dataset.k;if(k=="type"||k=="tz")e.target.select();if(k=="tz"){const dt=e.target.closest("tr").querySelector("[data-k=date]");fillDlTz(dt?dt.value:"")}});
 /* custom headers */
-const HSEC=[["Schedule and Tournament",["date","time","tz","name","type","game","fee","store","pw","url"],"hk"],["Standings",["p.place","p.name","p.record","p.points","p.mon","p.drop"],"hl"],["Matchups",["m.place","m.name","m.record","m.points"],"hl"],["Usage",["u.all","u.p2","u.cut","u.deck","u.tname","u.tall","u.tp2","u.tcut","u.tov"],"hl"]];
+const HSEC=[["Schedule and Tournament",["date","time","tz","name","type","game","fee","store","pw","url"],"hk"],["Standings",["p.place","p.name","p.country","p.record","p.points","p.mon","p.drop"],"hl"],["Matchups",["m.place","m.name","m.record","m.points"],"hl"],["Usage",["u.all","u.p2","u.cut","u.deck","u.tname","u.tall","u.tp2","u.tcut","u.tov"],"hl"]];
 function applyHL(){COLS_S.forEach(c=>{c[1]=hl("p."+c[0])});COLS_M.forEach(c=>{c[1]=hl("m."+c[0])});COLS_U.forEach(c=>{c[1]=hl("u."+c[0])});
  document.querySelectorAll("[data-hd]").forEach(e=>{e.textContent=hl(e.dataset.hd)})}
 function drawHdrList(){$("hdrlist").innerHTML=HSEC.map(([t,ids,kind])=>`<h3 class="hsec">${t}</h3>`+ids.map(id=>{const def=kind=="hk"?COLDEF[id]:HD[id],val=kind=="hk"?lbl(id):hl(id);return`<label class="hrow"><span>${esc(def)}</span><input type="text" maxlength="40" ${kind=="hk"?`data-hk="${id}"`:`data-hl="${id}"`} value="${esc(val)}" placeholder="${esc(def)}" aria-label="${esc(def)}"></label>`}).join("")).join("")}
